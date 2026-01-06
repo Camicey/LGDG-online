@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2132d60b31fc8e245bc6b28001df91c0, type: 3}
+  m_Name: Ariane
+  m_EditorClassIdentifier: 
+  Id: 1
+  Prenom: Ariane
+  Image: {fileID: 21300000, guid: 405a5f2a4a733994bb49ab06261d1776, type: 3}
+  PM: 3
+  PV: 10
+  PVar: 10
+  PA: 35
+  IdPouvoir: 1
+  IdPouvoirVar: 1
+  Pouvoir: "Se d\xE9place n'importe o\xF9."
+  PouvoirVar: "Se d\xE9place n'importe o\xF9."
+  CoutPouvoir: 2
+  CoutPouvoirVar: 2
+  Famille: Rose
+  FamilleImage: {fileID: 21300000, guid: c49e9474addff1745a891236ea6c655b, type: 3}
+  Type: Attaquant
+  TypeImage: {fileID: 21300000, guid: 8fce92e41ff55d845b144e0aedf863a5, type: 3}
+  liens: []
+  liensVar: []
