@@ -7,8 +7,6 @@ using Mirror;
 
 public class PlayerManager : NetworkBehaviour
 {
-    public List<GameObject> pioche = new List<GameObject>();
-    public List<Carte> PiocheCarte = new List<Carte>();
     public GameObject PrefabCarte;
     public GameObject DeckJoueur;
     public GameObject DeckAdversaire;
@@ -35,6 +33,7 @@ public class PlayerManager : NetworkBehaviour
     public override void OnStartLocalPlayer()
     {
         base.OnStartLocalPlayer();
+        UnityEngine.Debug.Log($"{name} PlayerManager");
         LocalPlayer = this;
     }
 
@@ -42,38 +41,23 @@ public class PlayerManager : NetworkBehaviour
     public override void OnStartServer()
     {
         base.OnStartServer();
-        pioche.Add(PrefabCarte);
     }
-    [Command]
-    public void CmdInstancier()
-    {
-        foreach (CarteSettings carteSettings in JeuEnCours.CartesSettings) //On instancie les cartes
-        {
-            GameObject derniere = Instantiate(PrefabCarte, new Vector3(0, 0, 0), Quaternion.identity, DossierCarte.transform); //-500 -500
-            NetworkServer.Spawn(derniere, connectionToClient);
-            derniere.GetComponent<Carte>().Stats = carteSettings;
-            //derniere.GetComponent<Carte>().Commencer();
-        }
-    }
+
     [Command]
     public void CmdPiocher()
     {
-        if (DeckCartes.Count < 5) //Limite de pioche à 5 cartes
-        {
-            //Ce qu'il faudra changer 
-            GameObject carte = Instantiate(pioche[Random.Range(0, pioche.Count)], new UnityEngine.Vector3(0, 0, 0), UnityEngine.Quaternion.identity);
-            //Ce qu'il faudre changer
-            carte.GetComponent<Carte>().Initialiser();
-            DeckCartes.Add(carte.GetComponent<Carte>()); //On ajoute au Deck la carte
-            NetworkServer.Spawn(carte, connectionToClient);
-            RpcShowCard(carte, "Dealt");
-        }
+        JeuEnCours.Piocher(connectionToClient);
     }
 
     public void JouerCarte(GameObject carte)
     {
         CmdJouerCarte(carte);
         Cartesjouees++;
+    }
+    public void PiocherCarte(GameObject carte)
+    {
+        carte.GetComponent<Carte>().Initialiser();
+        RpcShowCard(carte, "Dealt");
     }
 
     [Command]
@@ -88,7 +72,7 @@ public class PlayerManager : NetworkBehaviour
         if (carte == null) return;
         if (type == "Dealt") // Si elles viennent d'être piochées
         {
-            if (isLocalPlayer) //Si je suis le joueur
+            if (isLocalPlayer) // Si je suis le joueur
             {
                 carte.transform.SetParent(DeckJoueur.transform, false); // Je la met dans mon deck
                 carte.GetComponent<Carte>().MontrerCarte(); // Je la montre
@@ -104,6 +88,7 @@ public class PlayerManager : NetworkBehaviour
             if (isLocalPlayer)
             {
                 carte.transform.SetParent(PlaceTerrainJoueur.transform, false); // Je la place sur le Terrain Joueur
+                carte.GetComponent<Carte>().EstEnJeu = true;
             }
             else
             {
@@ -111,5 +96,4 @@ public class PlayerManager : NetworkBehaviour
             }
         }
     }
-
 }

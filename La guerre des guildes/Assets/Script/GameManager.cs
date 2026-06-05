@@ -7,22 +7,59 @@ using Mirror;
 
 public class GameManager : NetworkBehaviour
 {
-    public PlayerManager PlayerManager;
     public Sprite ImageDosCarte;
-    public List<Carte> Pioche = new List<Carte>();
+    public List<CarteSettings> Pioche = new List<CarteSettings>();
     public List<Carte> Defausse = new List<Carte>();
     public List<CarteSettings> CartesSettings = new List<CarteSettings>(); //Toutes les cartes settings
 
-    public void Piocher()
+    public override void OnStartServer()
     {
-        NetworkIdentity networkIdentity = NetworkClient.connection.identity;
-        PlayerManager = networkIdentity.GetComponent<PlayerManager>();
-        if (PlayerManager.LocalPlayer == null)
+        CreateDeck();
+    }
+
+    [Server]
+    private void CreateDeck()
+    {
+        Pioche.Clear();
+
+        foreach (var card in CartesSettings)
         {
-            Debug.LogWarning("Player local pas encore prêt");
-            return;
+            Pioche.Add(card);
         }
-        PlayerManager.LocalPlayer.CmdPiocher();
+        Shuffle(Pioche);
+    }
+
+    private void Shuffle(List<CarteSettings> list)
+    {
+        for (int i = 0; i < list.Count; i++)
+        {
+            int rand = Random.Range(i, list.Count);
+            (list[i], list[rand]) = (list[rand], list[i]);
+        }
+    }
+
+    [Server]
+    public void Piocher(NetworkConnectionToClient conn)
+    {
+        if (Pioche.Count == 0) return;
+
+        var joueur = conn.identity.GetComponent<PlayerManager>();
+
+        if (joueur.DeckCartes.Count > 5) return;
+
+        int index = Random.Range(0, Pioche.Count);
+        var data = Pioche[index];
+        Pioche.RemoveAt(index);
+
+        GameObject cardObj = Instantiate(joueur.PrefabCarte);
+
+        Carte carte = cardObj.GetComponent<Carte>();
+        carte.Stats = data;
+        carte.Initialiser();
+        carte.PlayerManager = joueur;
+
+        NetworkServer.Spawn(cardObj, conn);
+        joueur.PiocherCarte(cardObj);
     }
 
 }

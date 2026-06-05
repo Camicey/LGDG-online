@@ -13,7 +13,7 @@ public class Carte : NetworkBehaviour, IPointerDownHandler, IBeginDragHandler, I
     [SerializeField] public Canvas canvas;
     private CanvasGroup canvasGroup;
     private Vector2 PositionBase;
-    private PlayerManager PlayerManager;
+    public PlayerManager PlayerManager;
     public RectTransform rectTransform;
 
     //GameObject Terrain //Ca devrait être supprimé vu que ça n'a pas l'air d'être important
@@ -21,6 +21,7 @@ public class Carte : NetworkBehaviour, IPointerDownHandler, IBeginDragHandler, I
     public GameObject PlaceTerrainAdversaire;
 
     // Information importante carte
+    [SyncVar]
     public int Id;
     public PlaceTerrain PlaceDeTerrain;
 
@@ -72,6 +73,7 @@ public class Carte : NetworkBehaviour, IPointerDownHandler, IBeginDragHandler, I
         EstEnJeu = false;
         PVar = Stats.PV;
         PAVar = Stats.PA;
+        Id = Stats.Id;
     }
 
     public void CacherCarte()
@@ -100,7 +102,7 @@ public class Carte : NetworkBehaviour, IPointerDownHandler, IBeginDragHandler, I
     public void MontrerCarte()
     {
         //gameObject.GetComponent<Image>().sprite = CarteDevant;
-
+        UnityEngine.Debug.Log($"{name} PlayerManager");
         PrenomT.text = Stats.Prenom;
         ImageT.sprite = Stats.Image;
         ImageT.enabled = true;
