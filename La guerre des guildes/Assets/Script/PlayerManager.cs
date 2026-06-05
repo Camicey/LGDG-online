@@ -41,6 +41,7 @@ public class PlayerManager : NetworkBehaviour
     [Server]
     public override void OnStartServer()
     {
+        base.OnStartServer();
         pioche.Add(PrefabCarte);
     }
     [Command]

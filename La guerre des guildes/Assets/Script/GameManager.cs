@@ -22,7 +22,6 @@ public class GameManager : NetworkBehaviour
             Debug.LogWarning("Player local pas encore prêt");
             return;
         }
-
         PlayerManager.LocalPlayer.CmdPiocher();
     }
 
