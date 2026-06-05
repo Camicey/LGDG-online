@@ -66,6 +66,17 @@ public class Carte : NetworkBehaviour, IPointerDownHandler, IBeginDragHandler, I
         PlaceTerrainAdversaire = GameObject.Find("PlaceTerrainAdversaire");
         PlaceTerrainJoueur = GameObject.Find("PlaceTerrainJoueur");
     }
+    public override void OnStartClient()
+    {
+        base.OnStartClient();
+
+        Stats = FindObjectOfType<GameManager>()
+            .CartesSettings
+            .Find(c => c.Id == Id);
+
+        Initialiser();
+        MontrerCarte();
+    }
 
     public void Initialiser()
     {
@@ -73,7 +84,7 @@ public class Carte : NetworkBehaviour, IPointerDownHandler, IBeginDragHandler, I
         EstEnJeu = false;
         PVar = Stats.PV;
         PAVar = Stats.PA;
-        Id = Stats.Id;
+
     }
 
     public void CacherCarte()

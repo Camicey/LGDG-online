@@ -8,7 +8,7 @@ using Mirror;
 public class GameManager : NetworkBehaviour
 {
     public Sprite ImageDosCarte;
-    public List<CarteSettings> Pioche = new List<CarteSettings>();
+    public List<int> Pioche = new List<int>();
     public List<Carte> Defausse = new List<Carte>();
     public List<CarteSettings> CartesSettings = new List<CarteSettings>(); //Toutes les cartes settings
 
@@ -24,12 +24,12 @@ public class GameManager : NetworkBehaviour
 
         foreach (var card in CartesSettings)
         {
-            Pioche.Add(card);
+            Pioche.Add(card.Id);
         }
         Shuffle(Pioche);
     }
 
-    private void Shuffle(List<CarteSettings> list)
+    private void Shuffle(List<int> list)
     {
         for (int i = 0; i < list.Count; i++)
         {
@@ -43,18 +43,19 @@ public class GameManager : NetworkBehaviour
     {
         if (Pioche.Count == 0) return;
 
-        var joueur = conn.identity.GetComponent<PlayerManager>();
+        PlayerManager joueur = conn.identity.GetComponent<PlayerManager>();
 
         if (joueur.DeckCartes.Count > 5) return;
 
-        int index = Random.Range(0, Pioche.Count);
-        var data = Pioche[index];
-        Pioche.RemoveAt(index);
+        int dataId = Pioche[0];
+        Pioche.RemoveAt(0);
 
         GameObject cardObj = Instantiate(joueur.PrefabCarte);
 
         Carte carte = cardObj.GetComponent<Carte>();
-        carte.Stats = data;
+        carte.Id = dataId;
+        //CarteSettings data = CartesSettings.Find(c => c.Id == dataId);
+
         carte.Initialiser();
         carte.PlayerManager = joueur;
 
