@@ -7,7 +7,7 @@ public class GameManager : NetworkBehaviour
 {
     public Sprite ImageDosCarte;
     public List<int> Pioche = new List<int>();
-    public List<Carte> Defausse = new List<Carte>();
+    public List<Carte> Defausse = new List<Carte>(); // Pour l'instant inutilisee, peut etre faire une liste de int a la place
     public List<CarteSettings> CartesSettings = new List<CarteSettings>(); //Ajoutees manuellement
 
     public override void OnStartServer()
