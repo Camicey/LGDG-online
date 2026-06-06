@@ -1,19 +1,17 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
 using Mirror;
 using TMPro;
 using System.Diagnostics;
 
-public class Carte : NetworkBehaviour, IPointerDownHandler, IBeginDragHandler, IEndDragHandler, IDragHandler
+public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDragHandler  //Les suppléments sont les promesses de fonction
 {
 
     [SerializeField] public Canvas canvas;
     private CanvasGroup canvasGroup;
     private Vector2 PositionBase;
-    public PlayerManager PlayerManager;
+    public PlayerManager PlayerManager; //Joueur a qui appartient la carte
     public RectTransform rectTransform;
 
     //GameObject Terrain //Ca devrait être supprimé vu que ça n'a pas l'air d'être important
@@ -24,15 +22,11 @@ public class Carte : NetworkBehaviour, IPointerDownHandler, IBeginDragHandler, I
     [SyncVar]
     public int Id;
     public PlaceTerrain PlaceDeTerrain;
-
-    //Boolean
     public bool EstEnJeu = false;
 
-    // Carte Setting
     public CarteSettings Stats;
 
     //Tous les paramètres de chaque carte.
-
     public TMP_Text PrenomT;
 
     public Image ImageT;
@@ -51,8 +45,6 @@ public class Carte : NetworkBehaviour, IPointerDownHandler, IBeginDragHandler, I
     public int PVar;
     public int PAVar;
 
-
-    // Start is called before the first frame update
     void Start()
     {
         rectTransform = GetComponent<RectTransform>();
@@ -60,19 +52,17 @@ public class Carte : NetworkBehaviour, IPointerDownHandler, IBeginDragHandler, I
         PositionBase = rectTransform.anchoredPosition;
         canvas = GetComponentInParent<Canvas>();
 
-        Initialiser();
-
         //Ca devrait être supprimé vu que ça n'a pas l'air d'être important
         PlaceTerrainAdversaire = GameObject.Find("PlaceTerrainAdversaire");
         PlaceTerrainJoueur = GameObject.Find("PlaceTerrainJoueur");
     }
-    public override void OnStartClient()
+
+    public override void OnStartClient() // De la carte
     {
         base.OnStartClient();
 
-        Stats = FindObjectOfType<GameManager>()
-            .CartesSettings
-            .Find(c => c.Id == Id);
+        //Ce qui permet au client de récupérer la carte setting à partir de l'Id
+        Stats = FindObjectOfType<GameManager>().CartesSettings.Find(c => c.Id == Id);
 
         Initialiser();
         MontrerCarte();
@@ -84,7 +74,6 @@ public class Carte : NetworkBehaviour, IPointerDownHandler, IBeginDragHandler, I
         EstEnJeu = false;
         PVar = Stats.PV;
         PAVar = Stats.PA;
-
     }
 
     public void CacherCarte()
@@ -99,12 +88,6 @@ public class Carte : NetworkBehaviour, IPointerDownHandler, IBeginDragHandler, I
         CoutPouvoirT.text = " ";
         NetworkIdentity networkIdentity = NetworkClient.connection.identity;
         PlayerManager = networkIdentity.GetComponent<PlayerManager>();
-        if (PlayerManager == null)
-        { UnityEngine.Debug.Log("C'est la faute du Playermanager !"); }
-        if (PlayerManager.JeuEnCours == null)
-        { UnityEngine.Debug.Log("C'est la faute du JeuEnCours !"); }
-        if (PlayerManager.JeuEnCours.ImageDosCarte == null)
-        { UnityEngine.Debug.Log("C'est la faute de ImageDosCarte !"); }
         FamilleImageT.sprite = PlayerManager.JeuEnCours.ImageDosCarte;
         TypeImageT.enabled = false;
         LiensT.text = " ";
@@ -113,7 +96,6 @@ public class Carte : NetworkBehaviour, IPointerDownHandler, IBeginDragHandler, I
     public void MontrerCarte()
     {
         //gameObject.GetComponent<Image>().sprite = CarteDevant;
-        UnityEngine.Debug.Log($"{name} PlayerManager");
         PrenomT.text = Stats.Prenom;
         ImageT.sprite = Stats.Image;
         ImageT.enabled = true;
@@ -172,10 +154,12 @@ public class Carte : NetworkBehaviour, IPointerDownHandler, IBeginDragHandler, I
         }
     }
 
-    public void OnPointerDown(PointerEventData eventData)
-    {
-        if (isOwned) { UnityEngine.Debug.Log("Cette carte m'appartient !"); }
-        if (PrenomT.text == " ") { MontrerCarte(); }
-        else { CacherCarte(); }
-    }
+    /* //C'est pour vérifier l'appartenance (mais tout va bien)
+        public void OnPointerDown(PointerEventData eventData)
+        {
+            if (isOwned) { UnityEngine.Debug.Log("Cette carte m'appartient !"); }
+            if (PrenomT.text == " ") { MontrerCarte(); }
+            else { CacherCarte(); }
+        }
+    */
 }

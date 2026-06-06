@@ -1,8 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 using Mirror;
 
 public class PlayerManager : NetworkBehaviour
@@ -15,8 +13,6 @@ public class PlayerManager : NetworkBehaviour
     public GameObject DossierCarte;
     public GameManager JeuEnCours;
     public List<Carte> DeckCartes = new List<Carte>();
-    [SyncVar]
-    public int Cartesjouees = 0; //Cette information n'est PAS partagée
     public static PlayerManager LocalPlayer;
 
     public override void OnStartClient()
@@ -33,7 +29,6 @@ public class PlayerManager : NetworkBehaviour
     public override void OnStartLocalPlayer()
     {
         base.OnStartLocalPlayer();
-        UnityEngine.Debug.Log($"{name} PlayerManager");
         LocalPlayer = this;
     }
 
@@ -52,7 +47,6 @@ public class PlayerManager : NetworkBehaviour
     public void JouerCarte(GameObject carte)
     {
         CmdJouerCarte(carte);
-        Cartesjouees++;
     }
     public void PiocherCarte(GameObject carte)
     {
@@ -88,12 +82,12 @@ public class PlayerManager : NetworkBehaviour
             if (isLocalPlayer)
             {
                 carte.transform.SetParent(PlaceTerrainJoueur.transform, false); // Je la place sur le Terrain Joueur
-                carte.GetComponent<Carte>().EstEnJeu = true;
             }
             else
             {
                 carte.transform.SetParent(PlaceTerrainAdversaire.transform, false); // Je la place sur le Terrain Adverse
             }
+            carte.GetComponent<Carte>().EstEnJeu = true;
         }
     }
 }

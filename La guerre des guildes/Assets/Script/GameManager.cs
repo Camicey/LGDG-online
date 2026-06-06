@@ -1,8 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 using Mirror;
 
 public class GameManager : NetworkBehaviour
@@ -10,7 +8,7 @@ public class GameManager : NetworkBehaviour
     public Sprite ImageDosCarte;
     public List<int> Pioche = new List<int>();
     public List<Carte> Defausse = new List<Carte>();
-    public List<CarteSettings> CartesSettings = new List<CarteSettings>(); //Toutes les cartes settings
+    public List<CarteSettings> CartesSettings = new List<CarteSettings>(); //Ajoutees manuellement
 
     public override void OnStartServer()
     {
@@ -22,9 +20,9 @@ public class GameManager : NetworkBehaviour
     {
         Pioche.Clear();
 
-        foreach (var card in CartesSettings)
+        foreach (var carteStats in CartesSettings)
         {
-            Pioche.Add(card.Id);
+            Pioche.Add(carteStats.Id);
         }
         Shuffle(Pioche);
     }
@@ -54,9 +52,6 @@ public class GameManager : NetworkBehaviour
 
         Carte carte = cardObj.GetComponent<Carte>();
         carte.Id = dataId;
-        //CarteSettings data = CartesSettings.Find(c => c.Id == dataId);
-
-        carte.Initialiser();
         carte.PlayerManager = joueur;
 
         NetworkServer.Spawn(cardObj, conn);
