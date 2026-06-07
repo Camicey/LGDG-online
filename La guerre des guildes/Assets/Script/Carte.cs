@@ -46,6 +46,10 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     //Les paramètres qui changent
     public int PVar;
     public int PAVar;
+    public int IdPouvoirVar;
+    public string PouvoirVar;
+    public float CoutPouvoirVar;
+    public List<int> liensVar = new List<int>();
 
     void Start()
     {
@@ -76,6 +80,13 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         EstEnJeu = false;
         PVar = Stats.PV;
         PAVar = Stats.PA;
+        IdPouvoirVar = Stats.IdPouvoir;
+        PouvoirVar = Stats.Pouvoir;
+        CoutPouvoirVar = Stats.CoutPouvoir;
+        foreach (int lien in Stats.liens)
+        {
+            liensVar.Add(lien);
+        }
     }
 
     public void CacherCarte()
@@ -104,8 +115,8 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         PMT.text = Stats.PM.ToString();
         PVT.text = PVar.ToString();
         PAT.text = PAVar.ToString();
-        PouvoirT.text = Stats.PouvoirVar;
-        CoutPouvoirT.text = Stats.CoutPouvoirVar.ToString() + "PM";
+        PouvoirT.text = PouvoirVar;
+        CoutPouvoirT.text = CoutPouvoirVar.ToString() + "PM";
         FamilleImageT.sprite = Stats.FamilleImage;
         TypeImageT.sprite = Stats.TypeImage;
         TypeImageT.enabled = true;
@@ -114,8 +125,17 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     public string MontrerLiens() //Afficher les liens sur la carte
     {
         string description = " ";
-        foreach (CarteSettings lien in Stats.liensVar)
-        { description += lien.Prenom + "\n"; }
+        foreach (int lien in liensVar)
+        {
+            if (lien == 0)
+            {
+                description += "?" + "\n";
+            }
+            else
+            {
+                description += FindObjectOfType<GameManager>().CartesSettings.Find(c => c.Id == lien).Prenom + "\n";
+            }
+        }
         if (description == " ") { description = "Personne"; }
         return description;
     }

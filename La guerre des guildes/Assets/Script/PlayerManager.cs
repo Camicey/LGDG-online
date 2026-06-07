@@ -71,6 +71,7 @@ public class PlayerManager : NetworkBehaviour
             if (isLocalPlayer) // Si je suis le joueur
             {
                 carte.transform.SetParent(DeckJoueur.transform, false); // Je la met dans mon deck
+                DeckCartes.Add(carte.GetComponent<Carte>());
                 carte.GetComponent<Carte>().MontrerCarte(); // Je la montre
             }
             else

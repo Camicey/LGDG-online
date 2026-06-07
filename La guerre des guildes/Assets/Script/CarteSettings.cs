@@ -10,19 +10,16 @@ public class CarteSettings : ScriptableObject
     public Sprite Image;
     public float PM;
     public int PV;
-    public int PVar;
     public int PA;
     public int IdPouvoir;
-    public int IdPouvoirVar;
     public string Pouvoir;
-    public string PouvoirVar;
+    public string ComplementPouvoir;
     public float CoutPouvoir;
-    public float CoutPouvoirVar;
+    public string Particularite;
     public string Famille;
     public Sprite FamilleImage;
     public string Type;
     public Sprite TypeImage;
-    public List<CarteSettings> liens = new List<CarteSettings>();
-    public List<CarteSettings> liensVar = new List<CarteSettings>();
+    public List<int> liens = new List<int>();
 
 }

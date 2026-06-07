@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using Mirror;
 
@@ -12,7 +13,48 @@ public class GameManager : NetworkBehaviour
 
     public override void OnStartServer()
     {
+        ImporterCartes();
         CreateDeck();
+    }
+
+    public void ImporterCartes()
+    {
+        CartesSettings.Clear();
+        // Lire CSV
+        string[] export = File.ReadAllLines("Assets/Script/ExportCartes.csv");
+        string ligne = export[0];
+        for (int i = 1; i < export.Length; i++)
+        {
+            CarteSettings carte = ScriptableObject.CreateInstance<CarteSettings>();
+            ligne = export[i];
+            string[] colonnes = ligne.Split(',');
+            carte.Id = int.Parse(colonnes[0]);
+            carte.Prenom = colonnes[1];
+            carte.PM = int.Parse(colonnes[2]);
+            carte.PV = int.Parse(colonnes[3]);
+            carte.PA = int.Parse(colonnes[4]);
+            //Image
+            string nomImage = colonnes[5];
+            carte.Image = Resources.Load<Sprite>("Images/Personnage/" + nomImage);
+            carte.Pouvoir = colonnes[6];
+            carte.IdPouvoir = int.Parse(colonnes[7]);
+            carte.ComplementPouvoir = colonnes[8];
+            carte.CoutPouvoir = float.Parse(colonnes[9]);
+            string[] lienTransfert = colonnes[10].Split('/');
+            foreach (string lien in lienTransfert) { carte.liens.Add(int.Parse(lien)); }
+            carte.Particularite = colonnes[12];
+            carte.Famille = colonnes[13];
+            carte.FamilleImage = Resources.Load<Sprite>("Images/Famille/" + carte.Famille);
+            carte.Type = colonnes[14];
+            carte.TypeImage = Resources.Load<Sprite>("Images/Type/" + carte.Type);
+
+            //Id,Prenom,PM,PV,PA,Image,Pouvoir,IdPouvoir,Complement Pouvoir,Cout,LienID,Liens,Particularite,Famille,Role
+
+            UnityEngine.Debug.Log($"{carte.Id} - {carte.Prenom}");
+
+            CartesSettings.Add(carte);
+        }
+
     }
 
     [Server]
