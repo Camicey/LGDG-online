@@ -117,6 +117,7 @@ public class PlayerManager : NetworkBehaviour
         if (isLocalPlayer)
         {
             carte.transform.SetParent(terrain.transform, false); // Je la place sur le Terrain Joueur
+            terrain.CartePlacee = carte.GetComponent<Carte>();
         }
         else
         {
