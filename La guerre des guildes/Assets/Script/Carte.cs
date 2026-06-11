@@ -7,18 +7,15 @@ using Mirror;
 using TMPro;
 using System.Diagnostics;
 
-public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDragHandler  //Les suppléments sont les promesses de fonction
+public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDragHandler, IPointerDownHandler  //Les suppléments sont les promesses de fonction
 {
 
     [SerializeField] public Canvas canvas;
     private CanvasGroup canvasGroup;
-    private Vector2 PositionBase;
+    private Vector3 PositionBase;
     public PlayerManager PlayerManager; //Joueur a qui appartient la carte
     public RectTransform rectTransform;
-
-    //GameObject Terrain //Ca devrait être supprimé vu que ça n'a pas l'air d'être important
-    public GameObject PlaceTerrainJoueur;
-    public GameObject PlaceTerrainAdversaire;
+    public bool EstVisible;
 
     // Information importante carte
     [SyncVar]
@@ -57,18 +54,13 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         canvasGroup = GetComponent<CanvasGroup>();
         PositionBase = rectTransform.anchoredPosition;
         canvas = GetComponentInParent<Canvas>();
-
-        //Ca devrait être supprimé vu que ça n'a pas l'air d'être important
-        PlaceTerrainAdversaire = GameObject.Find("PlaceTerrainAdversaire");
-        PlaceTerrainJoueur = GameObject.Find("PlaceTerrainJoueur");
     }
 
     public override void OnStartClient() // De la carte
     {
         base.OnStartClient();
-
         //Ce qui permet au client de récupérer la carte setting à partir de l'Id
-        Stats = FindObjectOfType<GameManager>().CartesSettings.Find(c => c.Id == Id);
+        Stats = GameManager.Instance.CartesSettings.Find(c => c.Id == Id);
 
         Initialiser();
         MontrerCarte();
@@ -78,11 +70,15 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     {
         PlaceDeTerrain = null;
         EstEnJeu = false;
+        EstVisible = false;
         PVar = Stats.PV;
         PAVar = Stats.PA;
         IdPouvoirVar = Stats.IdPouvoir;
         PouvoirVar = Stats.Pouvoir;
         CoutPouvoirVar = Stats.CoutPouvoir;
+        NetworkIdentity networkIdentity = NetworkClient.connection.identity;
+        PlayerManager = networkIdentity.GetComponent<PlayerManager>();
+        liensVar.Clear();
         foreach (int lien in Stats.liens)
         {
             liensVar.Add(lien);
@@ -99,16 +95,13 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         PAT.text = " ";
         PouvoirT.text = " ";
         CoutPouvoirT.text = " ";
-        NetworkIdentity networkIdentity = NetworkClient.connection.identity;
-        PlayerManager = networkIdentity.GetComponent<PlayerManager>();
-        FamilleImageT.sprite = PlayerManager.JeuEnCours.ImageDosCarte;
+        FamilleImageT.sprite = GameManager.Instance.ImageDosCarte;
         TypeImageT.enabled = false;
         LiensT.text = " ";
+        EstVisible = false;
     }
-
     public void MontrerCarte()
     {
-        //gameObject.GetComponent<Image>().sprite = CarteDevant;
         PrenomT.text = Stats.Prenom;
         ImageT.sprite = Stats.Image;
         ImageT.enabled = true;
@@ -121,6 +114,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         TypeImageT.sprite = Stats.TypeImage;
         TypeImageT.enabled = true;
         LiensT.text = MontrerLiens();
+        EstVisible = true;
     }
     public string MontrerLiens() //Afficher les liens sur la carte
     {
@@ -133,7 +127,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
             }
             else
             {
-                description += FindObjectOfType<GameManager>().CartesSettings.Find(c => c.Id == lien).Prenom + "\n";
+                description += GameManager.Instance.CartesSettings.Find(c => c.Id == lien).Prenom + "\n";
             }
         }
         if (description == " ") { description = "Personne"; }
@@ -160,11 +154,11 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         if (!isOwned) { return; }
         canvasGroup.alpha = 1f;
         canvasGroup.blocksRaycasts = true;
-        if (GetComponent<Carte>().EstEnJeu == false)
+        if (EstEnJeu == false)
         {
             rectTransform.anchoredPosition = PositionBase; //On revient dans le deck
         }
-        else if (GetComponent<Carte>().EstEnJeu == true)
+        else if (EstEnJeu == true)
         {
             rectTransform.SetParent(PlaceDeTerrain.transform, false); // On va dans le terrain
             PositionBase = new Vector3(0, 0, 0);
@@ -172,16 +166,15 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
 
             NetworkIdentity networkIdentity = NetworkClient.connection.identity;
             PlayerManager = networkIdentity.GetComponent<PlayerManager>();
-            PlayerManager.JouerCarte(gameObject);
+            PlayerManager.JouerCarte(gameObject, PlaceDeTerrain);
         }
     }
 
-    /* //C'est pour vérifier l'appartenance (mais tout va bien)
-        public void OnPointerDown(PointerEventData eventData)
-        {
-            if (isOwned) { UnityEngine.Debug.Log("Cette carte m'appartient !"); }
-            if (PrenomT.text == " ") { MontrerCarte(); }
-            else { CacherCarte(); }
-        }
-    */
+    public void OnPointerDown(PointerEventData eventData)
+    {
+        if (isOwned) { UnityEngine.Debug.Log("Cette carte m'appartient !"); }
+        if (!EstVisible && EstEnJeu) { MontrerCarte(); }
+        else if (EstEnJeu) { CacherCarte(); }
+    }
+
 }

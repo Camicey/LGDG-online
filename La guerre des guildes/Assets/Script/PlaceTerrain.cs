@@ -6,16 +6,21 @@ using Mirror;
 
 public class PlaceTerrain : NetworkBehaviour, IDropHandler
 {
-    public int Id;
+    [SyncVar] public int Id;
     public Carte CartePlacee;
+    public PlayerManager PlayerManager;
 
-    public void Start() { CartePlacee = null; }
+    public void Start()
+    {
+        CartePlacee = null;
+    }
 
     public void OnDrop(PointerEventData eventData) // Quand une carte est lâchée sur le terrain
     {
         Carte carteDeplace = eventData.pointerDrag.GetComponent<Carte>();
-        if (eventData.pointerDrag != null && CartePlacee == null && gameObject.name == "PlaceTerrainJoueur" && carteDeplace.isOwned)
+        if (eventData.pointerDrag != null && CartePlacee == null && carteDeplace.isOwned && carteDeplace.PlayerManager.TerrainsJoueurList.Contains(this) && carteDeplace.EstEnJeu == false)
         {
+            UnityEngine.Debug.Log("Je vais sur un terrain allié du deck");
             carteDeplace.rectTransform.anchorMin = new Vector2(0.5f, 0.5f); // C'est pour remettre le pivot au centre
             carteDeplace.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
             carteDeplace.GetComponent<RectTransform>().anchoredPosition = new Vector3(0, 0, 0);
@@ -23,5 +28,29 @@ public class PlaceTerrain : NetworkBehaviour, IDropHandler
             CartePlacee = carteDeplace;
             carteDeplace.PlaceDeTerrain = this;
         }
+        else if (eventData.pointerDrag != null && CartePlacee == null && carteDeplace.isOwned && carteDeplace.EstEnJeu == true)
+        {
+            if (DeplacementAutorise(carteDeplace.PlaceDeTerrain.Id, Id))
+            {
+                UnityEngine.Debug.Log("Je vais sur un terrain allié ou adverse du terrain");
+                carteDeplace.rectTransform.anchorMin = new Vector2(0.5f, 0.5f); // C'est pour remettre le pivot au centre
+                carteDeplace.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                carteDeplace.GetComponent<RectTransform>().anchoredPosition = new Vector3(0, 0, 0);
+                carteDeplace.EstEnJeu = true; // Si je pose la carte sur la place, on pose un true
+                if (carteDeplace.PlaceDeTerrain != null) { carteDeplace.PlaceDeTerrain.CartePlacee = null; }
+                CartePlacee = carteDeplace;
+                carteDeplace.PlaceDeTerrain = this;
+            }
+        }
+    }
+
+    public bool DeplacementAutorise(int IdOrigine, int IdVise)
+    {
+        if ((IdOrigine == 1 || IdOrigine == 4) && (IdOrigine + 1 == IdVise || IdOrigine + 2 == IdVise)) { return true; }
+        else if ((IdOrigine == 2 || IdOrigine == 5) && (IdVise == 3 || IdVise == 6)) { return true; }
+        else if ((IdOrigine == 3 || IdOrigine == 6) && (IdVise == 2 || IdVise == 5)) { return true; }
+        if ((IdOrigine == 2 || IdOrigine == 3) && (IdVise == 1)) { return true; }
+        else if ((IdOrigine == 5 || IdOrigine == 6) && (IdVise == 4)) { return true; }
+        return false;
     }
 }

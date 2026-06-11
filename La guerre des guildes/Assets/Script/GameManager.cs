@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using Mirror;
+using System;
 
 public class GameManager : NetworkBehaviour
 {
@@ -10,11 +11,18 @@ public class GameManager : NetworkBehaviour
     public List<int> Pioche = new List<int>();
     public List<Carte> Defausse = new List<Carte>(); // Pour l'instant inutilisee, peut etre faire une liste de int a la place
     public List<CarteSettings> CartesSettings = new List<CarteSettings>(); //Ajoutees manuellement
+    public bool TerrainCree = false;
+    //public List<PlayerManager> Joueurs = new();
+    public static GameManager Instance;
 
-    public override void OnStartServer()
+    public void Start()
     {
+        Instance = this;
         ImporterCartes();
-        CreateDeck();
+        if (NetworkServer.active)
+        {
+            CreerDeck();
+        }
     }
 
     public void ImporterCartes()
@@ -33,9 +41,7 @@ public class GameManager : NetworkBehaviour
             carte.PM = int.Parse(colonnes[2]);
             carte.PV = int.Parse(colonnes[3]);
             carte.PA = int.Parse(colonnes[4]);
-            //Image
-            string nomImage = colonnes[5];
-            carte.Image = Resources.Load<Sprite>("Images/Personnage/" + nomImage);
+            carte.Image = Resources.Load<Sprite>("Images/Personnage/" + colonnes[5]); //Image
             carte.Pouvoir = colonnes[6];
             carte.IdPouvoir = int.Parse(colonnes[7]);
             carte.ComplementPouvoir = colonnes[8];
@@ -49,16 +55,13 @@ public class GameManager : NetworkBehaviour
             carte.TypeImage = Resources.Load<Sprite>("Images/Type/" + carte.Type);
 
             //Id,Prenom,PM,PV,PA,Image,Pouvoir,IdPouvoir,Complement Pouvoir,Cout,LienID,Liens,Particularite,Famille,Role
-
-            UnityEngine.Debug.Log($"{carte.Id} - {carte.Prenom}");
-
             CartesSettings.Add(carte);
         }
 
     }
 
     [Server]
-    private void CreateDeck()
+    private void CreerDeck()
     {
         Pioche.Clear();
 
@@ -66,14 +69,14 @@ public class GameManager : NetworkBehaviour
         {
             Pioche.Add(carteStats.Id);
         }
-        Shuffle(Pioche);
+        Melanger(Pioche);
     }
 
-    private void Shuffle(List<int> list)
+    private void Melanger(List<int> list)
     {
         for (int i = 0; i < list.Count; i++)
         {
-            int rand = Random.Range(i, list.Count);
+            int rand = UnityEngine.Random.Range(i, list.Count);
             (list[i], list[rand]) = (list[rand], list[i]);
         }
     }
@@ -82,9 +85,7 @@ public class GameManager : NetworkBehaviour
     public void Piocher(NetworkConnectionToClient conn)
     {
         if (Pioche.Count == 0) return;
-
         PlayerManager joueur = conn.identity.GetComponent<PlayerManager>();
-
         if (joueur.DeckCartes.Count > 5) return;
 
         int dataId = Pioche[0];
@@ -99,5 +100,4 @@ public class GameManager : NetworkBehaviour
         NetworkServer.Spawn(cardObj, conn);
         joueur.PiocherCarte(cardObj);
     }
-
 }

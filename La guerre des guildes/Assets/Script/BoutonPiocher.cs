@@ -4,9 +4,6 @@ public class UIManager : MonoBehaviour
 {
     public void OnClickPiocher()
     {
-        if (PlayerManager.LocalPlayer != null)
-        {
-            PlayerManager.LocalPlayer.CmdPiocher();
-        }
+        if (PlayerManager.LocalPlayer != null) { PlayerManager.LocalPlayer.CmdPiocher(); }
     }
 }
