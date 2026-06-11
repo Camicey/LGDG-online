@@ -17,30 +17,15 @@ public class PlaceTerrain : NetworkBehaviour, IDropHandler
 
     public void OnDrop(PointerEventData eventData) // Quand une carte est lâchée sur le terrain
     {
+        if (eventData.pointerDrag == null || CartePlacee != null) { return; }
         Carte carteDeplace = eventData.pointerDrag.GetComponent<Carte>();
-        if (eventData.pointerDrag != null && CartePlacee == null && carteDeplace.isOwned && carteDeplace.PlayerManager.TerrainsJoueurList.Contains(this) && carteDeplace.EstEnJeu == false)
+        if (!carteDeplace.isOwned) { return; }
+        if ((carteDeplace.PlayerManager.TerrainsJoueurList.Contains(this) && carteDeplace.EstEnJeu == false) || (carteDeplace.EstEnJeu == true && DeplacementAutorise(carteDeplace.PlaceDeTerrain.Id, Id)))
         {
-            UnityEngine.Debug.Log("Je vais sur un terrain allié du deck");
-            carteDeplace.rectTransform.anchorMin = new Vector2(0.5f, 0.5f); // C'est pour remettre le pivot au centre
-            carteDeplace.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-            carteDeplace.GetComponent<RectTransform>().anchoredPosition = new Vector3(0, 0, 0);
             carteDeplace.EstEnJeu = true; // Si je pose la carte sur la place, on pose un true
-            CartePlacee = carteDeplace;
+            if (carteDeplace.PlaceDeTerrain != null) { carteDeplace.PlaceDeTerrain.CartePlacee = null; }
             carteDeplace.PlaceDeTerrain = this;
-        }
-        else if (eventData.pointerDrag != null && CartePlacee == null && carteDeplace.isOwned && carteDeplace.EstEnJeu == true)
-        {
-            if (DeplacementAutorise(carteDeplace.PlaceDeTerrain.Id, Id))
-            {
-                UnityEngine.Debug.Log("Je vais sur un terrain allié ou adverse du terrain");
-                carteDeplace.rectTransform.anchorMin = new Vector2(0.5f, 0.5f); // C'est pour remettre le pivot au centre
-                carteDeplace.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-                carteDeplace.GetComponent<RectTransform>().anchoredPosition = new Vector3(0, 0, 0);
-                carteDeplace.EstEnJeu = true; // Si je pose la carte sur la place, on pose un true
-                if (carteDeplace.PlaceDeTerrain != null) { carteDeplace.PlaceDeTerrain.CartePlacee = null; }
-                CartePlacee = carteDeplace;
-                carteDeplace.PlaceDeTerrain = this;
-            }
+            //CartePlacee = carteDeplace;
         }
     }
 

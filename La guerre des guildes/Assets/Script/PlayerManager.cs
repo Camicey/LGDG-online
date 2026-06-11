@@ -43,25 +43,18 @@ public class PlayerManager : NetworkBehaviour
         base.OnStartLocalPlayer();
         LocalPlayer = this;
     }
-    /*
-        [Server]
-        public override void OnStartServer()
-        {
-            base.OnStartServer();
-            //GameManager gm = FindObjectOfType<GameManager>();
-            //gm.Joueurs.Add(this);
-        }
-    */
+
     [Command]
     public void CmdPiocher()
     {
         JeuEnCours.Piocher(connectionToClient);
     }
 
-    public void JouerCarte(GameObject carte, PlaceTerrain terrain)
+    public void JouerCarte(Carte carte, PlaceTerrain terrain)
     {
-        CmdJouerCarte(carte, terrain);
+        CmdJouerCarte(carte.netId, terrain.Id);
     }
+
     public void PiocherCarte(GameObject carte)
     {
         carte.GetComponent<Carte>().Initialiser();
@@ -73,11 +66,10 @@ public class PlayerManager : NetworkBehaviour
         //RpcShowTerrain(terrain);
     }
 
-
     [Command]
-    private void CmdJouerCarte(GameObject carte, PlaceTerrain terrain)
+    public void CmdJouerCarte(uint carteNetId, int terrainId)
     {
-        RpcJoueCarte(carte, terrain);
+        RpcJoueCarte(carteNetId, terrainId);
     }
 
     [ClientRpc]
@@ -103,9 +95,24 @@ public class PlayerManager : NetworkBehaviour
     }
 
     [ClientRpc]
-    private void RpcJoueCarte(GameObject carte, PlaceTerrain terrain)
+    void RpcJoueCarte(uint carteNetId, int terrainId)
     {
+        if (!NetworkClient.spawned.TryGetValue(carteNetId, out NetworkIdentity identity))
+        {
+            Debug.LogError("Carte introuvable côté client !");
+            return;
+        }
+        Carte carte = identity.GetComponent<Carte>();
+        PlaceTerrain terrain = TerrainsJoueurList.Find(t => t.Id == terrainId);
+        if (terrain == null) { terrain = TerrainsAdverseList.Find(t => t.Id == terrainId); }
         int idTerrain = terrain.gameObject.GetComponent<PlaceTerrain>().Id + 3;
+
+        carte.canvasGroup.alpha = 1f;
+        carte.canvasGroup.blocksRaycasts = true;
+        carte.rectTransform.anchorMin = new Vector2(0.5f, 0.5f); // C'est pour remettre le pivot au centre
+        carte.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+        carte.GetComponent<RectTransform>().anchoredPosition = new Vector3(0, 0, 0);
+
         if (idTerrain > 6) { idTerrain = idTerrain - 6; }
         if (isLocalPlayer)
         {
@@ -115,16 +122,14 @@ public class PlayerManager : NetworkBehaviour
         {
             PlaceTerrain terrainAdversaire;
             if (idTerrain >= 4)
-            { terrainAdversaire = FindObjectOfType<PlayerManager>().TerrainsAdverseList.Find(t => t.Id == idTerrain); }
-            else { terrainAdversaire = FindObjectOfType<PlayerManager>().TerrainsJoueurList.Find(t => t.Id == idTerrain); }
+            { terrainAdversaire = TerrainsAdverseList.Find(t => t.Id == idTerrain); }
+            else { terrainAdversaire = TerrainsJoueurList.Find(t => t.Id == idTerrain); }
             carte.transform.SetParent(terrainAdversaire.transform, false);
             terrainAdversaire.CartePlacee = carte.GetComponent<Carte>();
         }
-        carte.GetComponent<Carte>().EstEnJeu = true;
-
+        carte.EstEnJeu = true;
         //Ce qui est en dessous c'est pour enlever les cartes encore placées sur eux
         foreach (PlaceTerrain terrainTest in TerrainsAdverseList) { if (terrainTest.transform.childCount == 0) { terrainTest.CartePlacee = null; } }
         foreach (PlaceTerrain terrainTest in TerrainsJoueurList) { if (terrainTest.transform.childCount == 0) { terrainTest.CartePlacee = null; } }
-
     }
 }

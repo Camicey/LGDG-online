@@ -5,14 +5,12 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using Mirror;
 using TMPro;
-using System.Diagnostics;
 
 public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDragHandler, IPointerDownHandler  //Les suppléments sont les promesses de fonction
 {
 
     [SerializeField] public Canvas canvas;
-    private CanvasGroup canvasGroup;
-    private Vector3 PositionBase;
+    public CanvasGroup canvasGroup;
     public PlayerManager PlayerManager; //Joueur a qui appartient la carte
     public RectTransform rectTransform;
     public bool EstVisible;
@@ -52,7 +50,6 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     {
         rectTransform = GetComponent<RectTransform>();
         canvasGroup = GetComponent<CanvasGroup>();
-        PositionBase = rectTransform.anchoredPosition;
         canvas = GetComponentInParent<Canvas>();
     }
 
@@ -60,6 +57,11 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     {
         base.OnStartClient();
         //Ce qui permet au client de récupérer la carte setting à partir de l'Id
+        if (Stats == null)
+        {
+            Debug.LogError("Stats pas trouvé pour un Id de " + Id);
+            return;
+        }
         Stats = GameManager.Instance.CartesSettings.Find(c => c.Id == Id);
 
         Initialiser();
@@ -138,7 +140,6 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     public void OnBeginDrag(PointerEventData eventData)
     {
         if (!isOwned) { return; } //Si la carte n'est pas à moi, YEET
-        PositionBase = rectTransform.anchoredPosition;
         canvasGroup.alpha = .7f; // Opacité de la carte quand je clique dessus
         canvasGroup.blocksRaycasts = false;
     }
@@ -151,28 +152,19 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        if (!isOwned) { return; }
+        if (!isOwned) return;
         canvasGroup.alpha = 1f;
         canvasGroup.blocksRaycasts = true;
-        if (EstEnJeu == false)
+        if (EstEnJeu)
+        { PlayerManager.JouerCarte(this, PlaceDeTerrain); } // On joue la carte
+        else
         {
-            rectTransform.anchoredPosition = PositionBase; //On revient dans le deck
-        }
-        else if (EstEnJeu == true)
-        {
-            rectTransform.SetParent(PlaceDeTerrain.transform, false); // On va dans le terrain
-            PositionBase = new Vector3(0, 0, 0);
-            rectTransform.anchoredPosition = PositionBase;
-
-            NetworkIdentity networkIdentity = NetworkClient.connection.identity;
-            PlayerManager = networkIdentity.GetComponent<PlayerManager>();
-            PlayerManager.JouerCarte(gameObject, PlaceDeTerrain);
-        }
+            LayoutRebuilder.MarkLayoutForRebuild(PlayerManager.DeckJoueur.GetComponent<RectTransform>());
+        }// Pour qu'elle revienne dans le deck
     }
 
     public void OnPointerDown(PointerEventData eventData)
     {
-        if (isOwned) { UnityEngine.Debug.Log("Cette carte m'appartient !"); }
         if (!EstVisible && EstEnJeu) { MontrerCarte(); }
         else if (EstEnJeu) { CacherCarte(); }
     }
