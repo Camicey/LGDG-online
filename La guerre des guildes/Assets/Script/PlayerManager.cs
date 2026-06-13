@@ -42,6 +42,7 @@ public class PlayerManager : NetworkBehaviour
     {
         base.OnStartLocalPlayer();
         LocalPlayer = this;
+        UnityEngine.Debug.Log("Nombre de joueurs : " + NetworkManager.singleton.numPlayers);
     }
 
     [Command]
@@ -59,11 +60,6 @@ public class PlayerManager : NetworkBehaviour
     {
         carte.GetComponent<Carte>().Initialiser();
         RpcShowCard(carte, "Dealt");
-    }
-
-    public void ApparaitreTerrain(GameObject terrain)
-    {
-        //RpcShowTerrain(terrain);
     }
 
     [Command]

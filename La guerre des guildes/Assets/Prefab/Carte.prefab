@@ -651,7 +651,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -30, y: -70}
+  m_AnchoredPosition: {x: -28, y: -70}
   m_SizeDelta: {x: 150, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &806682284898688171
@@ -932,14 +932,13 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0
   canvas: {fileID: 0}
+  canvasGroup: {fileID: 0}
+  PlayerManager: {fileID: 0}
   rectTransform: {fileID: 0}
-  PlaceTerrainJoueur: {fileID: 0}
-  PlaceTerrainAdversaire: {fileID: 0}
+  EstVisible: 0
   Id: 0
   PlaceDeTerrain: {fileID: 0}
   EstEnJeu: 0
-  CarteDevant: {fileID: 21300000, guid: d3c5077590003f143a065e9e1659e794, type: 3}
-  CarteDerriere: {fileID: 21300000, guid: 9737b412fc25f8045b7eb847ed70875c, type: 3}
   Stats: {fileID: 11400000, guid: 3b269cc11c4fd764b95d6cea22f9b59a, type: 2}
   PrenomT: {fileID: 5847358831571013812}
   ImageT: {fileID: 9065145710772252139}
@@ -953,6 +952,9 @@ MonoBehaviour:
   LiensT: {fileID: 507399061034212579}
   PVar: 0
   PAVar: 0
+  IdPouvoirVar: 0
+  PouvoirVar: 
+  CoutPouvoirVar: 0
 --- !u!225 &-8986544984926811049
 CanvasGroup:
   m_ObjectHideFlags: 0

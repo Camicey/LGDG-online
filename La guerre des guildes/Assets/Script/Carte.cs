@@ -6,7 +6,7 @@ using UnityEngine.EventSystems;
 using Mirror;
 using TMPro;
 
-public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDragHandler, IPointerDownHandler  //Les suppléments sont les promesses de fonction
+public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDragHandler, IPointerDownHandler, IDropHandler  //Les suppléments sont les promesses de fonction
 {
 
     [SerializeField] public Canvas canvas;
@@ -16,8 +16,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     public bool EstVisible;
 
     // Information importante carte
-    [SyncVar]
-    public int Id;
+    [SyncVar] public int Id;
     public PlaceTerrain PlaceDeTerrain;
     public bool EstEnJeu = false;
 
@@ -39,12 +38,12 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     public TMP_Text LiensT;
 
     //Les paramètres qui changent
-    public int PVar;
-    public int PAVar;
-    public int IdPouvoirVar;
-    public string PouvoirVar;
-    public float CoutPouvoirVar;
-    public List<int> liensVar = new List<int>();
+    [SyncVar] public int PVar;
+    [SyncVar] public int PAVar;
+    [SyncVar] public int IdPouvoirVar;
+    [SyncVar] public string PouvoirVar;
+    [SyncVar] public float CoutPouvoirVar;
+    public List<int> liensVar = new();
 
     void Start()
     {
@@ -57,13 +56,12 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     {
         base.OnStartClient();
         //Ce qui permet au client de récupérer la carte setting à partir de l'Id
+        Stats = GameManager.Instance.CartesSettings.Find(c => c.Id == Id);
         if (Stats == null)
         {
             Debug.LogError("Stats pas trouvé pour un Id de " + Id);
             return;
         }
-        Stats = GameManager.Instance.CartesSettings.Find(c => c.Id == Id);
-
         Initialiser();
         MontrerCarte();
     }
@@ -77,9 +75,9 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         PAVar = Stats.PA;
         IdPouvoirVar = Stats.IdPouvoir;
         PouvoirVar = Stats.Pouvoir;
-        CoutPouvoirVar = Stats.CoutPouvoir;
         NetworkIdentity networkIdentity = NetworkClient.connection.identity;
         PlayerManager = networkIdentity.GetComponent<PlayerManager>();
+        CoutPouvoirVar = Stats.CoutPouvoir;
         liensVar.Clear();
         foreach (int lien in Stats.liens)
         {
@@ -140,33 +138,54 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     public void OnBeginDrag(PointerEventData eventData)
     {
         if (!isOwned) { return; } //Si la carte n'est pas à moi, YEET
-        canvasGroup.alpha = .7f; // Opacité de la carte quand je clique dessus
-        canvasGroup.blocksRaycasts = false;
+
+        if (eventData.button == PointerEventData.InputButton.Left)
+        {
+            canvasGroup.alpha = .7f; // Opacité de la carte quand je clique dessus
+            canvasGroup.blocksRaycasts = false;
+        }
+        if (eventData.button == PointerEventData.InputButton.Right) { FamilleImageT.color = Color.red; }
     }
 
     public void OnDrag(PointerEventData eventData)
     {
-        if (!isOwned) { return; }
-        rectTransform.anchoredPosition += eventData.delta / canvas.scaleFactor;
+        if (!isOwned && eventData.button != PointerEventData.InputButton.Left) { return; }
+        if (eventData.button == PointerEventData.InputButton.Left)
+        {
+            rectTransform.anchoredPosition += eventData.delta / canvas.scaleFactor;
+        }
     }
-
     public void OnEndDrag(PointerEventData eventData)
     {
-        if (!isOwned) return;
+        if (!isOwned) { return; }
         canvasGroup.alpha = 1f;
         canvasGroup.blocksRaycasts = true;
-        if (EstEnJeu)
+
+        if (eventData.button == PointerEventData.InputButton.Right)
+        {
+            FamilleImageT.color = Color.white;
+        }
+        if (EstEnJeu && eventData.button == PointerEventData.InputButton.Left)
         { PlayerManager.JouerCarte(this, PlaceDeTerrain); } // On joue la carte
         else
         {
-            LayoutRebuilder.MarkLayoutForRebuild(PlayerManager.DeckJoueur.GetComponent<RectTransform>());
-        }// Pour qu'elle revienne dans le deck
+            LayoutRebuilder.MarkLayoutForRebuild(PlayerManager.DeckJoueur.GetComponent<RectTransform>()); // Elle revient dans le deck
+        }
     }
 
     public void OnPointerDown(PointerEventData eventData)
     {
+        if (eventData.button == PointerEventData.InputButton.Right) { FamilleImageT.color = Color.red; }
+        if (!isOwned || eventData.button != PointerEventData.InputButton.Middle) { return; }
         if (!EstVisible && EstEnJeu) { MontrerCarte(); }
         else if (EstEnJeu) { CacherCarte(); }
     }
-
+    public void OnDrop(PointerEventData eventData)
+    {
+        Carte carteDeplace = eventData.pointerDrag.GetComponent<Carte>();
+        if (EstEnJeu && carteDeplace.isOwned && isOwned && eventData.button == PointerEventData.InputButton.Left)
+        { UnityEngine.Debug.Log($"On échange entre {PrenomT.ToString()} et {carteDeplace.PrenomT.ToString()}"); }
+        if (EstEnJeu && carteDeplace.EstEnJeu && !isOwned && carteDeplace.isOwned && eventData.button == PointerEventData.InputButton.Right)
+        { UnityEngine.Debug.Log($"{carteDeplace.PrenomT.ToString()} attaque {PrenomT.ToString()}"); }
+    }
 }

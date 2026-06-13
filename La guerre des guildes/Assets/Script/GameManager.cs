@@ -12,7 +12,6 @@ public class GameManager : NetworkBehaviour
     public List<Carte> Defausse = new List<Carte>(); // Pour l'instant inutilisee, peut etre faire une liste de int a la place
     public List<CarteSettings> CartesSettings = new List<CarteSettings>(); //Ajoutees manuellement
     public bool TerrainCree = false;
-    //public List<PlayerManager> Joueurs = new();
     public static GameManager Instance;
 
     public void Start()
@@ -24,6 +23,7 @@ public class GameManager : NetworkBehaviour
             CreerDeck();
         }
     }
+
 
     public void ImporterCartes()
     {
