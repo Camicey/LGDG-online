@@ -15,7 +15,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     public RectTransform rectTransform;
     public bool EstVisible;
     public bool EstStratege;
-
+    private Vector2 offset;
 
     // Information importante carte
     [SyncVar] public int Id;
@@ -147,6 +147,12 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
             canvasGroup.alpha = .7f; // Opacité de la carte quand je clique dessus
             canvasGroup.blocksRaycasts = false;
             transform.SetParent(canvas.transform, false);
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                rectTransform,
+                eventData.position,
+                eventData.pressEventCamera,
+                out offset
+            );
         }
         if (eventData.button == PointerEventData.InputButton.Right) { FamilleImageT.color = Color.red; }
     }
@@ -156,9 +162,14 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         if (!isOwned) { return; }
         if (eventData.button == PointerEventData.InputButton.Left)
         {
-            Vector2 offset = new Vector2(0, 0);
-            if (PlaceDeTerrain != null) { offset = PlaceDeTerrain.GetComponent<RectTransform>().anchoredPosition; }
-            rectTransform.anchoredPosition += (eventData.delta / canvas.scaleFactor) - offset;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+        canvas.transform as RectTransform,
+        eventData.position,
+        eventData.pressEventCamera,
+        out Vector2 localPoint
+    );
+
+            rectTransform.anchoredPosition = localPoint;
         }
     }
     public void OnEndDrag(PointerEventData eventData)
