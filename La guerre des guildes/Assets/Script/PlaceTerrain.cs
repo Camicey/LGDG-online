@@ -9,10 +9,13 @@ public class PlaceTerrain : NetworkBehaviour, IDropHandler
     [SyncVar] public int Id;
     public Carte CartePlacee;
     public PlayerManager PlayerManager;
+    public bool EstTerrainStratege;
 
     public void Start()
     {
         CartePlacee = null;
+        if (Id == 1 || Id == 4) { EstTerrainStratege = true; }
+        else { EstTerrainStratege = false; }
     }
 
     public void OnDrop(PointerEventData eventData) // Quand une carte est lâchée sur le terrain

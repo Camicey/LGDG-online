@@ -149,11 +149,10 @@ public class PlayerManager : NetworkBehaviour
         {
             carte.transform.SetParent(terrain.transform, false); // Je la place sur le Terrain Joueur
             terrain.CartePlacee = carte.GetComponent<Carte>();
-            if (idTerrain == 1) { carte.EstStratege = true; }
+            if (terrain.EstTerrainStratege && terrain.Id == 1) { carte.EstStratege = true; }
         }
         else
         {
-            if (idTerrain == 4) { carte.EstStratege = true; } // N'est pas très au point pour l'instant
             PlaceTerrain terrainAdversaire;
             if (idTerrain >= 4)
             { terrainAdversaire = TerrainsAdverseList.Find(t => t.Id == idTerrain); }
@@ -161,6 +160,7 @@ public class PlayerManager : NetworkBehaviour
             carte.transform.SetParent(terrainAdversaire.transform, false);
             terrainAdversaire.CartePlacee = carte.GetComponent<Carte>();
             carte.GetComponent<Carte>().PlaceDeTerrain = terrainAdversaire;
+            if (terrainAdversaire.EstTerrainStratege) { carte.EstStratege = true; }
         }
         carte.EstEnJeu = true;
         //Ce qui est en dessous c'est pour enlever les cartes encore placées sur eux
