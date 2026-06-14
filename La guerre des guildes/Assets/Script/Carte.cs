@@ -14,6 +14,8 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     public PlayerManager PlayerManager; //Joueur a qui appartient la carte
     public RectTransform rectTransform;
     public bool EstVisible;
+    public bool EstStratege;
+
 
     // Information importante carte
     [SyncVar] public int Id;
@@ -71,6 +73,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         PlaceDeTerrain = null;
         EstEnJeu = false;
         EstVisible = false;
+        EstStratege = false;
         PVar = Stats.PV;
         PAVar = Stats.PA;
         IdPouvoirVar = Stats.IdPouvoir;
@@ -149,7 +152,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
 
     public void OnDrag(PointerEventData eventData)
     {
-        if (!isOwned && eventData.button != PointerEventData.InputButton.Left) { return; }
+        if (!isOwned) { return; }
         if (eventData.button == PointerEventData.InputButton.Left)
         {
             rectTransform.anchoredPosition += eventData.delta / canvas.scaleFactor;
@@ -175,17 +178,23 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
 
     public void OnPointerDown(PointerEventData eventData)
     {
-        if (eventData.button == PointerEventData.InputButton.Right) { FamilleImageT.color = Color.red; }
-        if (!isOwned || eventData.button != PointerEventData.InputButton.Middle) { return; }
+        if (eventData.button != PointerEventData.InputButton.Middle) { return; }
         if (!EstVisible && EstEnJeu) { MontrerCarte(); }
         else if (EstEnJeu) { CacherCarte(); }
     }
     public void OnDrop(PointerEventData eventData)
     {
+        if (eventData.pointerDrag == null) { return; }
         Carte carteDeplace = eventData.pointerDrag.GetComponent<Carte>();
         if (EstEnJeu && carteDeplace.isOwned && isOwned && eventData.button == PointerEventData.InputButton.Left)
-        { UnityEngine.Debug.Log($"On échange entre {PrenomT.ToString()} et {carteDeplace.PrenomT.ToString()}"); }
+        {
+            UnityEngine.Debug.Log($"On échange entre {Stats.Prenom} et {carteDeplace.Stats.Prenom}");
+            GameManager.Instance.Proposition(carteDeplace, this, "Echanger");
+        }
         if (EstEnJeu && carteDeplace.EstEnJeu && !isOwned && carteDeplace.isOwned && eventData.button == PointerEventData.InputButton.Right)
-        { UnityEngine.Debug.Log($"{carteDeplace.PrenomT.ToString()} attaque {PrenomT.ToString()}"); }
+        {
+            UnityEngine.Debug.Log($"{carteDeplace.Stats.Prenom} attaque {Stats.Prenom}");
+            GameManager.Instance.Proposition(carteDeplace, this, "Attaquer");
+        }
     }
 }

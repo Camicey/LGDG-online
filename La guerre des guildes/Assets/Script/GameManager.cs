@@ -4,6 +4,8 @@ using System.IO;
 using UnityEngine;
 using Mirror;
 using System;
+using TMPro;
+using Unity.VisualScripting;
 
 public class GameManager : NetworkBehaviour
 {
@@ -12,6 +14,7 @@ public class GameManager : NetworkBehaviour
     public List<Carte> Defausse = new List<Carte>(); // Pour l'instant inutilisee, peut etre faire une liste de int a la place
     public List<CarteSettings> CartesSettings = new List<CarteSettings>(); //Ajoutees manuellement
     public bool TerrainCree = false;
+    public EcranDeConfirmation EcranDeConfirmation;
     public static GameManager Instance;
 
     public void Start()
@@ -99,5 +102,26 @@ public class GameManager : NetworkBehaviour
 
         NetworkServer.Spawn(cardObj, conn);
         joueur.PiocherCarte(cardObj);
+    }
+
+    public void Proposition(Carte carteDeplacee, Carte carteChoisie, string choix)
+    {
+        EcranDeConfirmation.GameObject().SetActive(true);
+        if (choix == "Echanger" && !carteDeplacee.EstStratege && !carteChoisie.EstStratege)
+        { EcranDeConfirmation.Texte.text = "Voulez-vous échanger ?"; }
+        else if (choix == "Echanger" && (carteDeplacee.EstStratege || carteChoisie.EstStratege))
+        { EcranDeConfirmation.Texte.text = "Voulez-vous changer de stratège ?"; }
+        else if (choix == "Attaquer")
+        { EcranDeConfirmation.Texte.text = "Voulez-vous attaquer ?"; }
+        EcranDeConfirmation.BoutonConfirmer.GetComponentInChildren<TMP_Text>().text = choix;
+    }
+    public bool DeplacementAutorise(int IdOrigine, int IdVise)
+    {
+        if ((IdOrigine == 1 || IdOrigine == 4) && (IdOrigine + 1 == IdVise || IdOrigine + 2 == IdVise)) { return true; }
+        else if ((IdOrigine == 2 || IdOrigine == 5) && (IdVise == 3 || IdVise == 6)) { return true; }
+        else if ((IdOrigine == 3 || IdOrigine == 6) && (IdVise == 2 || IdVise == 5)) { return true; }
+        if ((IdOrigine == 2 || IdOrigine == 3) && (IdVise == 1)) { return true; }
+        else if ((IdOrigine == 5 || IdOrigine == 6) && (IdVise == 4)) { return true; }
+        return false;
     }
 }

@@ -42,7 +42,6 @@ public class PlayerManager : NetworkBehaviour
     {
         base.OnStartLocalPlayer();
         LocalPlayer = this;
-        UnityEngine.Debug.Log("Nombre de joueurs : " + NetworkManager.singleton.numPlayers);
     }
 
     [Command]
@@ -123,6 +122,7 @@ public class PlayerManager : NetworkBehaviour
             else { terrainAdversaire = TerrainsJoueurList.Find(t => t.Id == idTerrain); }
             carte.transform.SetParent(terrainAdversaire.transform, false);
             terrainAdversaire.CartePlacee = carte.GetComponent<Carte>();
+            carte.GetComponent<Carte>().PlaceDeTerrain = terrainAdversaire;
         }
         carte.EstEnJeu = true;
         //Ce qui est en dessous c'est pour enlever les cartes encore placées sur eux
