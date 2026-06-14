@@ -146,15 +146,19 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         {
             canvasGroup.alpha = .7f; // Opacité de la carte quand je clique dessus
             canvasGroup.blocksRaycasts = false;
-            transform.SetParent(canvas.transform, false);
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                rectTransform,
-                eventData.position,
-                eventData.pressEventCamera,
-                out offset
-            );
+
+            if (PlaceDeTerrain != null)
+            {
+                transform.SetParent(canvas.transform, false);
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    rectTransform,
+                    eventData.position,
+                    eventData.pressEventCamera,
+                    out offset
+                );
+            }
         }
-        if (eventData.button == PointerEventData.InputButton.Right) { FamilleImageT.color = Color.red; }
+        if (eventData.button == PointerEventData.InputButton.Right) { FamilleImageT.color = Color.red; } //C'est l'attaque
     }
 
     public void OnDrag(PointerEventData eventData)
@@ -162,14 +166,17 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         if (!isOwned) { return; }
         if (eventData.button == PointerEventData.InputButton.Left)
         {
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(
-        canvas.transform as RectTransform,
-        eventData.position,
-        eventData.pressEventCamera,
-        out Vector2 localPoint
-    );
-
-            rectTransform.anchoredPosition = localPoint;
+            if (PlaceDeTerrain != null)
+            {
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    canvas.transform as RectTransform,
+                    eventData.position,
+                    eventData.pressEventCamera,
+                    out Vector2 localPoint
+                    );
+                rectTransform.anchoredPosition = localPoint;
+            }
+            else { rectTransform.anchoredPosition += eventData.delta / canvas.scaleFactor; }
         }
     }
     public void OnEndDrag(PointerEventData eventData)
@@ -178,7 +185,6 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         canvasGroup.alpha = 1f;
         canvasGroup.blocksRaycasts = true;
         if (PlaceDeTerrain != null) { transform.SetParent(PlaceDeTerrain.transform, false); }
-        else { transform.SetParent(PlayerManager.DeckJoueur.transform, false); }
 
         if (eventData.button == PointerEventData.InputButton.Right)
         {
@@ -205,7 +211,6 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         if (EstEnJeu && carteDeplace.isOwned && isOwned && eventData.button == PointerEventData.InputButton.Left)
         {
             UnityEngine.Debug.Log($"On échange entre {Stats.Prenom} et {carteDeplace.Stats.Prenom}");
-            //LayoutRebuilder.MarkLayoutForRebuild(PlayerManager.DeckJoueur.GetComponent<RectTransform>());
             GameManager.Instance.Proposition(carteDeplace, this, "Echanger");
         }
         if (EstEnJeu && carteDeplace.EstEnJeu && !isOwned && carteDeplace.isOwned && eventData.button == PointerEventData.InputButton.Right)

@@ -96,6 +96,11 @@ public class PlayerManager : NetworkBehaviour
         int terrainInitial = carteDeplacee.PlaceDeTerrain.Id;
         RpcJoueCarte(carteDeplaceeId, carteChoisie.PlaceDeTerrain.Id);
         RpcJoueCarte(carteChoisieId, terrainInitial);
+        carteDeplacee.PlaceDeTerrain = carteChoisie.PlaceDeTerrain;
+        if (terrainInitial >= 4)
+        { carteChoisie.PlaceDeTerrain = TerrainsAdverseList.Find(t => t.Id == terrainInitial); }
+        else { carteChoisie.PlaceDeTerrain = TerrainsJoueurList.Find(t => t.Id == terrainInitial); }
+
     }
 
     [ClientRpc]

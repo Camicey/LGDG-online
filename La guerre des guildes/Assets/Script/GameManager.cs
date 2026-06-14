@@ -120,17 +120,6 @@ public class GameManager : NetworkBehaviour
         EcranDeConfirmation.CarteChoisieTemp = carteChoisie;
         EcranDeConfirmation.ChoixTemp = choix;
     }
-    /*
-        [Server]
-        public void ConfirmerAction(Carte carteDeplacee, Carte carteChoisie, string choix)
-        {
-            if (choix == "Echanger" && !carteDeplacee.EstStratege && !carteChoisie.EstStratege)
-            {
-                NetworkConnectionToClient conn;
-                PlayerManager joueur = conn.identity.GetComponent<PlayerManager>();
-                joueur.Echanger(carteDeplacee, carteChoisie);
-            }
-        }*/
 
     public bool DeplacementAutorise(int IdOrigine, int IdVise)
     {
