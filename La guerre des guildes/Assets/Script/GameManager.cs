@@ -106,15 +106,32 @@ public class GameManager : NetworkBehaviour
 
     public void Proposition(Carte carteDeplacee, Carte carteChoisie, string choix)
     {
+        if (!DeplacementAutorise(carteChoisie.PlaceDeTerrain.Id, carteDeplacee.PlaceDeTerrain.Id)) { return; }
         EcranDeConfirmation.GameObject().SetActive(true);
         if (choix == "Echanger" && !carteDeplacee.EstStratege && !carteChoisie.EstStratege)
-        { EcranDeConfirmation.Texte.text = "Voulez-vous échanger ?"; }
+        { EcranDeConfirmation.Texte.text = $"Voulez-vous échanger {carteDeplacee.Stats.Prenom} et {carteChoisie.Stats.Prenom} ?"; }
         else if (choix == "Echanger" && (carteDeplacee.EstStratege || carteChoisie.EstStratege))
-        { EcranDeConfirmation.Texte.text = "Voulez-vous changer de stratège ?"; }
+        { EcranDeConfirmation.Texte.text = $"Voulez-vous changer de stratège et mettre {carteDeplacee.Stats.Prenom} à la place ?"; }
         else if (choix == "Attaquer")
-        { EcranDeConfirmation.Texte.text = "Voulez-vous attaquer ?"; }
+        { EcranDeConfirmation.Texte.text = $"Voulez-vous attaquer {carteChoisie.Stats.Prenom} avec {carteDeplacee.Stats.Prenom}, en infligeant {carteDeplacee.PAVar.ToString()} dégâts ?"; }
+        //Visuels
         EcranDeConfirmation.BoutonConfirmer.GetComponentInChildren<TMP_Text>().text = choix;
+        EcranDeConfirmation.CarteDeplaceeTemp = carteDeplacee;
+        EcranDeConfirmation.CarteChoisieTemp = carteChoisie;
+        EcranDeConfirmation.ChoixTemp = choix;
     }
+    /*
+        [Server]
+        public void ConfirmerAction(Carte carteDeplacee, Carte carteChoisie, string choix)
+        {
+            if (choix == "Echanger" && !carteDeplacee.EstStratege && !carteChoisie.EstStratege)
+            {
+                NetworkConnectionToClient conn;
+                PlayerManager joueur = conn.identity.GetComponent<PlayerManager>();
+                joueur.Echanger(carteDeplacee, carteChoisie);
+            }
+        }*/
+
     public bool DeplacementAutorise(int IdOrigine, int IdVise)
     {
         if ((IdOrigine == 1 || IdOrigine == 4) && (IdOrigine + 1 == IdVise || IdOrigine + 2 == IdVise)) { return true; }

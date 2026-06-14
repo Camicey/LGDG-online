@@ -45,6 +45,22 @@ public class PlayerManager : NetworkBehaviour
     }
 
     [Command]
+    public void CmdConfirmerAction(uint carteDeplaceeId, uint carteChoisieId, string choix)
+    {
+        if (!NetworkServer.spawned.TryGetValue(carteDeplaceeId, out NetworkIdentity identity1))
+            return;
+        if (!NetworkServer.spawned.TryGetValue(carteChoisieId, out NetworkIdentity identity2))
+            return;
+        Carte carteDeplacee = identity1.GetComponent<Carte>();
+        Carte carteChoisie = identity2.GetComponent<Carte>();
+
+        if (choix == "Echanger" && !carteDeplacee.EstStratege && !carteChoisie.EstStratege)
+        {
+            RpcEchangeCarte(carteDeplaceeId, carteChoisieId);
+        }
+    }
+
+    [Command]
     public void CmdPiocher()
     {
         JeuEnCours.Piocher(connectionToClient);
@@ -65,6 +81,21 @@ public class PlayerManager : NetworkBehaviour
     public void CmdJouerCarte(uint carteNetId, int terrainId)
     {
         RpcJoueCarte(carteNetId, terrainId);
+    }
+
+    [ClientRpc]
+    private void RpcEchangeCarte(uint carteDeplaceeId, uint carteChoisieId)
+    {
+        if (!NetworkClient.spawned.TryGetValue(carteDeplaceeId, out NetworkIdentity identity1))
+            return;
+        if (!NetworkClient.spawned.TryGetValue(carteChoisieId, out NetworkIdentity identity2))
+            return;
+        Carte carteDeplacee = identity1.GetComponent<Carte>();
+        Carte carteChoisie = identity2.GetComponent<Carte>();
+
+        int terrainInitial = carteDeplacee.PlaceDeTerrain.Id;
+        RpcJoueCarte(carteDeplaceeId, carteChoisie.PlaceDeTerrain.Id);
+        RpcJoueCarte(carteChoisieId, terrainInitial);
     }
 
     [ClientRpc]
@@ -113,9 +144,11 @@ public class PlayerManager : NetworkBehaviour
         {
             carte.transform.SetParent(terrain.transform, false); // Je la place sur le Terrain Joueur
             terrain.CartePlacee = carte.GetComponent<Carte>();
+            if (idTerrain == 1) { carte.EstStratege = true; }
         }
         else
         {
+            if (idTerrain == 4) { carte.EstStratege = true; } // N'est pas très au point pour l'instant
             PlaceTerrain terrainAdversaire;
             if (idTerrain >= 4)
             { terrainAdversaire = TerrainsAdverseList.Find(t => t.Id == idTerrain); }
