@@ -144,12 +144,18 @@ public class PlayerManager : NetworkBehaviour
         carte.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
         carte.GetComponent<RectTransform>().anchoredPosition = new Vector3(0, 0, 0);
 
+        if (carte.PlaceDeTerrain == terrain) { return; }
+
         if (idTerrain > 6) { idTerrain = idTerrain - 6; }
         if (isLocalPlayer)
         {
             carte.transform.SetParent(terrain.transform, false); // Je la place sur le Terrain Joueur
             terrain.CartePlacee = carte.GetComponent<Carte>();
-            if (terrain.EstTerrainStratege && terrain.Id == 1) { carte.EstStratege = true; }
+            if (terrain.EstTerrainStratege && terrain.Id == 1)
+            {
+                carte.EstStratege = true;
+                carte.EstVisible = true;
+            }
         }
         else
         {
@@ -159,7 +165,12 @@ public class PlayerManager : NetworkBehaviour
             carte.transform.SetParent(terrainAdversaire.transform, false);
             terrainAdversaire.CartePlacee = carte.GetComponent<Carte>();
             carte.GetComponent<Carte>().PlaceDeTerrain = terrainAdversaire;
-            if (terrainAdversaire.EstTerrainStratege && terrainAdversaire.Id == 4) { carte.EstStratege = true; }
+            if (terrainAdversaire.EstTerrainStratege && terrainAdversaire.Id == 4)
+            {
+                carte.EstStratege = true;
+                carte.EstVisible = true;
+                carte.GetComponent<Carte>().MontrerCarte();
+            }
         }
         carte.EstEnJeu = true;
         //Ce qui est en dessous c'est pour enlever les cartes encore placées sur eux

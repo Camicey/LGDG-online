@@ -136,4 +136,11 @@ public class GameManager : NetworkBehaviour
         else if ((IdOrigine == 5 || IdOrigine == 6) && (IdVise == 4)) { return true; }
         return false;
     }
+
+    /*Vérifier le nombre de joueur avant de permettre de piocher, à faire plus tard.
+        private void Update()
+        {
+            if (NetworkServer.connections.Count == 2) { }
+        }
+    */
 }

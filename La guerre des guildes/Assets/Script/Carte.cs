@@ -13,7 +13,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     public CanvasGroup canvasGroup;
     public PlayerManager PlayerManager; //Joueur a qui appartient la carte
     public RectTransform rectTransform;
-    public bool EstVisible;
+    [SyncVar] public bool EstVisible;
     public bool EstStratege;
     private Vector2 offset;
 
@@ -117,7 +117,6 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         TypeImageT.sprite = Stats.TypeImage;
         TypeImageT.enabled = true;
         LiensT.text = MontrerLiens();
-        EstVisible = true;
     }
     public string MontrerLiens() //Afficher les liens sur la carte
     {
