@@ -113,7 +113,13 @@ public class GameManager : NetworkBehaviour
         else if (choix == "Echanger" && (carteDeplacee.EstStratege || carteChoisie.EstStratege))
         { EcranDeConfirmation.Texte.text = $"Voulez-vous changer de stratège et mettre {carteDeplacee.Stats.Prenom} à la place ?"; }
         else if (choix == "Attaquer")
-        { EcranDeConfirmation.Texte.text = $"Voulez-vous attaquer {carteChoisie.Stats.Prenom} avec {carteDeplacee.Stats.Prenom}, en infligeant {carteDeplacee.PAVar.ToString()} dégâts ?"; }
+        {
+            EcranDeConfirmation.Texte.text = $"Voulez-vous attaquer ";
+            if (carteChoisie.EstVisible)
+            { EcranDeConfirmation.Texte.text += $"{carteChoisie.Stats.Prenom} "; }
+            EcranDeConfirmation.Texte.text += $"avec {carteDeplacee.Stats.Prenom}, en infligeant {carteDeplacee.PAVar.ToString()} dégâts ?";
+            if (carteChoisie.isOwned) { EcranDeConfirmation.Texte.text += "\nAttention c'est votre carte."; }
+        }
         //Visuels
         EcranDeConfirmation.BoutonConfirmer.GetComponentInChildren<TMP_Text>().text = choix;
         EcranDeConfirmation.CarteDeplaceeTemp = carteDeplacee;

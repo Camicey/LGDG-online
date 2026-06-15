@@ -161,11 +161,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9169825851871032389, guid: 7d3db604d609dbb4495c0e893c63c681, type: 3}
       propertyPath: m_Pivot.x
-      value: 0.49999994
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 9169825851871032389, guid: 7d3db604d609dbb4495c0e893c63c681, type: 3}
       propertyPath: m_Pivot.y
-      value: 0.49999994
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 9169825851871032389, guid: 7d3db604d609dbb4495c0e893c63c681, type: 3}
       propertyPath: m_AnchorMax.x
@@ -615,8 +615,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -5, y: 42}
-  m_SizeDelta: {x: 734, y: 84}
+  m_AnchoredPosition: {x: 0, y: 35}
+  m_SizeDelta: {x: 750, y: 135}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &596236724
 MonoBehaviour:
@@ -639,7 +639,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_text: "Ici l'action qu'il est propos\xE9 de faire sur deux lignes pour bien voir
-    les interractions."
+    les interractions. Et une troisieme ligne pour la route"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -678,7 +678,7 @@ MonoBehaviour:
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_wordSpacing: 0
-  m_lineSpacing: 0
+  m_lineSpacing: 10
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
@@ -754,11 +754,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9169825851871032389, guid: 7d3db604d609dbb4495c0e893c63c681, type: 3}
       propertyPath: m_Pivot.x
-      value: 0.49999994
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 9169825851871032389, guid: 7d3db604d609dbb4495c0e893c63c681, type: 3}
       propertyPath: m_Pivot.y
-      value: 0.49999994
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 9169825851871032389, guid: 7d3db604d609dbb4495c0e893c63c681, type: 3}
       propertyPath: m_AnchorMax.x
@@ -868,17 +868,17 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 904252450}
-  m_LocalRotation: {x: -0, y: -0, z: 0.004351946, w: -0.9999905}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 439426974}
   m_Father: {fileID: 1510128566}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -0.499}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -30, y: -58}
+  m_AnchoredPosition: {x: -6, y: -75}
   m_SizeDelta: {x: 250, y: 60}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &904252452
@@ -1033,11 +1033,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9169825851871032389, guid: 7d3db604d609dbb4495c0e893c63c681, type: 3}
       propertyPath: m_Pivot.x
-      value: 0.49999994
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 9169825851871032389, guid: 7d3db604d609dbb4495c0e893c63c681, type: 3}
       propertyPath: m_Pivot.y
-      value: 0.49999994
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 9169825851871032389, guid: 7d3db604d609dbb4495c0e893c63c681, type: 3}
       propertyPath: m_AnchorMax.x
@@ -1157,17 +1157,17 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1222478020}
-  m_LocalRotation: {x: -0, y: -0, z: 0.004351946, w: -0.9999905}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1344591151}
   m_Father: {fileID: 1510128566}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -0.499}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 240, y: -58}
+  m_AnchoredPosition: {x: 261.6, y: -75}
   m_SizeDelta: {x: 250, y: 60}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1222478022
@@ -1442,7 +1442,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -480, y: -10}
-  m_SizeDelta: {x: 800, y: 225}
+  m_SizeDelta: {x: 800, y: 240}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1510128567
 MonoBehaviour:
@@ -1497,6 +1497,9 @@ MonoBehaviour:
   Texte: {fileID: 596236724}
   BoutonConfirmer: {fileID: 1222478022}
   BoutonAnnuler: {fileID: 904252452}
+  CarteDeplaceeTemp: {fileID: 0}
+  CarteChoisieTemp: {fileID: 0}
+  ChoixTemp: 
 --- !u!1 &1571407708
 GameObject:
   m_ObjectHideFlags: 0
@@ -1764,11 +1767,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9169825851871032389, guid: 7d3db604d609dbb4495c0e893c63c681, type: 3}
       propertyPath: m_Pivot.x
-      value: 0.49999994
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 9169825851871032389, guid: 7d3db604d609dbb4495c0e893c63c681, type: 3}
       propertyPath: m_Pivot.y
-      value: 0.49999994
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 9169825851871032389, guid: 7d3db604d609dbb4495c0e893c63c681, type: 3}
       propertyPath: m_AnchorMax.x
@@ -1979,11 +1982,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9169825851871032389, guid: 7d3db604d609dbb4495c0e893c63c681, type: 3}
       propertyPath: m_Pivot.x
-      value: 0.49999994
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 9169825851871032389, guid: 7d3db604d609dbb4495c0e893c63c681, type: 3}
       propertyPath: m_Pivot.y
-      value: 0.49999994
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 9169825851871032389, guid: 7d3db604d609dbb4495c0e893c63c681, type: 3}
       propertyPath: m_AnchorMax.x

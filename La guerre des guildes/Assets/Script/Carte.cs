@@ -150,12 +150,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
             if (PlaceDeTerrain != null)
             {
                 transform.SetParent(canvas.transform, false);
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    rectTransform,
-                    eventData.position,
-                    eventData.pressEventCamera,
-                    out offset
-                );
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(rectTransform, eventData.position, eventData.pressEventCamera, out offset);
             }
         }
         if (eventData.button == PointerEventData.InputButton.Right) { FamilleImageT.color = Color.red; } //C'est l'attaque
@@ -182,20 +177,19 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     public void OnEndDrag(PointerEventData eventData)
     {
         if (!isOwned) { return; }
-        canvasGroup.alpha = 1f;
-        canvasGroup.blocksRaycasts = true;
-        if (PlaceDeTerrain != null) { transform.SetParent(PlaceDeTerrain.transform, false); }
-
         if (eventData.button == PointerEventData.InputButton.Right)
         {
             FamilleImageT.color = Color.white;
+            return;
         }
+        canvasGroup.blocksRaycasts = true;
+        rectTransform.anchoredPosition = Vector2.zero;
+        if (PlaceDeTerrain != null) { transform.SetParent(PlaceDeTerrain.transform, false); }
         if (EstEnJeu && eventData.button == PointerEventData.InputButton.Left)
         { PlayerManager.JouerCarte(this, PlaceDeTerrain); } // On joue la carte
-        else
-        {
-            LayoutRebuilder.MarkLayoutForRebuild(PlayerManager.DeckJoueur.GetComponent<RectTransform>()); // Elle revient dans le deck
-        }
+        else // Elle revient dans le deck
+        { LayoutRebuilder.MarkLayoutForRebuild(PlayerManager.DeckJoueur.GetComponent<RectTransform>()); }
+
     }
 
     public void OnPointerDown(PointerEventData eventData)
@@ -213,7 +207,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
             UnityEngine.Debug.Log($"On échange entre {Stats.Prenom} et {carteDeplace.Stats.Prenom}");
             GameManager.Instance.Proposition(carteDeplace, this, "Echanger");
         }
-        if (EstEnJeu && carteDeplace.EstEnJeu && !isOwned && carteDeplace.isOwned && eventData.button == PointerEventData.InputButton.Right)
+        if (EstEnJeu && carteDeplace.EstEnJeu && carteDeplace.isOwned && eventData.button == PointerEventData.InputButton.Right)
         {
             UnityEngine.Debug.Log($"{carteDeplace.Stats.Prenom} attaque {Stats.Prenom}");
             GameManager.Instance.Proposition(carteDeplace, this, "Attaquer");

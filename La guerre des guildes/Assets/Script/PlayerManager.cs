@@ -154,13 +154,12 @@ public class PlayerManager : NetworkBehaviour
         else
         {
             PlaceTerrain terrainAdversaire;
-            if (idTerrain >= 4)
-            { terrainAdversaire = TerrainsAdverseList.Find(t => t.Id == idTerrain); }
+            if (idTerrain >= 4) { terrainAdversaire = TerrainsAdverseList.Find(t => t.Id == idTerrain); }
             else { terrainAdversaire = TerrainsJoueurList.Find(t => t.Id == idTerrain); }
             carte.transform.SetParent(terrainAdversaire.transform, false);
             terrainAdversaire.CartePlacee = carte.GetComponent<Carte>();
             carte.GetComponent<Carte>().PlaceDeTerrain = terrainAdversaire;
-            if (terrainAdversaire.EstTerrainStratege) { carte.EstStratege = true; }
+            if (terrainAdversaire.EstTerrainStratege && terrainAdversaire.Id == 4) { carte.EstStratege = true; }
         }
         carte.EstEnJeu = true;
         //Ce qui est en dessous c'est pour enlever les cartes encore placées sur eux
