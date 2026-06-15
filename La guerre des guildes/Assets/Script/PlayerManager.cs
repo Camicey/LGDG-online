@@ -4,21 +4,21 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using Mirror;
+using Mirror.BouncyCastle.Asn1.Misc;
 
 public class PlayerManager : NetworkBehaviour
 {
-    public List<GameObject> pioche = new List<GameObject>();
-    public List<Carte> PiocheCarte = new List<Carte>();
     public GameObject PrefabCarte;
     public GameObject DeckJoueur;
     public GameObject DeckAdversaire;
-    public GameObject PlaceTerrainJoueur;
-    public GameObject PlaceTerrainAdversaire;
+    public GameObject PlaceTerrain;
+    public GameObject TerrainsJoueur; // Inutilisé pour l'instant
+    public List<PlaceTerrain> TerrainsJoueurList = new List<PlaceTerrain>();
+    public GameObject TerrainsAdverse; // Inutilisé pour l'instant
+    public List<PlaceTerrain> TerrainsAdverseList = new List<PlaceTerrain>();
     public GameObject DossierCarte;
     public GameManager JeuEnCours;
     public List<Carte> DeckCartes = new List<Carte>();
-    [SyncVar]
-    public int Cartesjouees = 0; //Cette information n'est PAS partagée
     public static PlayerManager LocalPlayer;
 
     public override void OnStartClient()
@@ -27,9 +27,15 @@ public class PlayerManager : NetworkBehaviour
         JeuEnCours = GameObject.Find("GameManagerObject").GetComponent<GameManager>();
         DeckJoueur = GameObject.Find("DeckJoueur");
         DeckAdversaire = GameObject.Find("DeckAdversaire");
-        PlaceTerrainJoueur = GameObject.Find("PlaceTerrainJoueur");
-        PlaceTerrainAdversaire = GameObject.Find("PlaceTerrainAdversaire");
+        TerrainsJoueur = GameObject.Find("TerrainsJoueur");
+        TerrainsAdverse = GameObject.Find("TerrainsAdverse");
         DossierCarte = GameObject.Find("DossierCarte");
+        TerrainsJoueurList.Add(GameObject.Find("PlaceTerrain1").GetComponent<PlaceTerrain>());
+        TerrainsJoueurList.Add(GameObject.Find("PlaceTerrain2").GetComponent<PlaceTerrain>());
+        TerrainsJoueurList.Add(GameObject.Find("PlaceTerrain3").GetComponent<PlaceTerrain>());
+        TerrainsAdverseList.Add(GameObject.Find("PlaceTerrain4").GetComponent<PlaceTerrain>());
+        TerrainsAdverseList.Add(GameObject.Find("PlaceTerrain5").GetComponent<PlaceTerrain>());
+        TerrainsAdverseList.Add(GameObject.Find("PlaceTerrain6").GetComponent<PlaceTerrain>());
     }
 
     public override void OnStartLocalPlayer()
@@ -38,47 +44,63 @@ public class PlayerManager : NetworkBehaviour
         LocalPlayer = this;
     }
 
-    [Server]
-    public override void OnStartServer()
-    {
-        pioche.Add(PrefabCarte);
-    }
     [Command]
-    public void CmdInstancier()
+    public void CmdConfirmerAction(uint carteDeplaceeId, uint carteChoisieId, string choix)
     {
-        foreach (CarteSettings carteSettings in JeuEnCours.CartesSettings) //On instancie les cartes
+        if (!NetworkServer.spawned.TryGetValue(carteDeplaceeId, out NetworkIdentity identity1))
+            return;
+        if (!NetworkServer.spawned.TryGetValue(carteChoisieId, out NetworkIdentity identity2))
+            return;
+        Carte carteDeplacee = identity1.GetComponent<Carte>();
+        Carte carteChoisie = identity2.GetComponent<Carte>();
+
+        if (choix == "Echanger" && !carteDeplacee.EstStratege && !carteChoisie.EstStratege)
         {
-            GameObject derniere = Instantiate(PrefabCarte, new Vector3(0, 0, 0), Quaternion.identity, DossierCarte.transform); //-500 -500
-            NetworkServer.Spawn(derniere, connectionToClient);
-            derniere.GetComponent<Carte>().Stats = carteSettings;
-            //derniere.GetComponent<Carte>().Commencer();
+            RpcEchangeCarte(carteDeplaceeId, carteChoisieId);
         }
     }
+
     [Command]
     public void CmdPiocher()
     {
-        if (DeckCartes.Count < 5) //Limite de pioche à 5 cartes
-        {
-            //Ce qu'il faudra changer 
-            GameObject carte = Instantiate(pioche[Random.Range(0, pioche.Count)], new UnityEngine.Vector3(0, 0, 0), UnityEngine.Quaternion.identity);
-            //Ce qu'il faudre changer
-            carte.GetComponent<Carte>().Initialiser();
-            DeckCartes.Add(carte.GetComponent<Carte>()); //On ajoute au Deck la carte
-            NetworkServer.Spawn(carte, connectionToClient);
-            RpcShowCard(carte, "Dealt");
-        }
+        JeuEnCours.Piocher(connectionToClient);
     }
 
-    public void JouerCarte(GameObject carte)
+    public void JouerCarte(Carte carte, PlaceTerrain terrain)
     {
-        CmdJouerCarte(carte);
-        Cartesjouees++;
+        CmdJouerCarte(carte.netId, terrain.Id);
+    }
+
+    public void PiocherCarte(GameObject carte)
+    {
+        carte.GetComponent<Carte>().Initialiser();
+        RpcShowCard(carte, "Dealt");
     }
 
     [Command]
-    private void CmdJouerCarte(GameObject carte)
+    public void CmdJouerCarte(uint carteNetId, int terrainId)
     {
-        RpcShowCard(carte, "Played");
+        RpcJoueCarte(carteNetId, terrainId);
+    }
+
+    [ClientRpc]
+    private void RpcEchangeCarte(uint carteDeplaceeId, uint carteChoisieId)
+    {
+        if (!NetworkClient.spawned.TryGetValue(carteDeplaceeId, out NetworkIdentity identity1))
+            return;
+        if (!NetworkClient.spawned.TryGetValue(carteChoisieId, out NetworkIdentity identity2))
+            return;
+        Carte carteDeplacee = identity1.GetComponent<Carte>();
+        Carte carteChoisie = identity2.GetComponent<Carte>();
+
+        int terrainInitial = carteDeplacee.PlaceDeTerrain.Id;
+        RpcJoueCarte(carteDeplaceeId, carteChoisie.PlaceDeTerrain.Id);
+        RpcJoueCarte(carteChoisieId, terrainInitial);
+        carteDeplacee.PlaceDeTerrain = carteChoisie.PlaceDeTerrain;
+        if (terrainInitial >= 4)
+        { carteChoisie.PlaceDeTerrain = TerrainsAdverseList.Find(t => t.Id == terrainInitial); }
+        else { carteChoisie.PlaceDeTerrain = TerrainsJoueurList.Find(t => t.Id == terrainInitial); }
+
     }
 
     [ClientRpc]
@@ -87,28 +109,61 @@ public class PlayerManager : NetworkBehaviour
         if (carte == null) return;
         if (type == "Dealt") // Si elles viennent d'être piochées
         {
-            if (isLocalPlayer) //Si je suis le joueur
+            if (isLocalPlayer) // Si je suis le joueur
             {
                 carte.transform.SetParent(DeckJoueur.transform, false); // Je la met dans mon deck
+                DeckCartes.Add(carte.GetComponent<Carte>());
                 carte.GetComponent<Carte>().MontrerCarte(); // Je la montre
+                UnityEngine.Debug.Log("C'est ma carte");
             }
             else
             {
                 carte.transform.SetParent(DeckAdversaire.transform, false); // Je la met dans le deck de l'autre joueur
                 carte.GetComponent<Carte>().CacherCarte(); // Je la cache
-            }
-        }
-        else if (type == "Played") // Si elle est placée sur le terrain
-        {
-            if (isLocalPlayer)
-            {
-                carte.transform.SetParent(PlaceTerrainJoueur.transform, false); // Je la place sur le Terrain Joueur
-            }
-            else
-            {
-                carte.transform.SetParent(PlaceTerrainAdversaire.transform, false); // Je la place sur le Terrain Adverse
+                UnityEngine.Debug.Log("Pas ma carte");
             }
         }
     }
 
+    [ClientRpc]
+    void RpcJoueCarte(uint carteNetId, int terrainId)
+    {
+        if (!NetworkClient.spawned.TryGetValue(carteNetId, out NetworkIdentity identity))
+        {
+            Debug.LogError("Carte introuvable côté client !");
+            return;
+        }
+        Carte carte = identity.GetComponent<Carte>();
+        PlaceTerrain terrain = TerrainsJoueurList.Find(t => t.Id == terrainId);
+        if (terrain == null) { terrain = TerrainsAdverseList.Find(t => t.Id == terrainId); }
+        int idTerrain = terrain.gameObject.GetComponent<PlaceTerrain>().Id + 3;
+
+        carte.canvasGroup.alpha = 1f;
+        carte.canvasGroup.blocksRaycasts = true;
+        carte.rectTransform.anchorMin = new Vector2(0.5f, 0.5f); // C'est pour remettre le pivot au centre
+        carte.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+        carte.GetComponent<RectTransform>().anchoredPosition = new Vector3(0, 0, 0);
+
+        if (idTerrain > 6) { idTerrain = idTerrain - 6; }
+        if (isLocalPlayer)
+        {
+            carte.transform.SetParent(terrain.transform, false); // Je la place sur le Terrain Joueur
+            terrain.CartePlacee = carte.GetComponent<Carte>();
+            if (terrain.EstTerrainStratege && terrain.Id == 1) { carte.EstStratege = true; }
+        }
+        else
+        {
+            PlaceTerrain terrainAdversaire;
+            if (idTerrain >= 4) { terrainAdversaire = TerrainsAdverseList.Find(t => t.Id == idTerrain); }
+            else { terrainAdversaire = TerrainsJoueurList.Find(t => t.Id == idTerrain); }
+            carte.transform.SetParent(terrainAdversaire.transform, false);
+            terrainAdversaire.CartePlacee = carte.GetComponent<Carte>();
+            carte.GetComponent<Carte>().PlaceDeTerrain = terrainAdversaire;
+            if (terrainAdversaire.EstTerrainStratege && terrainAdversaire.Id == 4) { carte.EstStratege = true; }
+        }
+        carte.EstEnJeu = true;
+        //Ce qui est en dessous c'est pour enlever les cartes encore placées sur eux
+        foreach (PlaceTerrain terrainTest in TerrainsAdverseList) { if (terrainTest.transform.childCount == 0) { terrainTest.CartePlacee = null; } }
+        foreach (PlaceTerrain terrainTest in TerrainsJoueurList) { if (terrainTest.transform.childCount == 0) { terrainTest.CartePlacee = null; } }
+    }
 }

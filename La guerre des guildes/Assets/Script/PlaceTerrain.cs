@@ -6,22 +6,30 @@ using Mirror;
 
 public class PlaceTerrain : NetworkBehaviour, IDropHandler
 {
-    public int Id;
+    [SyncVar] public int Id;
     public Carte CartePlacee;
+    public PlayerManager PlayerManager;
+    public bool EstTerrainStratege;
 
-    public void Start() { CartePlacee = null; }
-
-    public void OnDrop(PointerEventData eventData) //Quand une carte est lâchée sur le terrain
+    public void Start()
     {
+        CartePlacee = null;
+        if (Id == 1 || Id == 4) { EstTerrainStratege = true; }
+        else { EstTerrainStratege = false; }
+    }
+
+    public void OnDrop(PointerEventData eventData) // Quand une carte est lâchée sur le terrain
+    {
+        if (eventData.pointerDrag == null || CartePlacee != null) { return; }
         Carte carteDeplace = eventData.pointerDrag.GetComponent<Carte>();
-        if (eventData.pointerDrag != null && CartePlacee == null && gameObject.name == "PlaceTerrainJoueur" && carteDeplace.isOwned)
+        if (!carteDeplace.isOwned) { return; }
+        if ((carteDeplace.PlayerManager.TerrainsJoueurList.Contains(this) && carteDeplace.EstEnJeu == false) || (carteDeplace.EstEnJeu == true && GameManager.Instance.DeplacementAutorise(carteDeplace.PlaceDeTerrain.Id, Id)))
         {
-            carteDeplace.rectTransform.anchorMin = new Vector2(0.5f, 0.5f); // C'est pour remettre le pivot au centre
-            carteDeplace.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-            carteDeplace.GetComponent<RectTransform>().anchoredPosition = new Vector3(0, 0, 0);
-            carteDeplace.EstEnJeu = true; //Si je pose la carte sur la place, on pose un true
-            CartePlacee = carteDeplace;
+            carteDeplace.EstEnJeu = true; // Si je pose la carte sur la place, on pose un true
+            if (carteDeplace.PlaceDeTerrain != null) { carteDeplace.PlaceDeTerrain.CartePlacee = null; }
             carteDeplace.PlaceDeTerrain = this;
         }
     }
+
+
 }
