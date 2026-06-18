@@ -181,13 +181,23 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
             FamilleImageT.color = Color.white;
             return;
         }
+        canvasGroup.alpha = 1f; // Opacité de la carte quand je clique dessus
         canvasGroup.blocksRaycasts = true;
         rectTransform.anchoredPosition = Vector2.zero;
-        if (PlaceDeTerrain != null) { transform.SetParent(PlaceDeTerrain.transform, false); }
-        if (EstEnJeu && eventData.button == PointerEventData.InputButton.Left)
-        { PlayerManager.JouerCarte(this, PlaceDeTerrain); } // On joue la carte
-        else // Elle revient dans le deck
-        { LayoutRebuilder.MarkLayoutForRebuild(PlayerManager.DeckJoueur.GetComponent<RectTransform>()); }
+
+        if (PlaceDeTerrain != null && eventData.button == PointerEventData.InputButton.Left)
+        {
+            PlayerManager.JouerCarte(this, PlaceDeTerrain);
+            transform.SetParent(PlaceDeTerrain.transform, false);
+        } // On joue la carte
+        else if (PlaceDeTerrain == null && eventData.button == PointerEventData.InputButton.Left)// Elle revient dans le deck
+        {
+            EstEnJeu = false;
+            EstStratege = false;
+            EstVisible = false;
+            transform.SetParent(PlayerManager.DeckJoueur.transform, false);
+            LayoutRebuilder.MarkLayoutForRebuild(PlayerManager.DeckJoueur.GetComponent<RectTransform>());
+        }
 
     }
 
