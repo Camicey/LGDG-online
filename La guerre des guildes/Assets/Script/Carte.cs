@@ -5,6 +5,8 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using Mirror;
 using TMPro;
+using Mirror.Examples.Basic;
+using Unity.VisualScripting;
 
 public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDragHandler, IPointerDownHandler, IDropHandler  //Les suppléments sont les promesses de fonction
 {
@@ -134,6 +136,14 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         }
         if (description == " ") { description = "Personne"; }
         return description;
+    }
+
+    public void Mourir()
+    {
+        UnityEngine.Debug.Log($"{Stats.Prenom} est mort.e.");
+        PlayerManager.CmdMourir(this.GameObject());
+        //Je la réinitialise
+        //Je la met dans la pioche des morts
     }
 
     //Tout en dessous c'est pour déplacer la carte

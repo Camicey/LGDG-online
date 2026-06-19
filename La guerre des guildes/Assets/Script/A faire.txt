@@ -1,0 +1,6 @@
+Se retourne quand il y a un soucis de lien
+
+Ok, tout le monde gagne si yen a un qui gagne, voir comment choisir un côté ou l'autre
+
+Choses apprises : 
+On ne peut pas appeler un RPC dans un RPC

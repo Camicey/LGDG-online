@@ -6,16 +6,16 @@ using Mirror;
 using System;
 using TMPro;
 using Unity.VisualScripting;
+using System.Linq;
 
 public class GameManager : NetworkBehaviour
 {
     public Sprite ImageDosCarte;
     public List<int> Pioche = new List<int>();
-    public List<Carte> Defausse = new List<Carte>(); // Pour l'instant inutilisee, peut etre faire une liste de int a la place
     public List<CarteSettings> CartesSettings = new List<CarteSettings>(); //Ajoutees manuellement
-    public bool TerrainCree = false;
     public EcranDeConfirmation EcranDeConfirmation;
     public static GameManager Instance;
+    public List<Carte> ToutesLesCartes = new List<Carte>();
 
     public void Start()
     {
@@ -89,19 +89,25 @@ public class GameManager : NetworkBehaviour
     {
         if (Pioche.Count == 0) return;
         PlayerManager joueur = conn.identity.GetComponent<PlayerManager>();
-        if (joueur.DeckCartes.Count > 5) return;
+        if (joueur.DeckJoueur.transform.childCount >= 5) return;
 
         int dataId = Pioche[0];
         Pioche.RemoveAt(0);
-
         GameObject cardObj = Instantiate(joueur.PrefabCarte);
-
         Carte carte = cardObj.GetComponent<Carte>();
         carte.Id = dataId;
         carte.PlayerManager = joueur;
 
         NetworkServer.Spawn(cardObj, conn);
         joueur.PiocherCarte(cardObj);
+    }
+
+    public void Gagner()
+    {
+        EcranDeConfirmation.GameObject().SetActive(true);
+        EcranDeConfirmation.Texte.text = "Vous avez gagné";
+        EcranDeConfirmation.BoutonConfirmer.GetComponentInChildren<TMP_Text>().text = "Ok";
+        EcranDeConfirmation.ChoixTemp = "Gagner";
     }
 
     public void Proposition(Carte carteDeplacee, Carte carteChoisie, string choix)
