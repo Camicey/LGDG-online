@@ -2,5 +2,16 @@ Se retourne quand il y a un soucis de lien
 
 Ok, tout le monde gagne si yen a un qui gagne, voir comment choisir un côté ou l'autre
 
+Apprendre a faire des signaux ? Plug-in voir Marie et Temmie
+
 Choses apprises : 
 On ne peut pas appeler un RPC dans un RPC
+
+
+Bout a replacer plus tard : 
+ /*Vérifier le nombre de joueur avant de permettre de piocher, à faire plus tard.
+        private void Update()
+        {
+            if (NetworkServer.connections.Count == 2) { }
+        }
+    */

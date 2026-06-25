@@ -842,6 +842,7 @@ GameObject:
   - component: {fileID: -5158829305818031557}
   - component: {fileID: 8096495441558756377}
   - component: {fileID: 671587778664104324}
+  - component: {fileID: 8412977394653780798}
   m_Layer: 5
   m_Name: Carte
   m_TagString: Untagged
@@ -936,6 +937,7 @@ MonoBehaviour:
   PlayerManager: {fileID: 0}
   rectTransform: {fileID: 0}
   EstVisible: 0
+  EstStratege: 0
   Id: 0
   PlaceDeTerrain: {fileID: 0}
   EstEnJeu: 0
@@ -955,6 +957,7 @@ MonoBehaviour:
   IdPouvoirVar: 0
   PouvoirVar: 
   CoutPouvoirVar: 0
+  liensVar: 
 --- !u!225 &-8986544984926811049
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -1063,6 +1066,23 @@ MonoBehaviour:
   rotationSensitivity: 0.01
   positionPrecision: 0.01
   scalePrecision: 0.01
+--- !u!320 &8412977394653780798
+PlayableDirector:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6097343779307823918}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_PlayableAsset: {fileID: 11400000, guid: c6152967fdc21814e9613379b99899e8, type: 2}
+  m_InitialState: 1
+  m_WrapMode: 2
+  m_DirectorUpdateMode: 1
+  m_InitialTime: 0
+  m_SceneBindings: []
+  m_ExposedReferences:
+    m_References: []
 --- !u!1 &6423682238253102235
 GameObject:
   m_ObjectHideFlags: 0

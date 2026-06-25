@@ -19,13 +19,11 @@ public class PlayerManager : NetworkBehaviour
     public GameObject TerrainsAdverse; // Inutilisé pour l'instant
     public List<PlaceTerrain> TerrainsAdverseList = new List<PlaceTerrain>();
     public GameObject DossierCarte;
-    public GameManager JeuEnCours;
     public static PlayerManager LocalPlayer;
 
     public override void OnStartClient()
     {
         base.OnStartClient();
-        JeuEnCours = GameObject.Find("GameManagerObject").GetComponent<GameManager>();
         DeckJoueur = GameObject.Find("DeckJoueur");
         DeckAdversaire = GameObject.Find("DeckAdversaire");
         TerrainsJoueur = GameObject.Find("TerrainsJoueur");
@@ -69,7 +67,7 @@ public class PlayerManager : NetworkBehaviour
     [Command]
     public void CmdPiocher()
     {
-        JeuEnCours.Piocher(connectionToClient);
+        GameManager.Instance.Piocher(connectionToClient);
     }
 
     public void JouerCarte(Carte carte, PlaceTerrain terrain)
@@ -111,7 +109,7 @@ public class PlayerManager : NetworkBehaviour
         carteMourante.PVar = 0;
         carteMourante.PlayerManager = null;
 
-        JeuEnCours.ToutesLesCartes.Remove(carteMourante.GetComponent<Carte>());
+        GameManager.Instance.ToutesLesCartes.Remove(carteMourante.GetComponent<Carte>());
 
         VerifierGagnant();
     }
@@ -148,6 +146,7 @@ public class PlayerManager : NetworkBehaviour
         if (carteAttaquante.liensVar.Contains(carteChoisie.Id))
         {
             //Blabla je peux pas attaquer
+
             return;
         }
 
@@ -179,13 +178,22 @@ public class PlayerManager : NetworkBehaviour
     {
         int joueurNbCarte = 0;
         int autreJoueurNbCarte = 0;
-        foreach (Carte carte in JeuEnCours.ToutesLesCartes)
+        foreach (Carte carte in GameManager.Instance.ToutesLesCartes)
         {
             if (carte.isOwned) { joueurNbCarte++; }
             else { autreJoueurNbCarte++; }
         }
         if (joueurNbCarte == 0 || autreJoueurNbCarte == 0)
-        { JeuEnCours.Gagner(); }
+        { GameManager.Instance.Proposition("Gagner"); }
+    }
+
+    [ClientRpc]
+    private void Gagner()
+    {
+        //IF moi joueur
+        GameManager.Instance.Proposition("Gagner");
+        // If pas moi joueur
+        GameManager.Instance.Proposition("Perdre");
     }
 
     [ClientRpc]
@@ -229,7 +237,7 @@ public class PlayerManager : NetworkBehaviour
             carte.transform.SetParent(DeckAdversaire.transform, false); // Je la met dans le deck de l'autre joueur
             carte.GetComponent<Carte>().CacherCarte(); // Je la cache
         }
-        JeuEnCours.ToutesLesCartes.Add(carte.GetComponent<Carte>());
+        GameManager.Instance.ToutesLesCartes.Add(carte.GetComponent<Carte>());
     }
 
     [ClientRpc]

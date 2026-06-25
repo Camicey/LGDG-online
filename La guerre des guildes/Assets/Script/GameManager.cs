@@ -10,7 +10,7 @@ using System.Linq;
 
 public class GameManager : NetworkBehaviour
 {
-    public Sprite ImageDosCarte;
+
     public List<int> Pioche = new List<int>();
     public List<CarteSettings> CartesSettings = new List<CarteSettings>(); //Ajoutees manuellement
     public EcranDeConfirmation EcranDeConfirmation;
@@ -27,12 +27,40 @@ public class GameManager : NetworkBehaviour
         }
     }
 
+    //Server
+    [Server]
+    private void CreerDeck()
+    {
+        Pioche.Clear();
+
+        foreach (var carteStats in CartesSettings)
+        {
+            Pioche.Add(carteStats.Id);
+        }
+        Melanger(Pioche);
+    }
+    [Server]
+    public void Piocher(NetworkConnectionToClient conn)
+    {
+        if (Pioche.Count == 0) return;
+        PlayerManager joueur = conn.identity.GetComponent<PlayerManager>();
+        if (joueur.DeckJoueur.transform.childCount >= 5) return;
+
+        int dataId = Pioche[0];
+        Pioche.RemoveAt(0);
+        GameObject cardObj = Instantiate(joueur.PrefabCarte);
+        Carte carte = cardObj.GetComponent<Carte>();
+        carte.Id = dataId;
+        carte.PlayerManager = joueur;
+
+        NetworkServer.Spawn(cardObj, conn);
+        joueur.PiocherCarte(cardObj);
+    }
 
     public void ImporterCartes()
     {
-        CartesSettings.Clear();
-        // Lire CSV
-        string[] export = File.ReadAllLines("Assets/Script/ExportCartes.csv");
+        CartesSettings.Clear(); //On enlève tout
+        string[] export = File.ReadAllLines("Assets/Script/ExportCartes.csv"); // Lire CSV
         string ligne = export[0];
         for (int i = 1; i < export.Length; i++)
         {
@@ -56,25 +84,11 @@ public class GameManager : NetworkBehaviour
             carte.FamilleImage = Resources.Load<Sprite>("Images/Famille/" + carte.Famille);
             carte.Type = colonnes[14];
             carte.TypeImage = Resources.Load<Sprite>("Images/Type/" + carte.Type);
-
             //Id,Prenom,PM,PV,PA,Image,Pouvoir,IdPouvoir,Complement Pouvoir,Cout,LienID,Liens,Particularite,Famille,Role
             CartesSettings.Add(carte);
         }
 
     }
-
-    [Server]
-    private void CreerDeck()
-    {
-        Pioche.Clear();
-
-        foreach (var carteStats in CartesSettings)
-        {
-            Pioche.Add(carteStats.Id);
-        }
-        Melanger(Pioche);
-    }
-
     private void Melanger(List<int> list)
     {
         for (int i = 0; i < list.Count; i++)
@@ -82,32 +96,6 @@ public class GameManager : NetworkBehaviour
             int rand = UnityEngine.Random.Range(i, list.Count);
             (list[i], list[rand]) = (list[rand], list[i]);
         }
-    }
-
-    [Server]
-    public void Piocher(NetworkConnectionToClient conn)
-    {
-        if (Pioche.Count == 0) return;
-        PlayerManager joueur = conn.identity.GetComponent<PlayerManager>();
-        if (joueur.DeckJoueur.transform.childCount >= 5) return;
-
-        int dataId = Pioche[0];
-        Pioche.RemoveAt(0);
-        GameObject cardObj = Instantiate(joueur.PrefabCarte);
-        Carte carte = cardObj.GetComponent<Carte>();
-        carte.Id = dataId;
-        carte.PlayerManager = joueur;
-
-        NetworkServer.Spawn(cardObj, conn);
-        joueur.PiocherCarte(cardObj);
-    }
-
-    public void Gagner()
-    {
-        EcranDeConfirmation.GameObject().SetActive(true);
-        EcranDeConfirmation.Texte.text = "Vous avez gagné";
-        EcranDeConfirmation.BoutonConfirmer.GetComponentInChildren<TMP_Text>().text = "Ok";
-        EcranDeConfirmation.ChoixTemp = "Gagner";
     }
 
     public void Proposition(Carte carteDeplacee, Carte carteChoisie, string choix)
@@ -132,6 +120,16 @@ public class GameManager : NetworkBehaviour
         EcranDeConfirmation.CarteChoisieTemp = carteChoisie;
         EcranDeConfirmation.ChoixTemp = choix;
     }
+    public void Proposition(string choix)
+    {
+        if (choix == "Gagner")
+        {
+            EcranDeConfirmation.GameObject().SetActive(true);
+            EcranDeConfirmation.Texte.text = "Vous avez gagné";
+            EcranDeConfirmation.BoutonConfirmer.GetComponentInChildren<TMP_Text>().text = "Ok";
+            EcranDeConfirmation.ChoixTemp = "Gagner";
+        }
+    }
 
     public bool DeplacementAutorise(int IdOrigine, int IdVise)
     {
@@ -143,10 +141,4 @@ public class GameManager : NetworkBehaviour
         return false;
     }
 
-    /*Vérifier le nombre de joueur avant de permettre de piocher, à faire plus tard.
-        private void Update()
-        {
-            if (NetworkServer.connections.Count == 2) { }
-        }
-    */
 }

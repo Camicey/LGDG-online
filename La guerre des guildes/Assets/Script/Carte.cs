@@ -26,6 +26,8 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
 
     public CarteSettings Stats;
 
+    public Sprite ImageDosCarte;
+
     //Tous les paramètres de chaque carte.
     public TMP_Text PrenomT;
 
@@ -82,6 +84,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         PouvoirVar = Stats.Pouvoir;
         NetworkIdentity networkIdentity = NetworkClient.connection.identity;
         PlayerManager = networkIdentity.GetComponent<PlayerManager>();
+        ImageDosCarte = Resources.Load<Sprite>("Images/" + "DosAdversaires");
         CoutPouvoirVar = Stats.CoutPouvoir;
         liensVar.Clear();
         foreach (int lien in Stats.liens)
@@ -100,7 +103,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         PAT.text = " ";
         PouvoirT.text = " ";
         CoutPouvoirT.text = " ";
-        FamilleImageT.sprite = GameManager.Instance.ImageDosCarte;
+        FamilleImageT.sprite = ImageDosCarte;
         TypeImageT.enabled = false;
         LiensT.text = " ";
         EstVisible = false;
@@ -142,8 +145,6 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     {
         UnityEngine.Debug.Log($"{Stats.Prenom} est mort.e.");
         PlayerManager.CmdMourir(this.GameObject());
-        //Je la réinitialise
-        //Je la met dans la pioche des morts
     }
 
     //Tout en dessous c'est pour déplacer la carte
