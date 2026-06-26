@@ -26,6 +26,7 @@ public class EcranDeConfirmation : MonoBehaviour
             ChoixTemp
             );
         }
+        UnityEngine.Debug.Log(CarteDeplaceeTemp.netId + CarteChoisieTemp.netId + ChoixTemp);
         gameObject.SetActive(false);
     }
 

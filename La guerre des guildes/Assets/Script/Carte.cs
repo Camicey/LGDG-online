@@ -91,6 +91,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         {
             liensVar.Add(lien);
         }
+
     }
 
     public void CacherCarte()
@@ -196,12 +197,12 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         canvasGroup.blocksRaycasts = true;
         rectTransform.anchoredPosition = Vector2.zero;
 
-        if (PlaceDeTerrain != null && eventData.button == PointerEventData.InputButton.Left)
+        if (PlaceDeTerrain != null && eventData.button == PointerEventData.InputButton.Left) // On joue la carte
         {
             PlayerManager.JouerCarte(this, PlaceDeTerrain);
             transform.SetParent(PlaceDeTerrain.transform, false);
-        } // On joue la carte
-        else if (PlaceDeTerrain == null && eventData.button == PointerEventData.InputButton.Left)// Elle revient dans le deck
+        }
+        else if (PlaceDeTerrain == null && eventData.button == PointerEventData.InputButton.Left) // Elle revient dans le deck
         {
             EstEnJeu = false;
             EstStratege = false;
@@ -209,8 +210,8 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
             transform.SetParent(PlayerManager.DeckJoueur.transform, false);
             LayoutRebuilder.MarkLayoutForRebuild(PlayerManager.DeckJoueur.GetComponent<RectTransform>());
         }
-
     }
+
 
     public void OnPointerDown(PointerEventData eventData)
     {

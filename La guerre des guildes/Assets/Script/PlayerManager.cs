@@ -56,7 +56,7 @@ public class PlayerManager : NetworkBehaviour
 
         if (choix == "Echanger" && !carteDeplacee.EstStratege && !carteChoisie.EstStratege)
         {
-            RpcEchangerCarte(carteDeplaceeId, carteChoisieId);
+            EchangerCarte(carteDeplaceeId, carteChoisieId);
         }
         if (choix == "Attaquer")
         {
@@ -84,7 +84,7 @@ public class PlayerManager : NetworkBehaviour
     [Command]
     public void CmdJouerCarte(uint carteNetId, int terrainId)
     {
-        RpcJoueCarte(carteNetId, terrainId);
+        RpcJouerCarte(carteNetId, terrainId);
     }
 
 
@@ -114,8 +114,7 @@ public class PlayerManager : NetworkBehaviour
         VerifierGagnant();
     }
 
-    [ClientRpc]
-    private void RpcEchangerCarte(uint carteDeplaceeId, uint carteChoisieId)
+    private void EchangerCarte(uint carteDeplaceeId, uint carteChoisieId)
     {
         if (!NetworkClient.spawned.TryGetValue(carteDeplaceeId, out NetworkIdentity identity1))
             return;
@@ -125,8 +124,8 @@ public class PlayerManager : NetworkBehaviour
         Carte carteChoisie = identity2.GetComponent<Carte>();
 
         int terrainInitial = carteDeplacee.PlaceDeTerrain.Id;
-        RpcJoueCarte(carteDeplaceeId, carteChoisie.PlaceDeTerrain.Id);
-        RpcJoueCarte(carteChoisieId, terrainInitial);
+        RpcJouerCarte(carteDeplaceeId, carteChoisie.PlaceDeTerrain.Id);
+        RpcJouerCarte(carteChoisieId, terrainInitial);
         carteDeplacee.PlaceDeTerrain = carteChoisie.PlaceDeTerrain;
         if (terrainInitial >= 4)
         { carteChoisie.PlaceDeTerrain = TerrainsAdverseList.Find(t => t.Id == terrainInitial); }
@@ -173,7 +172,6 @@ public class PlayerManager : NetworkBehaviour
         if (carteAttaquante.Stats.Type == "Robot") { degatsDef = 1; }
         RpcAttaquerCarte(carteAttaquanteId, carteChoisieId, degats, degatsDef);
     }
-
     private void VerifierGagnant()
     {
         int joueurNbCarte = 0;
@@ -188,7 +186,7 @@ public class PlayerManager : NetworkBehaviour
     }
 
     [ClientRpc]
-    private void Gagner()
+    private void RpcGagner()
     {
         //IF moi joueur
         GameManager.Instance.Proposition("Gagner");
@@ -241,25 +239,19 @@ public class PlayerManager : NetworkBehaviour
     }
 
     [ClientRpc]
-    void RpcJoueCarte(uint carteNetId, int terrainId)
+    void RpcJouerCarte(uint carteNetId, int terrainId)
     {
-        if (!NetworkClient.spawned.TryGetValue(carteNetId, out NetworkIdentity identity))
-        {
-            Debug.LogError("Carte introuvable côté client !");
-            return;
-        }
+        if (!NetworkClient.spawned.TryGetValue(carteNetId, out NetworkIdentity identity)) { return; }
+        //On récupère nos variables
         Carte carte = identity.GetComponent<Carte>();
         PlaceTerrain terrain = TerrainsJoueurList.Find(t => t.Id == terrainId);
         if (terrain == null) { terrain = TerrainsAdverseList.Find(t => t.Id == terrainId); }
+
         int idTerrain = terrain.gameObject.GetComponent<PlaceTerrain>().Id + 3;
 
-        carte.canvasGroup.alpha = 1f;
-        carte.canvasGroup.blocksRaycasts = true;
         carte.rectTransform.anchorMin = new Vector2(0.5f, 0.5f); // C'est pour remettre le pivot au centre
         carte.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
         carte.GetComponent<RectTransform>().anchoredPosition = new Vector3(0, 0, 0);
-
-        if (carte.PlaceDeTerrain == terrain) { return; }
 
         if (idTerrain > 6) { idTerrain = idTerrain - 6; }
         if (isLocalPlayer)
