@@ -241,19 +241,18 @@ public class PlayerManager : NetworkBehaviour
     [ClientRpc]
     void RpcJouerCarte(uint carteNetId, int terrainId)
     {
+
         if (!NetworkClient.spawned.TryGetValue(carteNetId, out NetworkIdentity identity)) { return; }
         //On récupère nos variables
         Carte carte = identity.GetComponent<Carte>();
         PlaceTerrain terrain = TerrainsJoueurList.Find(t => t.Id == terrainId);
         if (terrain == null) { terrain = TerrainsAdverseList.Find(t => t.Id == terrainId); }
 
-        int idTerrain = terrain.gameObject.GetComponent<PlaceTerrain>().Id + 3;
-
-        carte.rectTransform.anchorMin = new Vector2(0.5f, 0.5f); // C'est pour remettre le pivot au centre
+        carte.rectTransform.anchorMin = new Vector2(0.5f, 0.5f); // Remettre le pivot au centre
         carte.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
         carte.GetComponent<RectTransform>().anchoredPosition = new Vector3(0, 0, 0);
-
-        if (idTerrain > 6) { idTerrain = idTerrain - 6; }
+        PlaceTerrain terrainAdversaire;
+        int idTerrain = terrain.gameObject.GetComponent<PlaceTerrain>().Id + 3;
         if (isLocalPlayer)
         {
             carte.transform.SetParent(terrain.transform, false); // Je la place sur le Terrain Joueur
@@ -266,9 +265,10 @@ public class PlayerManager : NetworkBehaviour
         }
         else
         {
-            PlaceTerrain terrainAdversaire;
+            if (idTerrain > 6) { idTerrain = idTerrain - 6; }
             if (idTerrain >= 4) { terrainAdversaire = TerrainsAdverseList.Find(t => t.Id == idTerrain); }
             else { terrainAdversaire = TerrainsJoueurList.Find(t => t.Id == idTerrain); }
+
             carte.transform.SetParent(terrainAdversaire.transform, false);
             terrainAdversaire.CartePlacee = carte.GetComponent<Carte>();
             carte.GetComponent<Carte>().PlaceDeTerrain = terrainAdversaire;
@@ -280,8 +280,23 @@ public class PlayerManager : NetworkBehaviour
             }
         }
         carte.EstEnJeu = true;
-        //Ce qui est en dessous c'est pour enlever les cartes encore placées sur eux
-        foreach (PlaceTerrain terrainTest in TerrainsAdverseList) { if (terrainTest.transform.childCount == 0) { terrainTest.CartePlacee = null; } }
-        foreach (PlaceTerrain terrainTest in TerrainsJoueurList) { if (terrainTest.transform.childCount == 0) { terrainTest.CartePlacee = null; } }
+        ViderTerrain("Normal");
+    }
+
+
+    //Toutes petites fonctions
+    private void ViderTerrain(string choix) // Pour enlever les cartes encore placées sur eux
+    {
+        switch (choix)
+        {
+            case "Tout":
+                foreach (PlaceTerrain terrainTest in TerrainsAdverseList) { terrainTest.CartePlacee = null; }
+                foreach (PlaceTerrain terrainTest in TerrainsJoueurList) { terrainTest.CartePlacee = null; }
+                break;
+            case "Normal":
+                foreach (PlaceTerrain terrainTest in TerrainsAdverseList) { if (terrainTest.transform.childCount == 0) { terrainTest.CartePlacee = null; } }
+                foreach (PlaceTerrain terrainTest in TerrainsJoueurList) { if (terrainTest.transform.childCount == 0) { terrainTest.CartePlacee = null; } }
+                break;
+        }
     }
 }
