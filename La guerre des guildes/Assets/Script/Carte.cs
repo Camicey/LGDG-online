@@ -72,12 +72,6 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         MontrerCarte();
     }
 
-    public override void OnStopClient() // De la carte
-    {
-        base.OnStopClient();
-
-    }
-
     public void Initialiser()
     {
         PlaceDeTerrain = null;
@@ -157,7 +151,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     //Tout en dessous c'est pour déplacer la carte
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if (!isOwned) { return; } //Si la carte n'est pas à moi, YEET
+        if (!isOwned || EstStratege) { return; } //Si la carte n'est pas à moi, YEET
 
         if (eventData.button == PointerEventData.InputButton.Left)
         {
@@ -175,7 +169,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
 
     public void OnDrag(PointerEventData eventData)
     {
-        if (!isOwned) { return; }
+        if (!isOwned || EstStratege) { return; }
         if (eventData.button == PointerEventData.InputButton.Left)
         {
             if (PlaceDeTerrain != null)
@@ -193,7 +187,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     }
     public void OnEndDrag(PointerEventData eventData)
     {
-        if (!isOwned) { return; }
+        if (!isOwned || EstStratege) { return; }
         if (eventData.button == PointerEventData.InputButton.Right)
         {
             FamilleImageT.color = Color.white;
