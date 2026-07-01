@@ -36,12 +36,20 @@ public class PlayerManager : NetworkBehaviour
         TerrainsAdverseList.Add(GameObject.Find("PlaceTerrain4").GetComponent<PlaceTerrain>());
         TerrainsAdverseList.Add(GameObject.Find("PlaceTerrain5").GetComponent<PlaceTerrain>());
         TerrainsAdverseList.Add(GameObject.Find("PlaceTerrain6").GetComponent<PlaceTerrain>());
+
+        GameManager.Instance.TousLesJoueurs.Add(this);
     }
 
     public override void OnStartLocalPlayer()
     {
         base.OnStartLocalPlayer();
         LocalPlayer = this;
+    }
+
+    public override void OnStopClient()
+    {
+        base.OnStopClient();
+        GameManager.Instance.TousLesJoueurs.Remove(this);
     }
 
     [Command]

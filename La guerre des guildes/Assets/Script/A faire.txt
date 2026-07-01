@@ -1,8 +1,17 @@
+A faire : 
+Un état de sauvegarde pour le gamemanager pour restaurer pour les joueurs qui buggent.
+=> avoir une liste 
+
 Se retourne quand il y a un soucis de lien
 
 Ok, tout le monde gagne si yen a un qui gagne, voir comment choisir un côté ou l'autre
 
 Apprendre a faire des signaux ? Plug-in voir Marie et Temmie
+
+Problèmes : 
+Les cartes depop ;-; quand je quitte et revient > J'ai rajouté un bouton pour initialiser les cartes dans la pioche
+> Problème 2 : Je ne peux pas créer de pioche côté client. (Il parrait que le serveur est pas prêt) 
+> Problème 3 : Ca fout en l'air le concept de gagner (Il faudrait pouvoir clear avant de créer à nouveau même s'il y a répétition)
 
 Choses apprises : 
 On ne peut pas appeler un RPC dans un RPC

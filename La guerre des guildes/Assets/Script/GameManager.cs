@@ -16,20 +16,24 @@ public class GameManager : NetworkBehaviour
     public EcranDeConfirmation EcranDeConfirmation;
     public static GameManager Instance;
     public List<Carte> ToutesLesCartes = new List<Carte>();
+    public List<PlayerManager> TousLesJoueurs = new List<PlayerManager>();
 
     public void Start()
     {
         Instance = this;
-        ImporterCartes();
-        if (NetworkServer.active)
-        {
-            CreerDeck();
-        }
+        if (CartesSettings.Count == 0) { ImporterCartes(); }
+        //if (NetworkServer.active) { CreerDeck(); } // A rajouter si on veut pas appuyer sur le bouton
+    }
+
+    public override void OnStopServer()
+    {
+        base.OnStopServer();
+        TousLesJoueurs.Clear();
     }
 
     //Server
     [Server]
-    private void CreerDeck()
+    public void CreerDeck()
     {
         Pioche.Clear();
 

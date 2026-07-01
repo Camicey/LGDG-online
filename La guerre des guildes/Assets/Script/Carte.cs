@@ -72,6 +72,12 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         MontrerCarte();
     }
 
+    public override void OnStopClient() // De la carte
+    {
+        base.OnStopClient();
+
+    }
+
     public void Initialiser()
     {
         PlaceDeTerrain = null;
