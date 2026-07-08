@@ -33,6 +33,6 @@ public class EcranDeConfirmation : MonoBehaviour
     public void Annuler()
     {
         UnityEngine.Debug.Log("J'annule, rien ne se passe");
-        this.GameObject().SetActive(false);
+        gameObject.SetActive(false);
     }
 }

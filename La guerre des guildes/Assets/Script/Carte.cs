@@ -44,6 +44,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     public TMP_Text LiensT;
 
     //Les paramètres qui changent
+    [SyncVar] public float PMVar;
     [SyncVar] public int PVar;
     [SyncVar] public int PAVar;
     [SyncVar] public int IdPouvoirVar;
@@ -61,6 +62,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     public override void OnStartClient() // De la carte
     {
         base.OnStartClient();
+
         //Ce qui permet au client de récupérer la carte setting à partir de l'Id
         Stats = GameManager.Instance.CartesSettings.Find(c => c.Id == Id);
         if (Stats == null)
@@ -80,6 +82,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         EstStratege = false;
         PVar = Stats.PV;
         PAVar = Stats.PA;
+        PMVar = Stats.PM;
         IdPouvoirVar = Stats.IdPouvoir;
         PouvoirVar = Stats.Pouvoir;
         NetworkIdentity networkIdentity = NetworkClient.connection.identity;
@@ -114,7 +117,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         PrenomT.text = Stats.Prenom;
         ImageT.sprite = Stats.Image;
         ImageT.enabled = true;
-        PMT.text = Stats.PM.ToString();
+        PMT.text = PMVar.ToString();
         PVT.text = PVar.ToString();
         PAT.text = PAVar.ToString();
         PouvoirT.text = PouvoirVar;
@@ -151,6 +154,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     //Tout en dessous c'est pour déplacer la carte
     public void OnBeginDrag(PointerEventData eventData)
     {
+        if (canvas == null) { canvas = GetComponentInParent<Canvas>(); }
         if (!isOwned || EstStratege) { return; } //Si la carte n'est pas à moi, YEET
 
         if (eventData.button == PointerEventData.InputButton.Left)

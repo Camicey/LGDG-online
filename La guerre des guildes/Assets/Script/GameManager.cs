@@ -24,11 +24,15 @@ public class GameManager : NetworkBehaviour
         if (CartesSettings.Count == 0) { ImporterCartes(); }
         //if (NetworkServer.active) { CreerDeck(); } // A rajouter si on veut pas appuyer sur le bouton
     }
-
+    public void Awake()
+    {
+        Instance = this;
+    }
     public override void OnStopServer()
     {
         base.OnStopServer();
         TousLesJoueurs.Clear();
+        ToutesLesCartes.Clear();
     }
 
     //Server
@@ -126,13 +130,21 @@ public class GameManager : NetworkBehaviour
     }
     public void Proposition(string choix)
     {
+        EcranDeConfirmation.GameObject().SetActive(true);
+        EcranDeConfirmation.BoutonConfirmer.GetComponentInChildren<TMP_Text>().text = "Ok";
         if (choix == "Gagner")
         {
-            EcranDeConfirmation.GameObject().SetActive(true);
-            EcranDeConfirmation.Texte.text = "Vous avez gagné";
-            EcranDeConfirmation.BoutonConfirmer.GetComponentInChildren<TMP_Text>().text = "Ok";
-            EcranDeConfirmation.ChoixTemp = "Gagner";
+            EcranDeConfirmation.Texte.text = "Vous avez gagné :)";
         }
+        else if (choix == "Perdre")
+        {
+            EcranDeConfirmation.Texte.text = "Vous avez perdu :(";
+        }
+        else if (choix == "Cout")
+        {
+            EcranDeConfirmation.Texte.text = "Vous n'avez pas assez de Point de Mouvement";
+        }
+        EcranDeConfirmation.ChoixTemp = choix;
     }
 
     public bool DeplacementAutorise(int IdOrigine, int IdVise)

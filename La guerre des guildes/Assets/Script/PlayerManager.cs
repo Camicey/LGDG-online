@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using Mirror;
+using TMPro;
 using Mirror.BouncyCastle.Asn1.Misc;
 using Unity.VisualScripting;
 
@@ -19,7 +20,11 @@ public class PlayerManager : NetworkBehaviour
     public GameObject TerrainsAdverse; // Inutilisé pour l'instant
     public List<PlaceTerrain> TerrainsAdverseList = new List<PlaceTerrain>();
     public GameObject DossierCarte;
+    public GameObject PMObjet;
+    public Carte Stratege;
     public static PlayerManager LocalPlayer;
+    [SyncVar(hook = nameof(OnPMChanged))]
+    public int PMEnCours;
 
     public override void OnStartClient()
     {
@@ -36,7 +41,7 @@ public class PlayerManager : NetworkBehaviour
         TerrainsAdverseList.Add(GameObject.Find("PlaceTerrain4").GetComponent<PlaceTerrain>());
         TerrainsAdverseList.Add(GameObject.Find("PlaceTerrain5").GetComponent<PlaceTerrain>());
         TerrainsAdverseList.Add(GameObject.Find("PlaceTerrain6").GetComponent<PlaceTerrain>());
-
+        PMObjet = GameObject.Find("PMEnCoursObjet");
         GameManager.Instance.TousLesJoueurs.Add(this);
     }
 
@@ -52,6 +57,15 @@ public class PlayerManager : NetworkBehaviour
         GameManager.Instance.TousLesJoueurs.Remove(this);
     }
 
+    public void OnPMChanged(int ancienneValeur, int nouvelleValeur)
+    {
+        if (!isLocalPlayer) return;
+        if (PMObjet == null) return;
+        string pmChecker = nouvelleValeur.ToString();
+        if (Stratege != null) { pmChecker += " / " + Stratege.PMVar; }
+        PMObjet.GetComponent<TMP_Text>().text = pmChecker;
+    }
+
     [Command]
     public void CmdConfirmerAction(uint carteDeplaceeId, uint carteChoisieId, string choix)
     {
@@ -61,15 +75,34 @@ public class PlayerManager : NetworkBehaviour
         { return; }
         Carte carteDeplacee = identity1.GetComponent<Carte>();
         Carte carteChoisie = identity2.GetComponent<Carte>();
-
         if (choix == "Echanger" && !carteDeplacee.EstStratege && !carteChoisie.EstStratege)
         {
             EchangerCarte(carteDeplaceeId, carteChoisieId);
+            CoutAction(2);
         }
-        if (choix == "Attaquer")
+        else if (choix == "Attaquer")
         {
             AttaquerCarte(carteDeplaceeId, carteChoisieId);
+            CoutAction(1);
         }
+    }
+
+    [Server]
+    public bool CoutAction(int cout)
+    {
+        if (PMEnCours - cout <= 0)
+        {
+            GameManager.Instance.Proposition("Cout");
+            return false;
+        }
+        PMEnCours = PMEnCours - cout;
+        return true;
+    }
+
+    [Server]
+    public void ValeurPM(int nouvelleValeur)
+    {
+        PMEnCours = nouvelleValeur;
     }
 
     [Command]
@@ -268,6 +301,7 @@ public class PlayerManager : NetworkBehaviour
             if (terrain.EstTerrainStratege && terrain.Id == 1)
             {
                 carte.EstStratege = true;
+                Stratege = carte;
                 carte.EstVisible = true;
             }
         }
