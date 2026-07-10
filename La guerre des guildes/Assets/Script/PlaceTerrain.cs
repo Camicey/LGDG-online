@@ -10,20 +10,20 @@ public class PlaceTerrain : NetworkBehaviour, IDropHandler
     public Carte CartePlacee;
     //public PlayerManager PlayerManager;
     public bool EstTerrainStratege;
+    public bool EstAMoi;
 
     public void Start()
     {
         CartePlacee = null;
-        if (Id == 1 || Id == 4) { EstTerrainStratege = true; }
-        else { EstTerrainStratege = false; }
+        Placement();
     }
 
     public void OnDrop(PointerEventData eventData) // Quand une carte est lâchée sur le terrain
     {
         if (eventData.pointerDrag == null || CartePlacee != null) { return; }
         Carte carteDeplace = eventData.pointerDrag.GetComponent<Carte>();
-        if (!carteDeplace.isOwned) { return; }
-        if ((carteDeplace.PlayerManager.TerrainsJoueurList.Contains(this) && carteDeplace.EstEnJeu == false) // Pose du deck au terrain
+        if (!carteDeplace.isOwned || eventData.button == PointerEventData.InputButton.Right) { return; }
+        if ((EstAMoi && carteDeplace.EstEnJeu == false) // Pose du deck au terrain
         || (carteDeplace.EstEnJeu == true && GameManager.Instance.DeplacementAutorise(carteDeplace.PlaceDeTerrain.Id, Id))) // Pose de terrain en terrain
         {
             UnityEngine.Debug.Log("Place de terrain originel");
@@ -32,7 +32,14 @@ public class PlaceTerrain : NetworkBehaviour, IDropHandler
             carteDeplace.PlaceDeTerrain = this;
             CartePlacee = carteDeplace;
         }
-    }
 
+    }
+    public void Placement()
+    {
+        if (Id == 3 || Id == 5) { GetComponent<RectTransform>().anchoredPosition = new Vector3(280, 0, 0); }
+        else if (Id == 2 || Id == 6) { GetComponent<RectTransform>().anchoredPosition = new Vector3(-280, 0, 0); }
+        else if (Id == 1) { GetComponent<RectTransform>().anchoredPosition = new Vector3(0, -50, 0); }
+        else if (Id == 4) { GetComponent<RectTransform>().anchoredPosition = new Vector3(0, 50, 0); }
+    }
 
 }

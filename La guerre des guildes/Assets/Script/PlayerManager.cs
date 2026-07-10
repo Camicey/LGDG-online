@@ -11,9 +11,9 @@ using Unity.VisualScripting;
 public class PlayerManager : NetworkBehaviour
 {
     public GameObject PrefabCarte;
+    public GameObject PrefabTerrain;
     public GameObject DeckJoueur;
     public GameObject DeckAdversaire;
-    public GameObject PlaceTerrain;
     public GameObject TerrainsJoueur; // Inutilisé pour l'instant
     public GameObject Defausse; // Pour l'instant inutilisee, peut etre faire une liste de int a la place
     public List<PlaceTerrain> TerrainsJoueurList = new List<PlaceTerrain>();
@@ -35,28 +35,21 @@ public class PlayerManager : NetworkBehaviour
         TerrainsAdverse = GameObject.Find("TerrainsAdverse");
         DossierCarte = GameObject.Find("DossierCarte");
         Defausse = GameObject.Find("Defausse");
-        TerrainsJoueurList.Add(GameObject.Find("PlaceTerrain1").GetComponent<PlaceTerrain>());
-        TerrainsJoueurList.Add(GameObject.Find("PlaceTerrain2").GetComponent<PlaceTerrain>());
-        TerrainsJoueurList.Add(GameObject.Find("PlaceTerrain3").GetComponent<PlaceTerrain>());
-        TerrainsAdverseList.Add(GameObject.Find("PlaceTerrain4").GetComponent<PlaceTerrain>());
-        TerrainsAdverseList.Add(GameObject.Find("PlaceTerrain5").GetComponent<PlaceTerrain>());
-        TerrainsAdverseList.Add(GameObject.Find("PlaceTerrain6").GetComponent<PlaceTerrain>());
         PMObjet = GameObject.Find("PMEnCoursObjet");
         GameManager.Instance.TousLesJoueurs.Add(this);
     }
-
     public override void OnStartLocalPlayer()
     {
         base.OnStartLocalPlayer();
         LocalPlayer = this;
     }
-
     public override void OnStopClient()
     {
         base.OnStopClient();
         GameManager.Instance.TousLesJoueurs.Remove(this);
     }
 
+    //Fonctions
     public void OnPMChanged(int ancienneValeur, int nouvelleValeur)
     {
         if (!isLocalPlayer) return;
@@ -122,6 +115,11 @@ public class PlayerManager : NetworkBehaviour
         RpcShowCard(carte);
     }
 
+    public void PiocherTerrain(GameObject terrain)
+    {
+        RpcShowTerrain(terrain);
+    }
+
     [Command]
     public void CmdJouerCarte(uint carteNetId, int terrainId)
     {
@@ -164,13 +162,15 @@ public class PlayerManager : NetworkBehaviour
         Carte carteDeplacee = identity1.GetComponent<Carte>();
         Carte carteChoisie = identity2.GetComponent<Carte>();
 
-        int terrainInitial = carteDeplacee.PlaceDeTerrain.Id;
-        RpcJouerCarte(carteDeplaceeId, carteChoisie.PlaceDeTerrain.Id);
-        RpcJouerCarte(carteChoisieId, terrainInitial);
-        carteDeplacee.PlaceDeTerrain = carteChoisie.PlaceDeTerrain;
+        //int terrainInitial = carteDeplacee.PlaceDeTerrain.Id;
+        //RpcJouerCarte(carteDeplaceeId, carteChoisie.PlaceDeTerrain.Id);
+        //RpcJouerCarte(carteChoisieId, terrainInitial);
+        RpcEchangerCarte(carteDeplaceeId, carteChoisie.PlaceDeTerrain.Id, carteChoisieId, carteDeplacee.PlaceDeTerrain.Id);
+
+        /*carteDeplacee.PlaceDeTerrain = carteChoisie.PlaceDeTerrain;
         if (terrainInitial >= 4)
         { carteChoisie.PlaceDeTerrain = TerrainsAdverseList.Find(t => t.Id == terrainInitial); }
-        else { carteChoisie.PlaceDeTerrain = TerrainsJoueurList.Find(t => t.Id == terrainInitial); }
+        else { carteChoisie.PlaceDeTerrain = TerrainsJoueurList.Find(t => t.Id == terrainInitial); }*/
 
     }
 
@@ -192,10 +192,10 @@ public class PlayerManager : NetworkBehaviour
 
         if (carteChoisie.EstStratege)
         {
-            PlaceTerrain terrain2 = TerrainsJoueurList.Find(t => t.Id == 2);
-            PlaceTerrain terrain3 = TerrainsJoueurList.Find(t => t.Id == 3);
-            PlaceTerrain terrain5 = TerrainsAdverseList.Find(t => t.Id == 5);
-            PlaceTerrain terrain6 = TerrainsAdverseList.Find(t => t.Id == 6);
+            PlaceTerrain terrain2 = GameManager.Instance.TousLesTerrains.Find(t => t.Id == 2);
+            PlaceTerrain terrain3 = GameManager.Instance.TousLesTerrains.Find(t => t.Id == 3);
+            PlaceTerrain terrain5 = GameManager.Instance.TousLesTerrains.Find(t => t.Id == 5);
+            PlaceTerrain terrain6 = GameManager.Instance.TousLesTerrains.Find(t => t.Id == 6);
             // Si on attaque le stratège, on fait attention que les aversaires n'ont pas de carte a côté
             //Penser a rajouter le moment ou le stratège sera SEUL
             if (carteChoisie.PlaceDeTerrain.Id == 1 &&
@@ -280,24 +280,52 @@ public class PlayerManager : NetworkBehaviour
     }
 
     [ClientRpc]
+    private void RpcShowTerrain(GameObject terrain)
+    {
+        PlaceTerrain terraing = terrain.GetComponent<PlaceTerrain>();
+        if (terrain == null) return;
+        if (isLocalPlayer) // Si je suis le joueur
+        {
+            //Je place d'un côté MAIS le coordonnées sont les mêmes donc je peux :D le faire dans le start !
+            if (terraing.Id <= 3)
+            {
+                terraing.transform.SetParent(TerrainsJoueur.transform, false);
+                terraing.EstAMoi = true;
+                if (terraing.Id == 1) { terraing.EstTerrainStratege = true; }
+            }
+            else { terraing.transform.SetParent(TerrainsAdverse.transform, false); }
+        }
+        else
+        {
+            //Je place de l'autre
+            if (terraing.Id > 3)
+            {
+                terraing.transform.SetParent(TerrainsJoueur.transform, false);
+                terraing.EstAMoi = true;
+            }
+            else
+            {
+                terraing.transform.SetParent(TerrainsAdverse.transform, false);
+                if (terraing.Id == 4) { terraing.EstTerrainStratege = true; }
+            }
+        }
+        GameManager.Instance.TousLesTerrains.Add(terrain.GetComponent<PlaceTerrain>());
+    }
+
+    [ClientRpc]
     void RpcJouerCarte(uint carteNetId, int terrainId)
     {
 
         if (!NetworkClient.spawned.TryGetValue(carteNetId, out NetworkIdentity identity)) { return; }
         //On récupère nos variables
         Carte carte = identity.GetComponent<Carte>();
-        PlaceTerrain terrain = TerrainsJoueurList.Find(t => t.Id == terrainId);
-        if (terrain == null) { terrain = TerrainsAdverseList.Find(t => t.Id == terrainId); }
-
-        carte.rectTransform.anchorMin = new Vector2(0.5f, 0.5f); // Remettre le pivot au centre
-        carte.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-        carte.GetComponent<RectTransform>().anchoredPosition = new Vector3(0, 0, 0);
-        PlaceTerrain terrainAdversaire;
-        int idTerrain = terrain.gameObject.GetComponent<PlaceTerrain>().Id + 3;
+        PlaceTerrain terrain = GameManager.Instance.TousLesTerrains.Find(t => t.Id == terrainId);
+        if (terrain == null) { return; }
+        carte.transform.SetParent(terrain.transform, false); // Je la place sur le Terrain Joueur
+        PivotCentre(carte);
+        terrain.CartePlacee = carte.GetComponent<Carte>();
         if (isLocalPlayer)
         {
-            carte.transform.SetParent(terrain.transform, false); // Je la place sur le Terrain Joueur
-            terrain.CartePlacee = carte.GetComponent<Carte>();
             if (terrain.EstTerrainStratege && terrain.Id == 1)
             {
                 carte.EstStratege = true;
@@ -307,21 +335,70 @@ public class PlayerManager : NetworkBehaviour
         }
         else
         {
-            if (idTerrain > 6) { idTerrain = idTerrain - 6; }
-            if (idTerrain >= 4) { terrainAdversaire = TerrainsAdverseList.Find(t => t.Id == idTerrain); }
-            else { terrainAdversaire = TerrainsJoueurList.Find(t => t.Id == idTerrain); }
-
-            carte.transform.SetParent(terrainAdversaire.transform, false);
-            terrainAdversaire.CartePlacee = carte.GetComponent<Carte>();
-            carte.GetComponent<Carte>().PlaceDeTerrain = terrainAdversaire;
-            if (terrainAdversaire.EstTerrainStratege && terrainAdversaire.Id == 4)
+            if (terrain.EstTerrainStratege && terrain.Id == 4)
             {
                 carte.EstStratege = true;
+                Stratege = carte;
                 carte.EstVisible = true;
-                carte.GetComponent<Carte>().MontrerCarte();
             }
         }
         carte.EstEnJeu = true;
+        ViderTerrain("Normal");
+    }
+
+    [ClientRpc]
+    void RpcEchangerCarte(uint carteNetId, int terrainId, uint carteNetId2, int terrainId2)
+    {
+        List<uint> cartesId = new List<uint>();
+        cartesId.Add(carteNetId);
+        cartesId.Add(carteNetId2);
+        List<int> terrainsId = new List<int>();
+        terrainsId.Add(terrainId);
+        terrainsId.Add(terrainId2);
+
+        for (int i = 0; i < 2; i++)
+        {
+            if (!NetworkClient.spawned.TryGetValue(cartesId[i], out NetworkIdentity identity)) { return; }
+            //On récupère nos variables
+            Carte carte = identity.GetComponent<Carte>();
+            PlaceTerrain terrain = TerrainsJoueurList.Find(t => t.Id == terrainsId[i]);
+            if (terrain == null) { terrain = TerrainsAdverseList.Find(t => t.Id == terrainsId[i]); }
+            if (isLocalPlayer)
+            {
+                carte.transform.SetParent(terrain.transform, false); // Je la place sur le Terrain Joueur
+                terrain.CartePlacee = carte.GetComponent<Carte>();
+                if (terrain.EstTerrainStratege)
+                {
+                    carte.EstStratege = true;
+                    Stratege = carte;
+                    carte.EstVisible = true;
+                }
+                if (terrainsId[i] >= 4)
+                { carte.PlaceDeTerrain = TerrainsAdverseList.Find(t => t.Id == terrainsId[i]); }
+                else { carte.PlaceDeTerrain = TerrainsJoueurList.Find(t => t.Id == terrainsId[i]); }
+            }
+            else
+            {
+                PlaceTerrain terrainAdversaire;
+                int idTerrain = terrain.gameObject.GetComponent<PlaceTerrain>().Id + 3;
+                if (idTerrain > 6) { idTerrain = idTerrain - 6; }
+                if (idTerrain >= 4) { terrainAdversaire = TerrainsAdverseList.Find(t => t.Id == idTerrain); }
+                else { terrainAdversaire = TerrainsJoueurList.Find(t => t.Id == idTerrain); }
+
+                carte.transform.SetParent(terrainAdversaire.transform, false);
+                terrainAdversaire.CartePlacee = carte.GetComponent<Carte>();
+                carte.GetComponent<Carte>().PlaceDeTerrain = terrainAdversaire;
+                if (terrainAdversaire.EstTerrainStratege)
+                {
+                    carte.EstStratege = true;
+                    carte.EstVisible = true;
+                    carte.GetComponent<Carte>().MontrerCarte();
+                }
+            }
+
+            carte.EstEnJeu = true;
+            PivotCentre(carte);
+        }
         ViderTerrain("Normal");
     }
 
@@ -332,13 +409,17 @@ public class PlayerManager : NetworkBehaviour
         switch (choix)
         {
             case "Tout":
-                foreach (PlaceTerrain terrainTest in TerrainsAdverseList) { terrainTest.CartePlacee = null; }
-                foreach (PlaceTerrain terrainTest in TerrainsJoueurList) { terrainTest.CartePlacee = null; }
+                foreach (PlaceTerrain terrainTest in GameManager.Instance.TousLesTerrains) { terrainTest.CartePlacee = null; }
                 break;
             case "Normal":
-                foreach (PlaceTerrain terrainTest in TerrainsAdverseList) { if (terrainTest.transform.childCount == 0) { terrainTest.CartePlacee = null; } }
-                foreach (PlaceTerrain terrainTest in TerrainsJoueurList) { if (terrainTest.transform.childCount == 0) { terrainTest.CartePlacee = null; } }
+                foreach (PlaceTerrain terrainTest in GameManager.Instance.TousLesTerrains) { if (terrainTest.transform.childCount == 0) { terrainTest.CartePlacee = null; } }
                 break;
         }
+    }
+    private void PivotCentre(Carte carte) // Pour enlever les cartes encore placées sur eux
+    {
+        carte.rectTransform.anchorMin = new Vector2(0.5f, 0.5f); // Remettre le pivot au centre
+        carte.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+        carte.GetComponent<RectTransform>().anchoredPosition = new Vector3(0, 0, 0);
     }
 }

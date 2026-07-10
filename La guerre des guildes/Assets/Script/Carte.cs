@@ -52,13 +52,13 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     [SyncVar] public float CoutPouvoirVar;
     public List<int> liensVar = new();
 
+    //Fonctions de Unity
     void Start()
     {
         rectTransform = GetComponent<RectTransform>();
         canvasGroup = GetComponent<CanvasGroup>();
         canvas = GetComponentInParent<Canvas>();
     }
-
     public override void OnStartClient() // De la carte
     {
         base.OnStartClient();
@@ -73,7 +73,6 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         Initialiser();
         MontrerCarte();
     }
-
     public void Initialiser()
     {
         PlaceDeTerrain = null;
@@ -144,19 +143,20 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         if (description == " ") { description = "Personne"; }
         return description;
     }
-
     public void Mourir()
     {
         UnityEngine.Debug.Log($"{Stats.Prenom} est mort.e.");
         PlayerManager.CmdMourir(this.GameObject());
     }
 
+
     //Tout en dessous c'est pour déplacer la carte
     public void OnBeginDrag(PointerEventData eventData)
     {
         if (canvas == null) { canvas = GetComponentInParent<Canvas>(); }
-        if (!isOwned || EstStratege) { return; } //Si la carte n'est pas à moi, YEET
-
+        if (!isOwned) { return; }//Si la carte n'est pas à moi, YEET
+        if (eventData.button == PointerEventData.InputButton.Right) { FamilleImageT.color = Color.red; } //C'est l'attaque
+        if (EstStratege) { return; }
         if (eventData.button == PointerEventData.InputButton.Left)
         {
             canvasGroup.alpha = .7f; // Opacité de la carte quand je clique dessus
@@ -168,9 +168,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
                 RectTransformUtility.ScreenPointToLocalPointInRectangle(rectTransform, eventData.position, eventData.pressEventCamera, out offset);
             }
         }
-        if (eventData.button == PointerEventData.InputButton.Right) { FamilleImageT.color = Color.red; } //C'est l'attaque
     }
-
     public void OnDrag(PointerEventData eventData)
     {
         if (!isOwned || EstStratege) { return; }
@@ -191,12 +189,13 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     }
     public void OnEndDrag(PointerEventData eventData)
     {
-        if (!isOwned || EstStratege) { return; }
+        if (!isOwned) { return; }
         if (eventData.button == PointerEventData.InputButton.Right)
         {
             FamilleImageT.color = Color.white;
             return;
         }
+        if (EstStratege) { return; }
         canvasGroup.alpha = 1f; // Opacité de la carte quand je clique dessus
         canvasGroup.blocksRaycasts = true;
         rectTransform.anchoredPosition = Vector2.zero;
@@ -215,8 +214,6 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
             LayoutRebuilder.MarkLayoutForRebuild(PlayerManager.DeckJoueur.GetComponent<RectTransform>());
         }
     }
-
-
     public void OnPointerDown(PointerEventData eventData)
     {
         if (eventData.button != PointerEventData.InputButton.Middle) { return; }

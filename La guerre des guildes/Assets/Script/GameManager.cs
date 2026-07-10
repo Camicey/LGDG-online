@@ -16,6 +16,7 @@ public class GameManager : NetworkBehaviour
     public EcranDeConfirmation EcranDeConfirmation;
     public static GameManager Instance;
     public List<Carte> ToutesLesCartes = new List<Carte>();
+    public List<PlaceTerrain> TousLesTerrains = new List<PlaceTerrain>();
     public List<PlayerManager> TousLesJoueurs = new List<PlayerManager>();
 
     public void Start()
@@ -25,44 +26,12 @@ public class GameManager : NetworkBehaviour
         //if (NetworkServer.active) { CreerDeck(); } // A rajouter si on veut pas appuyer sur le bouton
     }
     public void Awake()
-    {
-        Instance = this;
-    }
+    { Instance = this; }
     public override void OnStopServer()
     {
         base.OnStopServer();
         TousLesJoueurs.Clear();
         ToutesLesCartes.Clear();
-    }
-
-    //Server
-    [Server]
-    public void CreerDeck()
-    {
-        Pioche.Clear();
-
-        foreach (var carteStats in CartesSettings)
-        {
-            Pioche.Add(carteStats.Id);
-        }
-        Melanger(Pioche);
-    }
-    [Server]
-    public void Piocher(NetworkConnectionToClient conn)
-    {
-        if (Pioche.Count == 0) return;
-        PlayerManager joueur = conn.identity.GetComponent<PlayerManager>();
-        if (joueur.DeckJoueur.transform.childCount >= 5) return;
-
-        int dataId = Pioche[0];
-        Pioche.RemoveAt(0);
-        GameObject cardObj = Instantiate(joueur.PrefabCarte);
-        Carte carte = cardObj.GetComponent<Carte>();
-        carte.Id = dataId;
-        carte.PlayerManager = joueur;
-
-        NetworkServer.Spawn(cardObj, conn);
-        joueur.PiocherCarte(cardObj);
     }
 
     public void ImporterCartes()
@@ -97,6 +66,46 @@ public class GameManager : NetworkBehaviour
         }
 
     }
+
+    //Server
+    [Server]
+    public void CreerDeck()
+    {
+        Pioche.Clear();
+        foreach (var carteStats in CartesSettings)
+        { Pioche.Add(carteStats.Id); }
+        Melanger(Pioche);
+    }
+    [Server]
+    public void Piocher(NetworkConnectionToClient conn)
+    {
+        if (Pioche.Count == 0) return;
+        PlayerManager joueur = conn.identity.GetComponent<PlayerManager>();
+        if (joueur.DeckJoueur.transform.childCount >= 5) return;
+
+        int dataId = Pioche[0];
+        Pioche.RemoveAt(0);
+        GameObject cardObj = Instantiate(joueur.PrefabCarte);
+        Carte carte = cardObj.GetComponent<Carte>();
+        carte.Id = dataId;
+        carte.PlayerManager = joueur;
+
+        NetworkServer.Spawn(cardObj, conn);
+        joueur.PiocherCarte(cardObj);
+    }
+    [Server]
+    public void CreerTerrain(NetworkConnectionToClient conn, int i)
+    {
+        //if terrain déjà instancié return;
+        PlayerManager joueur = conn.identity.GetComponent<PlayerManager>();
+
+        GameObject terrainObj = Instantiate(joueur.PrefabTerrain);
+        PlaceTerrain terrain = terrainObj.GetComponent<PlaceTerrain>();
+        terrain.Id = i;
+
+        NetworkServer.Spawn(terrainObj, conn);
+        joueur.PiocherTerrain(terrainObj);
+    }
     private void Melanger(List<int> list)
     {
         for (int i = 0; i < list.Count; i++)
@@ -106,6 +115,7 @@ public class GameManager : NetworkBehaviour
         }
     }
 
+    //Propositions
     public void Proposition(Carte carteDeplacee, Carte carteChoisie, string choix)
     {
         if (!DeplacementAutorise(carteChoisie.PlaceDeTerrain.Id, carteDeplacee.PlaceDeTerrain.Id)) { return; }

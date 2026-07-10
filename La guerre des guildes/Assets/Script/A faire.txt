@@ -7,7 +7,9 @@ A faire :
 - Apprendre a faire des signaux ? Plug-in voir Marie et Temmie
 
 En train de faire : 
-Je suis en train de faire le PMENCOURS ou j'essaie en tout cas
+Encore un bug d'échange de cartes XD du côté client
+toujours hein mais je change le système de terrain et je les initialise
+PMEncours
 
 Problèmes : 
 Les cartes depop ;-; quand je quitte et revient > J'ai rajouté un bouton pour initialiser les cartes dans la pioche
@@ -18,7 +20,8 @@ Les cartes depop ;-; quand je quitte et revient > J'ai rajouté un bouton pour i
 Choses apprises : 
 
 On ne peut pas appeler un RPC dans un RPC
- [SyncVar(hook = nameof(OnPMChanged))]
+
+[SyncVar(hook = nameof(OnPMChanged))]
     public int PMEnCours = 20;
 Ca c'est un hook, il s'active dès que la variable est changée, ca aurait été plus facile avec a peu près tout HEIN
 
@@ -30,3 +33,6 @@ Bout a replacer plus tard :
             if (NetworkServer.connections.Count == 2) { }
         }
     */
+
+MoveTowards est une méthode de Unity qui permet de déplacer un objet d'une position actuelle vers une position cible à une vitesse constante, sans interpolation.
+La syntaxe est simple : Vector3. MoveTowards(current, target, maxDistanceDelta).

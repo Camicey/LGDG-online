@@ -101,11 +101,16 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0
   PrefabCarte: {fileID: 6097343779307823918, guid: e8562048988c4a84ba1f9aec3fc17abf, type: 3}
+  PrefabTerrain: {fileID: 3587013541137757171, guid: 7d3db604d609dbb4495c0e893c63c681, type: 3}
   DeckJoueur: {fileID: 0}
   DeckAdversaire: {fileID: 0}
   PlaceTerrain: {fileID: 3587013541137757171, guid: 7d3db604d609dbb4495c0e893c63c681, type: 3}
   TerrainsJoueur: {fileID: 0}
+  Defausse: {fileID: 0}
+  TerrainsJoueurList: []
   TerrainsAdverse: {fileID: 0}
+  TerrainsAdverseList: []
   DossierCarte: {fileID: 0}
-  JeuEnCours: {fileID: 0}
-  DeckCartes: []
+  PMObjet: {fileID: 0}
+  Stratege: {fileID: 0}
+  PMEnCours: 0
