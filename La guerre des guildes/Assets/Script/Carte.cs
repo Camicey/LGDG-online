@@ -58,6 +58,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         rectTransform = GetComponent<RectTransform>();
         canvasGroup = GetComponent<CanvasGroup>();
         canvas = GetComponentInParent<Canvas>();
+        PivotCentre();
     }
     public override void OnStartClient() // De la carte
     {
@@ -93,7 +94,6 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         {
             liensVar.Add(lien);
         }
-
     }
 
     public void CacherCarte()
@@ -148,7 +148,12 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         UnityEngine.Debug.Log($"{Stats.Prenom} est mort.e.");
         PlayerManager.CmdMourir(this.GameObject());
     }
-
+    public void PivotCentre() // Pour enlever les cartes encore placées sur eux
+    {
+        rectTransform.anchorMin = new Vector2(0.5f, 0.5f); // Remettre le pivot au centre
+        rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+        GetComponent<RectTransform>().anchoredPosition = new Vector3(0, 0, 0);
+    }
 
     //Tout en dessous c'est pour déplacer la carte
     public void OnBeginDrag(PointerEventData eventData)
@@ -198,7 +203,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         if (EstStratege) { return; }
         canvasGroup.alpha = 1f; // Opacité de la carte quand je clique dessus
         canvasGroup.blocksRaycasts = true;
-        rectTransform.anchoredPosition = Vector2.zero;
+        PivotCentre();
 
         if (PlaceDeTerrain != null && eventData.button == PointerEventData.InputButton.Left) // On joue la carte
         {
@@ -207,11 +212,18 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         }
         else if (PlaceDeTerrain == null && eventData.button == PointerEventData.InputButton.Left) // Elle revient dans le deck
         {
-            EstEnJeu = false;
+
             EstStratege = false;
             EstVisible = false;
-            transform.SetParent(PlayerManager.DeckJoueur.transform, false);
-            LayoutRebuilder.MarkLayoutForRebuild(PlayerManager.DeckJoueur.GetComponent<RectTransform>());
+            if (EstEnJeu == true)
+            {
+                PlayerManager.RangerCarte(this);
+            }
+            else
+            {
+                transform.SetParent(PlayerManager.DeckJoueur.transform, false);
+                LayoutRebuilder.MarkLayoutForRebuild(PlayerManager.DeckJoueur.GetComponent<RectTransform>());
+            }
         }
     }
     public void OnPointerDown(PointerEventData eventData)
@@ -222,6 +234,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     }
     public void OnDrop(PointerEventData eventData)
     {
+        UnityEngine.Debug.Log("AAAAAAH");
         if (eventData.pointerDrag == null) { return; }
         Carte carteDeplace = eventData.pointerDrag.GetComponent<Carte>();
         if (EstEnJeu && carteDeplace.isOwned && isOwned && eventData.button == PointerEventData.InputButton.Left)

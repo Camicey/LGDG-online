@@ -15,9 +15,15 @@ public class PlaceTerrain : NetworkBehaviour, IDropHandler
     public void Start()
     {
         CartePlacee = null;
-        Placement();
     }
-
+    public void Placement(int i)
+    {
+        RectTransform rt = GetComponent<RectTransform>();
+        if (Id == 3 || Id == 5) { rt.anchoredPosition = new Vector3(280 * i, 0, 0); }
+        else if (Id == 2 || Id == 6) { rt.anchoredPosition = new Vector3(-280 * i, 0, 0); }
+        else if (Id == 1) { rt.anchoredPosition = new Vector3(0, -50 * i, 0); }
+        else if (Id == 4) { rt.anchoredPosition = new Vector3(0, 50 * i, 0); }
+    }
     public void OnDrop(PointerEventData eventData) // Quand une carte est lâchée sur le terrain
     {
         if (eventData.pointerDrag == null || CartePlacee != null) { return; }
@@ -33,13 +39,6 @@ public class PlaceTerrain : NetworkBehaviour, IDropHandler
             CartePlacee = carteDeplace;
         }
 
-    }
-    public void Placement()
-    {
-        if (Id == 3 || Id == 5) { GetComponent<RectTransform>().anchoredPosition = new Vector3(280, 0, 0); }
-        else if (Id == 2 || Id == 6) { GetComponent<RectTransform>().anchoredPosition = new Vector3(-280, 0, 0); }
-        else if (Id == 1) { GetComponent<RectTransform>().anchoredPosition = new Vector3(0, -50, 0); }
-        else if (Id == 4) { GetComponent<RectTransform>().anchoredPosition = new Vector3(0, 50, 0); }
     }
 
 }
