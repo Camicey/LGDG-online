@@ -104,6 +104,10 @@ public class PlayerManager : NetworkBehaviour
         if (carteAttaquante.liensVar.Contains(carteChoisie.Id))
         {
             //Blabla je peux pas attaquer
+            carteAttaquante.EstVisible = true;
+            carteChoisie.EstVisible = true;
+            carteAttaquante.MontrerCarte();
+            carteChoisie.MontrerCarte();
             return;
         }
 
@@ -344,7 +348,7 @@ public class PlayerManager : NetworkBehaviour
         terrain.CartePlacee = carte.GetComponent<Carte>();
         if (isLocalPlayer)
         {
-            if (terrain.EstTerrainStratege && terrain.Id == 1)
+            if (terrain.Id == 1)
             {
                 carte.EstStratege = true;
                 Stratege = carte;
@@ -353,7 +357,7 @@ public class PlayerManager : NetworkBehaviour
         }
         else
         {
-            if (terrain.EstTerrainStratege && terrain.Id == 4)
+            if (terrain.Id == 4)
             {
                 carte.EstStratege = true;
                 Stratege = carte;
@@ -362,6 +366,7 @@ public class PlayerManager : NetworkBehaviour
         }
         carte.PlaceDeTerrain = terrain;
         carte.EstEnJeu = true;
+        if (terrain.Id == 4 || terrain.Id == 1) { carte.MontrerCarte(); }
         ViderTerrain("Normal");
     }
 

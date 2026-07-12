@@ -101,6 +101,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     public void CacherCarte()
     {
         //Retirer tout ce qui est visible
+        UnityEngine.Debug.Log("Je me cache");
         PrenomT.text = " ";
         ImageT.enabled = false;
         PMT.text = " ";
@@ -115,6 +116,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     }
     public void MontrerCarte()
     {
+        UnityEngine.Debug.Log("Je me montre");
         PrenomT.text = Stats.Prenom;
         ImageT.sprite = Stats.Image;
         ImageT.enabled = true;
