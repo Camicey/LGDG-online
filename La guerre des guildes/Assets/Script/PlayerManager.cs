@@ -24,7 +24,7 @@ public class PlayerManager : NetworkBehaviour
     public Carte Stratege;
     public static PlayerManager LocalPlayer;
     [SyncVar(hook = nameof(OnPMChanged))]
-    public int PMEnCours;
+    public float PMEnCours;
 
 
     //Fonction Network
@@ -53,7 +53,7 @@ public class PlayerManager : NetworkBehaviour
 
 
     //Fonction classiques
-    public void OnPMChanged(int ancienneValeur, int nouvelleValeur)
+    public void OnPMChanged(float ancienneValeur, float nouvelleValeur)
     {
         if (!isLocalPlayer) return;
         if (PMObjet == null) return;
@@ -152,11 +152,13 @@ public class PlayerManager : NetworkBehaviour
     public void CmdJouerCarte(uint carteNetId, int terrainId)
     {
         RpcJouerCarte(carteNetId, terrainId);
+        CoutAction(1);
     }
-
+    [Command]
     private void CmdRangerCarte(uint carteNetId)
     {
         RpcRangerCarte(carteNetId);
+        CoutAction(1);
     }
 
     [Command]
@@ -190,14 +192,15 @@ public class PlayerManager : NetworkBehaviour
     public void CmdPiocher()
     {
         GameManager.Instance.Piocher(connectionToClient);
+        CoutAction(1);
     }
 
 
     //Servers
     [Server]
-    public bool CoutAction(int cout)
+    public bool CoutAction(float cout)
     {
-        if (PMEnCours - cout <= 0)
+        if (PMEnCours - cout < 0)
         {
             GameManager.Instance.Proposition("Cout");
             return false;
@@ -214,17 +217,13 @@ public class PlayerManager : NetworkBehaviour
 
 
 
-
-
     //Client RPC
     private void RpcRangerCarte(uint carteNetId)
     {
         if (!NetworkClient.spawned.TryGetValue(carteNetId, out NetworkIdentity identity)) { return; }
         Carte carte = identity.GetComponent<Carte>();
-        if (isLocalPlayer)
-        { carte.transform.SetParent(DeckJoueur.transform, false); }
-        else
-        { carte.transform.SetParent(DeckAdversaire.transform, false); }
+        if (isLocalPlayer) { carte.transform.SetParent(DeckJoueur.transform, false); } //Je la remet dans mon deck
+        else { carte.transform.SetParent(DeckAdversaire.transform, false); } // Je la remet dans le deck adverse
         carte.EstEnJeu = false;
         ViderTerrain("Normal");
     }

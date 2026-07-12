@@ -12,8 +12,8 @@ public class Deck : MonoBehaviour, IDropHandler
 
         Carte carteDeplace = eventData.pointerDrag.GetComponent<Carte>();
         if (!carteDeplace.isOwned || !carteDeplace.EstEnJeu || carteDeplace.EstStratege) { return; }
-        if (carteDeplace.PlaceDeTerrain != null) { carteDeplace.PlaceDeTerrain.CartePlacee = null; }
+        carteDeplace.PlaceDeTerrain.CartePlacee = null;
         carteDeplace.PlaceDeTerrain = null;
-        UnityEngine.Debug.Log("LE DECK");
+        carteDeplace.EstRemise = true;
     }
 }

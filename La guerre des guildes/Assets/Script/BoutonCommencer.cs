@@ -7,7 +7,7 @@ public class BoutonCommencer : MonoBehaviour
 
     void Start()
     {
-        Invoke(nameof(VerifierServeur), 0.1f);
+        Invoke(nameof(VerifierServeur), 0.1f); // Ce l'enlève côté client
     }
 
     void VerifierServeur()

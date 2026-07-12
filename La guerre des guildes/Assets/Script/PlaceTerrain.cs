@@ -7,7 +7,7 @@ using Mirror;
 public class PlaceTerrain : NetworkBehaviour, IDropHandler
 {
     [SyncVar] public int Id;
-    public Carte CartePlacee;
+    [SyncVar] public Carte CartePlacee;
     //public PlayerManager PlayerManager;
     public bool EstTerrainStratege;
     public bool EstAMoi;
@@ -32,7 +32,6 @@ public class PlaceTerrain : NetworkBehaviour, IDropHandler
         if ((EstAMoi && carteDeplace.EstEnJeu == false) // Pose du deck au terrain
         || (carteDeplace.EstEnJeu == true && GameManager.Instance.DeplacementAutorise(carteDeplace.PlaceDeTerrain.Id, Id))) // Pose de terrain en terrain
         {
-            UnityEngine.Debug.Log("Place de terrain originel");
             carteDeplace.EstEnJeu = true; // Si je pose la carte sur la place, on pose un true
             if (carteDeplace.PlaceDeTerrain != null) { carteDeplace.PlaceDeTerrain.CartePlacee = null; }
             carteDeplace.PlaceDeTerrain = this;
