@@ -7,9 +7,12 @@ A faire :
 - Apprendre a faire des signaux ? Plug-in voir Marie et Temmie
 
 En train de faire :
+Ranger : 
+    > MontrerCarte en hook ?
+    > 
 Tour par tour :
-> PMEncours
-> Bloquer l'adversaire de faire une action pendant le tour de l'autre
+    > PMEncours
+    > Bloquer l'adversaire de faire une action pendant le tour de l'autre
 
 Problèmes : 
 > Problème 2 : si je ferme le serveur, les cartes sont bugguee (en gros tout tuer)

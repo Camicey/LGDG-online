@@ -7,6 +7,7 @@ using System;
 using TMPro;
 using Unity.VisualScripting;
 using System.Linq;
+using UnityEngine.UI;
 
 public class GameManager : NetworkBehaviour
 {
@@ -15,6 +16,8 @@ public class GameManager : NetworkBehaviour
     public List<CarteSettings> CartesSettings = new List<CarteSettings>(); //Ajoutees manuellement
     public EcranDeConfirmation EcranDeConfirmation;
     public static GameManager Instance;
+    public Sprite ImageVisible;
+    public Sprite ImagePasVisible;
     public List<Carte> ToutesLesCartes = new List<Carte>();
     public List<PlaceTerrain> TousLesTerrains = new List<PlaceTerrain>();
     public List<PlayerManager> TousLesJoueurs = new List<PlayerManager>();
@@ -37,7 +40,16 @@ public class GameManager : NetworkBehaviour
     public void ImporterCartes()
     {
         CartesSettings.Clear(); //On enlève tout
-        string[] export = File.ReadAllLines("Assets/Script/ExportCartes.csv"); // Lire CSV
+        //string[] export = File.ReadAllLines("Assets/Resources/ExportCartes.csv"); // Lire CSV
+        TextAsset csv = Resources.Load<TextAsset>("ExportCartes");
+
+        if (csv == null)
+        {
+            UnityEngine.Debug.LogError("Impossible de charger ExportCartes.csv");
+            return;
+        }
+
+        string[] export = csv.text.Split(new[] { "\r\n", "\n" }, System.StringSplitOptions.None); //testons
         string ligne = export[0];
         for (int i = 1; i < export.Length; i++)
         {

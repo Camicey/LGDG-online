@@ -2125,6 +2125,8 @@ MonoBehaviour:
   Pioche: 
   CartesSettings: []
   EcranDeConfirmation: {fileID: 1510128569}
+  ImageVisible: {fileID: 21300000, guid: 430eeab4f520fc64184a2654a33fff89, type: 3}
+  ImagePasVisible: {fileID: 21300000, guid: fde2446214f90304a890393d81206595, type: 3}
   ToutesLesCartes: []
   TousLesTerrains: []
   TousLesJoueurs: []

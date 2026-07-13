@@ -15,7 +15,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     public CanvasGroup canvasGroup;
     public PlayerManager PlayerManager; //Joueur a qui appartient la carte
     public RectTransform rectTransform;
-    [SyncVar] public bool EstVisible;
+    [SyncVar(hook = nameof(OnVisibleChanged))] public bool EstVisible;
     [SyncVar] public bool EstStratege;
     [SyncVar] public bool EstEnJeu;
     [SyncVar] public bool EstRemise;
@@ -33,6 +33,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     public TMP_Text PrenomT;
 
     public Image ImageT;
+    public Image VisibiliteT;
 
     public TMP_Text PMT;
     public TMP_Text PVT;
@@ -82,6 +83,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         EstVisible = false;
         EstStratege = false;
         EstRemise = false;
+        VisibiliteT.sprite = GameManager.Instance.ImagePasVisible; //Oeil fermé 
         PVar = Stats.PV;
         PAVar = Stats.PA;
         PMVar = Stats.PM;
@@ -98,10 +100,22 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         }
     }
 
+    public void OnVisibleChanged(bool ancienneValeur, bool nouvelleValeur)
+    {
+        if (nouvelleValeur == true)
+        {
+            VisibiliteT.sprite = GameManager.Instance.ImageVisible; //Oeil ouvert
+            VisibiliteT.enabled = true;
+        }
+        else
+        {
+            VisibiliteT.sprite = GameManager.Instance.ImagePasVisible; //Oeil fermé 
+            if (PrenomT.text == " ") { VisibiliteT.enabled = false; }
+        }
+    }
     public void CacherCarte()
     {
         //Retirer tout ce qui est visible
-        UnityEngine.Debug.Log("Je me cache");
         PrenomT.text = " ";
         ImageT.enabled = false;
         PMT.text = " ";
@@ -116,7 +130,6 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     }
     public void MontrerCarte()
     {
-        UnityEngine.Debug.Log("Je me montre");
         PrenomT.text = Stats.Prenom;
         ImageT.sprite = Stats.Image;
         ImageT.enabled = true;
