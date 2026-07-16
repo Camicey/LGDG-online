@@ -62,9 +62,9 @@ public class PlayerManager : NetworkBehaviour
         PMObjet.GetComponent<TMP_Text>().text = pmChecker;
     }
 
-    public void JouerCarte(Carte carte, PlaceTerrain terrain)
+    public void JouerCarte(Carte carte, int terrainId)
     {
-        CmdJouerCarte(carte.netId, terrain.Id);
+        CmdJouerCarte(carte.netId, terrainId);
     }
     public void RangerCarte(Carte carte)
     {
@@ -222,13 +222,12 @@ public class PlayerManager : NetworkBehaviour
 
 
     //Client RPC
+    [Server]
     private void RpcRangerCarte(uint carteNetId)
     {
         if (!NetworkClient.spawned.TryGetValue(carteNetId, out NetworkIdentity identity)) { return; }
         Carte carte = identity.GetComponent<Carte>();
-        if (isLocalPlayer) { carte.transform.SetParent(DeckJoueur.transform, false); } //Je la remet dans mon deck
-        else { carte.transform.SetParent(DeckAdversaire.transform, false); } // Je la remet dans le deck adverse
-        carte.EstEnJeu = false;
+        carte.TerrainId = 0;
         ViderTerrain("Normal");
     }
 
@@ -239,6 +238,7 @@ public class PlayerManager : NetworkBehaviour
         if (carteMourante.PlaceDeTerrain != null)
         {
             carteMourante.PlaceDeTerrain.CartePlacee = null;
+            carteMourante.TerrainId = -1;
         }
         carteMourante.transform.SetParent(Defausse.transform, false);
         carteMourante.GetComponent<RectTransform>().anchoredPosition = new Vector3(0, 0, 0);
@@ -260,7 +260,8 @@ public class PlayerManager : NetworkBehaviour
         GameManager.Instance.Proposition("Perdre");
     }
 
-    [ClientRpc]
+
+    [Server]
     private void RpcAttaquerCarte(uint carteAttaquanteId, uint carteChoisieId, int degatsAtt, int degatDef)
     {
         if (!NetworkClient.spawned.TryGetValue(carteAttaquanteId, out NetworkIdentity identity1))
@@ -282,8 +283,6 @@ public class PlayerManager : NetworkBehaviour
             if (carteAttaquante.PVar <= 0) { carteAttaquante.Mourir(); }
         }
         else { carteChoisie.Mourir(); }
-        carteChoisie.PVT.text = carteChoisie.PVar.ToString();
-        carteAttaquante.PVT.text = carteAttaquante.PVar.ToString();
     }
 
     [ClientRpc]
@@ -334,7 +333,7 @@ public class PlayerManager : NetworkBehaviour
         GameManager.Instance.TousLesTerrains.Add(terrain.GetComponent<PlaceTerrain>());
     }
 
-    [ClientRpc]
+    [Server]
     void RpcJouerCarte(uint carteNetId, int terrainId)
     {
 
@@ -346,6 +345,8 @@ public class PlayerManager : NetworkBehaviour
         carte.PivotCentre();
         carte.transform.SetParent(terrain.transform, false); // Je la place sur le Terrain Joueur
         terrain.CartePlacee = carte.GetComponent<Carte>();
+        carte.TerrainId = terrainId;
+        carte.TerrainIdVise = 0;
         if (isLocalPlayer)
         {
             if (terrain.Id == 1)
@@ -366,8 +367,8 @@ public class PlayerManager : NetworkBehaviour
             }
         }
         carte.PlaceDeTerrain = terrain;
+        carte.TerrainId = terrainId;
         carte.EstEnJeu = true;
-        if (terrain.Id == 4 || terrain.Id == 1) { carte.MontrerCarte(); }
         ViderTerrain("Normal");
     }
 
@@ -391,14 +392,14 @@ public class PlayerManager : NetworkBehaviour
             carte.transform.SetParent(terrain.transform, false); // Je la place sur le Terrain Joueur
             carte.PivotCentre();
             terrain.CartePlacee = carte.GetComponent<Carte>();
-            carte.EstEnJeu = true;
-            carte.PlaceDeTerrain = terrain;
+            carte.TerrainId = terrainId;
         }
         ViderTerrain("Normal");
     }
 
 
     //Toutes petites fonctions
+    [Server]
     private void ViderTerrain(string choix) // Pour enlever les cartes encore placées sur eux
     {
         switch (choix)

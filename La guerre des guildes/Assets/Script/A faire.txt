@@ -8,8 +8,10 @@ A faire :
 
 En train de faire :
 Ranger : 
-    > MontrerCarte en hook ?
-    > 
+    > Mettre plein de hook
+    > Deplacement => vider
+    > Deplacement vers deck => vider
+    > Je suis en train de voir pour l'attaque la mort semble bugger
 Tour par tour :
     > PMEncours
     > Bloquer l'adversaire de faire une action pendant le tour de l'autre
@@ -35,5 +37,4 @@ Bout a replacer plus tard :
 MoveTowards est une méthode de Unity qui permet de déplacer un objet d'une position actuelle vers une position cible à une vitesse constante, sans interpolation.
 La syntaxe est simple : Vector3. MoveTowards(current, target, maxDistanceDelta).
 
-
-        //if (NetworkServer.active) { CreerDeck(); } // A rajouter si on veut pas appuyer sur le bouton
+//if (NetworkServer.active) { CreerDeck(); } // A rajouter si on veut pas appuyer sur le bouton

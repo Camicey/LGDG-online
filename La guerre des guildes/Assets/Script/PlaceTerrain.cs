@@ -34,8 +34,7 @@ public class PlaceTerrain : NetworkBehaviour, IDropHandler
         {
             carteDeplace.EstEnJeu = true; // Si je pose la carte sur la place, on pose un true
             if (carteDeplace.PlaceDeTerrain != null) { carteDeplace.PlaceDeTerrain.CartePlacee = null; }
-            carteDeplace.PlaceDeTerrain = this;
-            CartePlacee = carteDeplace;
+            carteDeplace.TerrainIdVise = Id;
         }
 
     }

@@ -14,6 +14,7 @@ public class Deck : MonoBehaviour, IDropHandler
         if (!carteDeplace.isOwned || !carteDeplace.EstEnJeu || carteDeplace.EstStratege) { return; }
         carteDeplace.PlaceDeTerrain.CartePlacee = null;
         carteDeplace.PlaceDeTerrain = null;
+        carteDeplace.TerrainIdVise = 0;
         carteDeplace.EstRemise = true;
     }
 }

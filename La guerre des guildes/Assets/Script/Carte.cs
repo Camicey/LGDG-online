@@ -23,7 +23,10 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
 
     // Information importante carte
     [SyncVar] public int Id;
-    [SyncVar] public PlaceTerrain PlaceDeTerrain;
+    [SyncVar(hook = nameof(OnTerrainIdChanged))]
+    public int TerrainId; // Id du terrain sur lequel il est, 0 est deck, -1 est mort
+    public int TerrainIdVise;
+    public PlaceTerrain PlaceDeTerrain;
 
     public CarteSettings Stats;
 
@@ -47,7 +50,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
 
     //Les paramètres qui changent
     [SyncVar] public float PMVar;
-    [SyncVar] public int PVar;
+    [SyncVar(hook = nameof(OnPVarChanged))] public int PVar;
     [SyncVar] public int PAVar;
     [SyncVar] public int IdPouvoirVar;
     [SyncVar] public string PouvoirVar;
@@ -79,6 +82,8 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     public void Initialiser()
     {
         PlaceDeTerrain = null;
+        TerrainId = 0;
+        TerrainIdVise = 0;
         EstEnJeu = false;
         EstVisible = false;
         EstStratege = false;
@@ -106,6 +111,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         {
             VisibiliteT.sprite = GameManager.Instance.ImageVisible; //Oeil ouvert
             VisibiliteT.enabled = true;
+            MontrerCarte();
         }
         else
         {
@@ -113,6 +119,36 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
             if (PrenomT.text == " ") { VisibiliteT.enabled = false; }
         }
     }
+
+    public void OnPVarChanged(int ancienneValeur, int nouvelleValeur)
+    {
+        PVT.text = nouvelleValeur.ToString();
+    }
+
+    public void OnTerrainIdChanged(int ancienTerrain, int nouveauTerrain)
+    {
+        UnityEngine.Debug.Log($"Nous allons de {ancienTerrain} à {nouveauTerrain}");
+        if (nouveauTerrain > 0)
+        {
+            PlaceTerrain terrain = GameManager.Instance.TousLesTerrains.Find(t => t.Id == nouveauTerrain);
+            if (terrain == null) { return; }
+            PlaceDeTerrain = terrain;
+            terrain.CartePlacee = this;
+            transform.SetParent(terrain.transform, false);
+            PivotCentre(); // On le remet bien}
+        }
+        else //Si je veux aller dans le deck
+        {
+            PlaceTerrain vieuxTerrain = GameManager.Instance.TousLesTerrains.Find(t => t.Id == ancienTerrain);
+            vieuxTerrain.CartePlacee = null; //Enlever la carte dessus
+            PlaceDeTerrain = null;
+            EstEnJeu = false;
+            EstStratege = false;
+            if (isOwned) { transform.SetParent(PlayerManager.DeckJoueur.transform, false); } //On choisit le bon deck
+            else { transform.SetParent(PlayerManager.DeckAdversaire.transform, false); }
+        }
+    }
+
     public void CacherCarte()
     {
         //Retirer tout ce qui est visible
@@ -222,12 +258,11 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         canvasGroup.blocksRaycasts = true;
         PivotCentre();
 
-        if (PlaceDeTerrain != null && eventData.button == PointerEventData.InputButton.Left) // On joue la carte
+        if (TerrainIdVise != 0 && eventData.button == PointerEventData.InputButton.Left) // On joue la carte
         {
-            PlayerManager.JouerCarte(this, PlaceDeTerrain);
-            transform.SetParent(PlaceDeTerrain.transform, false);
+            PlayerManager.JouerCarte(this, TerrainIdVise);
         }
-        else if (PlaceDeTerrain == null && eventData.button == PointerEventData.InputButton.Left) // Elle revient dans le deck
+        else if (TerrainIdVise == 0 && eventData.button == PointerEventData.InputButton.Left) // Elle revient dans le deck
         {
             EstStratege = false;
             EstVisible = false;
@@ -236,7 +271,6 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         }
         if (EstRemise == true)
         {
-            UnityEngine.Debug.Log("Pioupiou");
             PlayerManager.RangerCarte(this);
             LayoutRebuilder.MarkLayoutForRebuild(PlayerManager.DeckJoueur.GetComponent<RectTransform>());
             EstRemise = false;
