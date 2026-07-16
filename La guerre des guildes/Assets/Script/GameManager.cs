@@ -18,6 +18,9 @@ public class GameManager : NetworkBehaviour
     public static GameManager Instance;
     public Sprite ImageVisible;
     public Sprite ImagePasVisible;
+    public PlayerManager JoueurEnCours;
+    public int Tour;
+    public string EtatDuJeu;
     public List<Carte> ToutesLesCartes = new List<Carte>();
     public List<PlaceTerrain> TousLesTerrains = new List<PlaceTerrain>();
     public List<PlayerManager> TousLesJoueurs = new List<PlayerManager>();
@@ -26,7 +29,7 @@ public class GameManager : NetworkBehaviour
     {
         Instance = this;
         if (CartesSettings.Count == 0) { ImporterCartes(); }
-        //if (NetworkServer.active) { CreerDeck(); } // A rajouter si on veut pas appuyer sur le bouton
+        EtatDuJeu = "EnAttente";
     }
     public void Awake()
     { Instance = this; }
@@ -57,17 +60,18 @@ public class GameManager : NetworkBehaviour
             ligne = export[i];
             string[] colonnes = ligne.Split(',');
             carte.Id = int.Parse(colonnes[0]);
-            carte.Prenom = colonnes[1];
-            carte.PM = int.Parse(colonnes[2]);
+            carte.Prenom = colonnes[1].ToString();
+            carte.PM = float.Parse(colonnes[2].Replace(".", ","));
             carte.PV = int.Parse(colonnes[3]);
             carte.PA = int.Parse(colonnes[4]);
             carte.Image = Resources.Load<Sprite>("Images/Personnage/" + colonnes[5]); //Image
             carte.Pouvoir = colonnes[6];
             carte.IdPouvoir = int.Parse(colonnes[7]);
             carte.ComplementPouvoir = colonnes[8];
-            carte.CoutPouvoir = float.Parse(colonnes[9]);
+            carte.CoutPouvoir = float.Parse(colonnes[9].Replace(".", ","));
             string[] lienTransfert = colonnes[10].Split('/');
-            foreach (string lien in lienTransfert) { carte.liens.Add(int.Parse(lien)); }
+            foreach (string lien in lienTransfert)
+            { carte.liens.Add(int.Parse(lien)); }
             carte.Particularite = colonnes[12];
             carte.Famille = colonnes[13];
             carte.FamilleImage = Resources.Load<Sprite>("Images/Famille/" + carte.Famille);
@@ -87,6 +91,7 @@ public class GameManager : NetworkBehaviour
         foreach (var carteStats in CartesSettings)
         { Pioche.Add(carteStats.Id); }
         Melanger(Pioche);
+        EtatDuJeu = "PretAJouer";
     }
     [Server]
     public void Piocher(NetworkConnectionToClient conn)
@@ -169,6 +174,11 @@ public class GameManager : NetworkBehaviour
         EcranDeConfirmation.ChoixTemp = choix;
     }
 
+    public bool AttaqueAutorisee(Carte attaquante)
+    {
+        if (EtatDuJeu == "Jouer" && JoueurEnCours == attaquante.PlayerManager) { return true; }
+        return false;
+    }
     public bool DeplacementAutorise(int IdOrigine, int IdVise)
     {
         if ((IdOrigine == 1 || IdOrigine == 4) && (IdOrigine + 1 == IdVise || IdOrigine + 2 == IdVise)) { return true; }

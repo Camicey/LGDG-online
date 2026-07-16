@@ -353,6 +353,7 @@ public class PlayerManager : NetworkBehaviour
                 carte.EstStratege = true;
                 Stratege = carte;
                 carte.EstVisible = true;
+                BoutonTourSuivant.Instance.GetComponent<Button>().interactable = true;
             }
         }
         else

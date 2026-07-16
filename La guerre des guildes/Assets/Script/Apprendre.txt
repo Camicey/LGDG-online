@@ -1,0 +1,8 @@
+//string[] export = File.ReadAllLines("Assets/Resources/ExportCartes.csv"); // Lire CSV
+^ Mais ne marche pas en multijoueur car on build les ressources et il n'y a plus accès
+
+On ne peut pas appeler un RPC dans un RPC
+
+[SyncVar(hook = nameof(OnPMChanged))]
+    public int PMEnCours = 20;
+Ca c'est un hook, il s'active dès que la variable est changée, ca aurait été plus facile avec a peu près tout HEIN

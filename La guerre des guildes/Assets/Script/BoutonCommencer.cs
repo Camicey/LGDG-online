@@ -33,6 +33,7 @@ public class BoutonCommencer : MonoBehaviour
             }
             for (int i = 1; i < 7; i++)
             { GameManager.Instance.CreerTerrain(GameManager.Instance.TousLesJoueurs[0].connectionToClient, i); }
+            GameManager.Instance.EtatDuJeu = "Preparation";
         }
         else //Pour mes tests, a enlever
         {
