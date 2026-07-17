@@ -27,7 +27,7 @@ public class BoutonTourSuivant : MonoBehaviour
             UnityEngine.Debug.Log(GameManager.Instance.Tour);
 
         }
-        else if (GameManager.Instance.EtatDuJeu == "Preparation")
+        else if (GameManager.Instance.EtatDuJeu == "Preparation") //Si c'est le tour de pose
         {
             //On donne la main au premier joueur
             GameManager.Instance.JoueurEnCours = GameManager.Instance.TousLesJoueurs[1];

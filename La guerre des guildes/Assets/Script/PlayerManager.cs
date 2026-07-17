@@ -14,17 +14,17 @@ public class PlayerManager : NetworkBehaviour
     public GameObject PrefabTerrain;
     public GameObject DeckJoueur;
     public GameObject DeckAdversaire;
-    public GameObject TerrainsJoueur; // Inutilisé pour l'instant
-    public GameObject Defausse; // Pour l'instant inutilisee, peut etre faire une liste de int a la place
-    public List<PlaceTerrain> TerrainsJoueurList = new List<PlaceTerrain>();
-    public GameObject TerrainsAdverse; // Inutilisé pour l'instant
-    public List<PlaceTerrain> TerrainsAdverseList = new List<PlaceTerrain>();
+    public GameObject TerrainsJoueur;
+    public GameObject Defausse;
+    public GameObject TerrainsAdverse;
     public GameObject DossierCarte;
     public GameObject PMObjet;
     public Carte Stratege;
     public static PlayerManager LocalPlayer;
     [SyncVar(hook = nameof(OnPMChanged))]
     public float PMEnCours;
+    [SyncVar]
+    public bool EstPret;
 
 
     //Fonction Network
@@ -103,11 +103,9 @@ public class PlayerManager : NetworkBehaviour
 
         if (carteAttaquante.liensVar.Contains(carteChoisie.Id))
         {
-            //Blabla je peux pas attaquer
             carteAttaquante.EstVisible = true;
             carteChoisie.EstVisible = true;
-            carteAttaquante.MontrerCarte();
-            carteChoisie.MontrerCarte();
+            GameManager.Instance.Proposition(carteAttaquante, carteChoisie, "Lien");
             return;
         }
 
@@ -285,10 +283,7 @@ public class PlayerManager : NetworkBehaviour
     private void ServeurMourirCarte(GameObject carte)
     {
         Carte carteMourante = carte.GetComponent<Carte>();
-        if (carteMourante.PlaceDeTerrain != null)
-        {
-            carteMourante.TerrainId = -1;
-        }
+        if (carteMourante.PlaceDeTerrain != null) { carteMourante.TerrainId = -1; }
         GameManager.Instance.ToutesLesCartes.Remove(carteMourante.GetComponent<Carte>());
         VerifierGagnant();
     }

@@ -16,6 +16,8 @@ public class PlaceTerrain : NetworkBehaviour, IDropHandler
     {
         CartePlacee = null;
     }
+
+
     public void Placement(int i)
     {
         RectTransform rt = GetComponent<RectTransform>();

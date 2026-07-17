@@ -7,11 +7,9 @@ A faire :
 - Apprendre a faire des signaux ? Plug-in voir Marie et Temmie
 
 En train de faire :
+Je suis a la ligne 30 de bouton suivant en train de voir pour faire la phase de pose tranquille après que l'état du jeu fonctionne
 Ranger : 
     > Mettre plein de hook
-    > Deplacement => vider
-    > Deplacement vers deck => vider
-    > Je suis en train de voir pour l'attaque la mort semble bugger
 Tour par tour :
     > PMEncours
     > Bloquer l'adversaire de faire une action pendant le tour de l'autre

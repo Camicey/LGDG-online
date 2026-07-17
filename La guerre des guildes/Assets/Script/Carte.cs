@@ -132,7 +132,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     public void OnTerrainIdChanged(int ancienTerrain, int nouveauTerrain)
     {
         UnityEngine.Debug.Log($"Nous allons de {ancienTerrain} à {nouveauTerrain}");
-        if (nouveauTerrain > 0)
+        if (nouveauTerrain > 0) //Si je vais vers un nouveau terrain
         {
             PlaceTerrain terrain = GameManager.Instance.TousLesTerrains.Find(t => t.Id == nouveauTerrain);
             if (terrain == null) { return; }
@@ -142,7 +142,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
             transform.SetParent(terrain.transform, false);
             PivotCentre(); // On le remet bien
         }
-        else if (nouveauTerrain == -1 || nouveauTerrain == 0)//Si je veux aller dans le deck ou mourir
+        else if (nouveauTerrain == -1 || nouveauTerrain == 0) //Si je veux aller dans le deck ou mourir
         {
 
             PlaceTerrain vieuxTerrain = GameManager.Instance.TousLesTerrains.Find(t => t.Id == ancienTerrain);

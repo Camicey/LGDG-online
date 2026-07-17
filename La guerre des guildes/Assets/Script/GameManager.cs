@@ -19,8 +19,11 @@ public class GameManager : NetworkBehaviour
     public Sprite ImageVisible;
     public Sprite ImagePasVisible;
     public PlayerManager JoueurEnCours;
+    [SyncVar(hook = nameof(OnTourChanged))]
     public int Tour;
-    public string EtatDuJeu;
+    public GameObject TourObject;
+    public GameObject JoueurTourObject;
+    [SyncVar] public string EtatDuJeu;
     public List<Carte> ToutesLesCartes = new List<Carte>();
     public List<PlaceTerrain> TousLesTerrains = new List<PlaceTerrain>();
     public List<PlayerManager> TousLesJoueurs = new List<PlayerManager>();
@@ -38,6 +41,14 @@ public class GameManager : NetworkBehaviour
         base.OnStopServer();
         TousLesJoueurs.Clear();
         ToutesLesCartes.Clear();
+    }
+
+
+    public void OnTourChanged(int ancienneValeur, int nouvelleValeur)
+    {
+        //Au changement de tour
+        GameManager.Instance.JoueurEnCours = GameManager.Instance.TousLesJoueurs[1];
+
     }
 
     public void ImporterCartes()
@@ -149,7 +160,13 @@ public class GameManager : NetworkBehaviour
             EcranDeConfirmation.Texte.text += $"avec {carteDeplacee.Stats.Prenom}, en infligeant {carteDeplacee.PAVar.ToString()} dégâts ?";
             if (carteChoisie.isOwned) { EcranDeConfirmation.Texte.text += "\nAttention c'est votre carte."; }
         }
+        else if (choix == "Lien")
+        {
+            EcranDeConfirmation.Texte.text = $"{carteDeplacee.Stats.Prenom} apperçoit {carteChoisie.Stats.Prenom} et refuse de se battre \nLien";
+            EcranDeConfirmation.BoutonConfirmer.gameObject.SetActive(false);
+        }
         //Visuels
+        EcranDeConfirmation.BoutonConfirmer.gameObject.SetActive(true);
         EcranDeConfirmation.BoutonConfirmer.GetComponentInChildren<TMP_Text>().text = choix;
         EcranDeConfirmation.CarteDeplaceeTemp = carteDeplacee;
         EcranDeConfirmation.CarteChoisieTemp = carteChoisie;
@@ -172,6 +189,7 @@ public class GameManager : NetworkBehaviour
             EcranDeConfirmation.Texte.text = "Vous n'avez pas assez de Point de Mouvement";
         }
         EcranDeConfirmation.ChoixTemp = choix;
+        EcranDeConfirmation.BoutonConfirmer.gameObject.SetActive(true);
     }
 
     public bool AttaqueAutorisee(Carte attaquante)
