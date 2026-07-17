@@ -24,7 +24,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     // Information importante carte
     [SyncVar] public int Id;
     [SyncVar(hook = nameof(OnTerrainIdChanged))]
-    public int TerrainId; // Id du terrain sur lequel il est, 0 est deck, -1 est mort
+    public int TerrainId; // Id du terrain sur lequel il est, 0 est deck, -1 est mort, -2 dans la pioche
     public int TerrainIdVise;
     public PlaceTerrain PlaceDeTerrain;
 
@@ -109,9 +109,13 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     {
         if (nouvelleValeur == true)
         {
-            VisibiliteT.sprite = GameManager.Instance.ImageVisible; //Oeil ouvert
-            VisibiliteT.enabled = true;
             MontrerCarte();
+            if (isOwned)
+            {
+                VisibiliteT.sprite = GameManager.Instance.ImageVisible; //Oeil ouvert
+                VisibiliteT.enabled = true;
+            }
+            else { VisibiliteT.enabled = false; }
         }
         else
         {
@@ -134,19 +138,32 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
             if (terrain == null) { return; }
             PlaceDeTerrain = terrain;
             terrain.CartePlacee = this;
+            EstEnJeu = true;
             transform.SetParent(terrain.transform, false);
-            PivotCentre(); // On le remet bien}
+            PivotCentre(); // On le remet bien
         }
-        else //Si je veux aller dans le deck
+        else if (nouveauTerrain == -1 || nouveauTerrain == 0)//Si je veux aller dans le deck ou mourir
         {
+
             PlaceTerrain vieuxTerrain = GameManager.Instance.TousLesTerrains.Find(t => t.Id == ancienTerrain);
-            vieuxTerrain.CartePlacee = null; //Enlever la carte dessus
+            if (vieuxTerrain != null) { vieuxTerrain.CartePlacee = null; }//Enlever la carte dessus
             PlaceDeTerrain = null;
             EstEnJeu = false;
             EstStratege = false;
-            if (isOwned) { transform.SetParent(PlayerManager.DeckJoueur.transform, false); } //On choisit le bon deck
-            else { transform.SetParent(PlayerManager.DeckAdversaire.transform, false); }
+            if (nouveauTerrain == -1) //Si elle meurt
+            {
+                transform.SetParent(PlayerManager.Defausse.transform, false);
+                GetComponent<RectTransform>().anchoredPosition = new Vector3(0, 0, 0);
+                PVar = 0;
+                PlayerManager = null;
+            }
+            else //Si elle retourne juste dans le deck
+            {
+                if (isOwned) { transform.SetParent(PlayerManager.DeckJoueur.transform, false); } //On choisit le bon deck
+                else { transform.SetParent(PlayerManager.DeckAdversaire.transform, false); }
+            }
         }
+
     }
 
     public void CacherCarte()
@@ -257,17 +274,20 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         canvasGroup.alpha = 1f; // Opacité de la carte quand je clique dessus
         canvasGroup.blocksRaycasts = true;
         PivotCentre();
-
         if (TerrainIdVise != 0 && eventData.button == PointerEventData.InputButton.Left) // On joue la carte
         {
             PlayerManager.JouerCarte(this, TerrainIdVise);
         }
-        else if (TerrainIdVise == 0 && eventData.button == PointerEventData.InputButton.Left) // Elle revient dans le deck
+        else if (TerrainIdVise == 0 && PlaceDeTerrain == null && eventData.button == PointerEventData.InputButton.Left) // Elle revient dans le deck
         {
             EstStratege = false;
             EstVisible = false;
             transform.SetParent(PlayerManager.DeckJoueur.transform, false);
             LayoutRebuilder.MarkLayoutForRebuild(PlayerManager.DeckJoueur.GetComponent<RectTransform>());
+        }
+        if (PlaceDeTerrain != null && eventData.button == PointerEventData.InputButton.Left) // Elle revient sur son terrain
+        {
+            transform.SetParent(PlaceDeTerrain.transform, false);
         }
         if (EstRemise == true)
         {

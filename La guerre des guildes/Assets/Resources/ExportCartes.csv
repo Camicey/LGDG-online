@@ -6,7 +6,7 @@ Id,Prenom,PM,PV,PA,Image,Pouvoir,IdPouvoir,Complement Pouvoir,Cout,LienID,Liens,
 5,Maï Rose,3,25,20,MaiRose,Coupe tous les liens d'une carte,5,/,2,1,Ariane,,Principaux,Pouvoir
 6,Mike,4,20,25,Mike,Fait un lien entre deux personnages,6,/,3,3,Eleo,,Principaux,Pouvoir
 7,Sofia,1,25,25,Sofia,Supprime un pouvoir,7,/,3,1/2,Ariane / Aude,,Principaux,Neutre
-8,Stones,3,20,30,Stones,Retourne les cartes pièges,4,Piege,1,4,Liz,Si apperçoit Liz : il va dans son camp,Principaux,Robot
+8,Stones,3,2,30,Stones,Retourne les cartes pièges,4,Piege,1,4,Liz,Si apperçoit Liz : il va dans son camp,Principaux,Robot
 9,Vivalie,4,3,10,Vivalie,Choisit une carte de son plateau qui retourne dans son deck,9,,1.5,11/13/0,Sosara / Lié / Mérié,Duo : Sosara,Rose,Robot
 10,Dimitri,3.5,35,5,Dimitri,Coupe tous les liens d'une carte,5,,1,9/11/13,Vivalie / Sosara / Lié,,Rose,Defenseur
 11,Sosara,3.5,20,10,Sosara,Redirige chaque coup porté à ses liens vers lui,8,,0,9/13/17,Vivalie / Lié / Papuchon,Duo : Vivalie,Rose,Pouvoir
