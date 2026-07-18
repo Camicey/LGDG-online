@@ -19,6 +19,7 @@ public class PlayerManager : NetworkBehaviour
     public GameObject TerrainsAdverse;
     public GameObject DossierCarte;
     public GameObject PMObjet;
+    public GameObject BoutonTourSuivant;
     public Carte Stratege;
     public static PlayerManager LocalPlayer;
     [SyncVar(hook = nameof(OnPMChanged))]
@@ -38,6 +39,7 @@ public class PlayerManager : NetworkBehaviour
         DossierCarte = GameObject.Find("DossierCarte");
         Defausse = GameObject.Find("Defausse");
         PMObjet = GameObject.Find("PMEnCoursObjet");
+        BoutonTourSuivant = GameObject.Find("Bouton - Tour suivant");
         GameManager.Instance.TousLesJoueurs.Add(this);
     }
     public override void OnStartLocalPlayer()
@@ -197,6 +199,20 @@ public class PlayerManager : NetworkBehaviour
         CoutAction(1);
     }
 
+    [Command]
+    public void CmdJeSuisPret()
+    {
+        EstPret = true;
+        if (GameManager.Instance.TousLesJoueurs.TrueForAll(j => j.EstPret))
+        { GameManager.Instance.CommencerLeJeu(); }
+    }
+    [Command]
+    public void CmdFinTour()
+    {
+        GameManager.Instance.PasserAuTourSuivant();
+    }
+
+
 
     //Servers
     [Server]
@@ -255,7 +271,6 @@ public class PlayerManager : NetworkBehaviour
                 carte.EstStratege = true;
                 Stratege = carte;
                 carte.EstVisible = true;
-                BoutonTourSuivant.Instance.GetComponent<Button>().interactable = true;
             }
         }
         else
@@ -359,8 +374,6 @@ public class PlayerManager : NetworkBehaviour
         }
         GameManager.Instance.TousLesTerrains.Add(terrain.GetComponent<PlaceTerrain>());
     }
-
-
 
 
     //Toutes petites fonctions

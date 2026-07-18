@@ -141,6 +141,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
             EstEnJeu = true;
             transform.SetParent(terrain.transform, false);
             PivotCentre(); // On le remet bien
+
         }
         else if (nouveauTerrain == -1 || nouveauTerrain == 0) //Si je veux aller dans le deck ou mourir
         {

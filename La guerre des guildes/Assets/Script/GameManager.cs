@@ -22,7 +22,6 @@ public class GameManager : NetworkBehaviour
     [SyncVar(hook = nameof(OnTourChanged))]
     public int Tour;
     public GameObject TourObject;
-    public GameObject JoueurTourObject;
     [SyncVar] public string EtatDuJeu;
     public List<Carte> ToutesLesCartes = new List<Carte>();
     public List<PlaceTerrain> TousLesTerrains = new List<PlaceTerrain>();
@@ -46,9 +45,20 @@ public class GameManager : NetworkBehaviour
 
     public void OnTourChanged(int ancienneValeur, int nouvelleValeur)
     {
-        //Au changement de tour
-        GameManager.Instance.JoueurEnCours = GameManager.Instance.TousLesJoueurs[1];
+        if (TousLesJoueurs.Count >= 2)
+        {
+            JoueurEnCours = TousLesJoueurs[Tour % 2];
+            JoueurEnCours.BoutonTourSuivant.GetComponent<Button>().interactable = true;
+            TousLesJoueurs[(Tour + 1) % 2].BoutonTourSuivant.GetComponent<Button>().interactable = false;
+        }
+        else
+        {
+            JoueurEnCours = TousLesJoueurs[0];
+        }
+        if (JoueurEnCours.Stratege != null)
+        { JoueurEnCours.PMEnCours = JoueurEnCours.Stratege.PMVar; } // On lui remet ses PMs
 
+        TourObject.GetComponent<TMP_Text>().text = nouvelleValeur.ToString();
     }
 
     public void ImporterCartes()
@@ -102,7 +112,7 @@ public class GameManager : NetworkBehaviour
         foreach (var carteStats in CartesSettings)
         { Pioche.Add(carteStats.Id); }
         Melanger(Pioche);
-        EtatDuJeu = "PretAJouer";
+        EtatDuJeu = "Preparation";
     }
     [Server]
     public void Piocher(NetworkConnectionToClient conn)
@@ -134,6 +144,20 @@ public class GameManager : NetworkBehaviour
         NetworkServer.Spawn(terrainObj, conn);
         joueur.PiocherTerrain(terrainObj);
     }
+    [Server]
+    public void PasserAuTourSuivant()
+    {
+        Tour++;
+    }
+    [Server]
+    public void CommencerLeJeu()
+    {
+        Tour = 1;
+        EtatDuJeu = "Jouer";
+    }
+
+
+
     private void Melanger(List<int> list)
     {
         for (int i = 0; i < list.Count; i++)
