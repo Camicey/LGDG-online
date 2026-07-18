@@ -45,11 +45,12 @@ public class GameManager : NetworkBehaviour
 
     public void OnTourChanged(int ancienneValeur, int nouvelleValeur)
     {
+        UnityEngine.Debug.Log($"OnTourChanged - {isServer} {isClient} {isLocalPlayer}");
+
         if (TousLesJoueurs.Count >= 2)
         {
             JoueurEnCours = TousLesJoueurs[Tour % 2];
-            JoueurEnCours.BoutonTourSuivant.GetComponent<Button>().interactable = true;
-            TousLesJoueurs[(Tour + 1) % 2].BoutonTourSuivant.GetComponent<Button>().interactable = false;
+            PlayerManager.LocalPlayer.BoutonTourSuivant.GetComponent<Button>().interactable = JoueurEnCours == PlayerManager.LocalPlayer;
         }
         else
         {

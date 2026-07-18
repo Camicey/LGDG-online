@@ -20,6 +20,7 @@ public class PlayerManager : NetworkBehaviour
     public GameObject DossierCarte;
     public GameObject PMObjet;
     public GameObject BoutonTourSuivant;
+    [SyncVar(hook = nameof(OnStrategeChanged))]
     public Carte Stratege;
     public static PlayerManager LocalPlayer;
     [SyncVar(hook = nameof(OnPMChanged))]
@@ -62,6 +63,12 @@ public class PlayerManager : NetworkBehaviour
         string pmChecker = nouvelleValeur.ToString();
         if (Stratege != null) { pmChecker += " / " + Stratege.PMVar; }
         PMObjet.GetComponent<TMP_Text>().text = pmChecker;
+    }
+
+    public void OnStrategeChanged(Carte ancienneCarte, Carte nouvelleCarte)
+    {
+        if (!isLocalPlayer) return;
+        BoutonTourSuivant.GetComponent<Button>().interactable = (nouvelleCarte != null);
     }
 
     public void JouerCarte(Carte carte, int terrainId)
@@ -264,24 +271,7 @@ public class PlayerManager : NetworkBehaviour
         Carte carte = identity.GetComponent<Carte>();
         carte.TerrainId = terrainId; //Declanche tout
         carte.TerrainIdVise = 0;
-        if (isLocalPlayer)
-        {
-            if (terrainId == 1)
-            {
-                carte.EstStratege = true;
-                Stratege = carte;
-                carte.EstVisible = true;
-            }
-        }
-        else
-        {
-            if (terrainId == 4)
-            {
-                carte.EstStratege = true;
-                Stratege = carte;
-                carte.EstVisible = true;
-            }
-        }
+        RpcRendreStratege(carte, terrainId);
         ViderTerrain("Normal");
     }
 
@@ -298,6 +288,7 @@ public class PlayerManager : NetworkBehaviour
     private void ServeurMourirCarte(GameObject carte)
     {
         Carte carteMourante = carte.GetComponent<Carte>();
+        if (carteMourante.EstStratege) { carteMourante.PlayerManager.Stratege = null; }
         if (carteMourante.PlaceDeTerrain != null) { carteMourante.TerrainId = -1; }
         GameManager.Instance.ToutesLesCartes.Remove(carteMourante.GetComponent<Carte>());
         VerifierGagnant();
@@ -318,6 +309,18 @@ public class PlayerManager : NetworkBehaviour
 
 
     //Client RPC
+
+    [ClientRpc]
+    private void RpcRendreStratege(Carte carte, int terrainId)
+    {
+        if ((isLocalPlayer && terrainId == 1) || (!isLocalPlayer && terrainId == 4))
+        {
+            Stratege = carte;
+            PMEnCours = Stratege.PMVar;
+            BoutonTourSuivant.GetComponent<Button>().interactable = true;
+        }
+    }
+
     [ClientRpc]
     private void RpcGagner()
     {

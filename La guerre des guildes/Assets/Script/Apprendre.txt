@@ -6,3 +6,29 @@ On ne peut pas appeler un RPC dans un RPC
 [SyncVar(hook = nameof(OnPMChanged))]
     public int PMEnCours = 20;
 Ca c'est un hook, il s'active dès que la variable est changée, ca aurait été plus facile avec a peu près tout HEIN
+
+
+
+
+
+
+
+
+Bout a replacer plus tard : 
+
+ /*Vérifier le nombre de joueur avant de permettre de piocher, à faire plus tard.
+        private void Update()
+        {
+            if (NetworkServer.connections.Count == 2) { }
+        }
+    */
+
+MoveTowards est une méthode de Unity qui permet de déplacer un objet d'une position actuelle vers une position cible à une vitesse constante, sans interpolation.
+La syntaxe est simple : Vector3. MoveTowards(current, target, maxDistanceDelta).
+
+//if (NetworkServer.active) { CreerDeck(); } // A rajouter si on veut pas appuyer sur le bouton
+
+if (!NetworkClient.spawned.TryGetValue(carteNetId, out NetworkIdentity identity)) { return; }
+    Carte carte = identity.GetComponent<Carte>();
+
+PlaceTerrain terrain = GameManager.Instance.TousLesTerrains.Find(t => t.Id == terrainId);
