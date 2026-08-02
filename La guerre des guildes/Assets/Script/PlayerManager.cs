@@ -235,10 +235,8 @@ public class PlayerManager : NetworkBehaviour
     }
 
     [Server]
-    public void ValeurPM(int nouvelleValeur)
-    {
-        PMEnCours = nouvelleValeur;
-    }
+    public void ValeurPM(float nouvelleValeur)
+    { PMEnCours = nouvelleValeur; }
 
 
     [Server]
@@ -315,10 +313,7 @@ public class PlayerManager : NetworkBehaviour
         ViderTerrain("Normal");
     }
 
-
-    //Client RPC
-
-    [ClientRpc]
+    [Server]
     private void RpcRendreStratege(Carte carte, int terrainId)
     {
         if ((isLocalPlayer && terrainId == 1) || (!isLocalPlayer && terrainId == 4))
@@ -329,6 +324,8 @@ public class PlayerManager : NetworkBehaviour
         }
     }
 
+
+    //Client RPC
     [ClientRpc]
     private void RpcGagner()
     {

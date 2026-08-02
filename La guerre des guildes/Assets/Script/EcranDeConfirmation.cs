@@ -18,7 +18,7 @@ public class EcranDeConfirmation : MonoBehaviour
 
     public void Confirmer()
     {
-        if (ChoixTemp != "Gagner")
+        if (CarteChoisieTemp != null && CarteDeplaceeTemp != null)
         {
             PlayerManager.LocalPlayer.CmdConfirmerAction(
             CarteDeplaceeTemp.netId,

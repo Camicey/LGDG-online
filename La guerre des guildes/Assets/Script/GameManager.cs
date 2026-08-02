@@ -65,8 +65,7 @@ public class GameManager : NetworkBehaviour
         {
             JoueurEnCours = TousLesJoueurs[0];
         }
-        if (JoueurEnCours.Stratege != null)
-        { JoueurEnCours.PMEnCours = JoueurEnCours.Stratege.PMVar; } // On lui remet ses PMs
+        if (JoueurEnCours.Stratege != null) { JoueurEnCours.ValeurPM(JoueurEnCours.Stratege.PMVar); } // On lui remet ses PMs //MAIS PAS ICI
 
         TourObject.GetComponent<TMP_Text>().text = nouvelleValeur.ToString();
     }

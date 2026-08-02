@@ -142,11 +142,6 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
             EstEnJeu = true;
             transform.SetParent(terrain.transform, false);
             PivotCentre(); // On le remet bien
-            // if (PlaceDeTerrain.EstTerrainStratege == true) 
-            // {
-            //     EstStratege = true;
-            //     EstVisible = true;
-            // }
 
             UnityEngine.Debug.Log($"Est il stratège ? {EstStratege} et son terrain ? {PlaceDeTerrain.EstTerrainStratege}");
         }
