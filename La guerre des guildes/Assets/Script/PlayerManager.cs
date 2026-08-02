@@ -244,9 +244,9 @@ public class PlayerManager : NetworkBehaviour
     [Server]
     private void ServeurAttaquerCarte(uint carteAttaquanteId, uint carteChoisieId, int degatsAtt, int degatDef)
     {
-        if (!NetworkClient.spawned.TryGetValue(carteAttaquanteId, out NetworkIdentity identity1))
+        if (!NetworkServer.spawned.TryGetValue(carteAttaquanteId, out NetworkIdentity identity1))
             return;
-        if (!NetworkClient.spawned.TryGetValue(carteChoisieId, out NetworkIdentity identity2))
+        if (!NetworkServer.spawned.TryGetValue(carteChoisieId, out NetworkIdentity identity2))
             return;
         Carte carteAttaquante = identity1.GetComponent<Carte>();
         Carte carteChoisie = identity2.GetComponent<Carte>();
@@ -264,13 +264,18 @@ public class PlayerManager : NetworkBehaviour
     }
 
     [Server]
-    void ServeurJouerCarte(uint carteNetId, int terrainId)
+    void ServeurJouerCarte(uint carteNetId, int terrainId) //Les déplacements
     {
 
-        if (!NetworkClient.spawned.TryGetValue(carteNetId, out NetworkIdentity identity)) { return; }
+        if (!NetworkServer.spawned.TryGetValue(carteNetId, out NetworkIdentity identity)) { return; }
         Carte carte = identity.GetComponent<Carte>();
         carte.TerrainId = terrainId; //Declanche tout
         carte.TerrainIdVise = 0;
+        if (terrainId == 1 || terrainId == 4)
+        {
+            carte.EstStratege = true;
+            carte.EstVisible = true;
+        }
         RpcRendreStratege(carte, terrainId);
         ViderTerrain("Normal");
     }
@@ -278,7 +283,7 @@ public class PlayerManager : NetworkBehaviour
     [Server]
     private void ServeurRangerCarte(uint carteNetId)
     {
-        if (!NetworkClient.spawned.TryGetValue(carteNetId, out NetworkIdentity identity)) { return; }
+        if (!NetworkServer.spawned.TryGetValue(carteNetId, out NetworkIdentity identity)) { return; }
         Carte carte = identity.GetComponent<Carte>();
         carte.TerrainId = 0;
         ViderTerrain("Normal");
@@ -291,6 +296,9 @@ public class PlayerManager : NetworkBehaviour
         if (carteMourante.EstStratege) { carteMourante.PlayerManager.Stratege = null; }
         if (carteMourante.PlaceDeTerrain != null) { carteMourante.TerrainId = -1; }
         GameManager.Instance.ToutesLesCartes.Remove(carteMourante.GetComponent<Carte>());
+
+        carteMourante.EstEnJeu = false;
+        carteMourante.EstStratege = false;
         VerifierGagnant();
     }
 
@@ -298,10 +306,10 @@ public class PlayerManager : NetworkBehaviour
     [Server]
     void ServerEchangerCarte(uint carteNetId, int terrainId, uint carteNetId2, int terrainId2)
     {
-        if (!NetworkClient.spawned.TryGetValue(carteNetId, out NetworkIdentity identity)) { return; }
+        if (!NetworkServer.spawned.TryGetValue(carteNetId, out NetworkIdentity identity)) { return; }
         Carte carte = identity.GetComponent<Carte>();
         carte.TerrainId = terrainId;
-        if (!NetworkClient.spawned.TryGetValue(carteNetId2, out NetworkIdentity identity2)) { return; }
+        if (!NetworkServer.spawned.TryGetValue(carteNetId2, out NetworkIdentity identity2)) { return; }
         Carte carte2 = identity2.GetComponent<Carte>();
         carte2.TerrainId = terrainId2;
         ViderTerrain("Normal");

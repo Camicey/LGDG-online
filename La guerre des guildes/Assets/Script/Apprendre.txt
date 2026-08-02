@@ -6,7 +6,7 @@ On ne peut pas appeler un RPC dans un RPC
 [SyncVar(hook = nameof(OnPMChanged))]
     public int PMEnCours = 20;
 Ca c'est un hook, il s'active dès que la variable est changée, ca aurait été plus facile avec a peu près tout HEIN
-
+Ctrl K + Ctrl C et Ctrl K et Ctrl U
 
 
 

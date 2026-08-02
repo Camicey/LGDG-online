@@ -142,11 +142,11 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
             EstEnJeu = true;
             transform.SetParent(terrain.transform, false);
             PivotCentre(); // On le remet bien
-            if (PlaceDeTerrain.EstTerrainStratege == true)
-            {
-                EstStratege = true;
-                EstVisible = true;
-            }
+            // if (PlaceDeTerrain.EstTerrainStratege == true) 
+            // {
+            //     EstStratege = true;
+            //     EstVisible = true;
+            // }
 
             UnityEngine.Debug.Log($"Est il stratège ? {EstStratege} et son terrain ? {PlaceDeTerrain.EstTerrainStratege}");
         }
@@ -156,8 +156,6 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
             PlaceTerrain vieuxTerrain = GameManager.Instance.TousLesTerrains.Find(t => t.Id == ancienTerrain);
             if (vieuxTerrain != null) { vieuxTerrain.CartePlacee = null; }//Enlever la carte dessus
             PlaceDeTerrain = null;
-            EstEnJeu = false;
-            EstStratege = false;
             if (nouveauTerrain == -1) //Si elle meurt
             {
                 transform.SetParent(PlayerManager.Defausse.transform, false);
