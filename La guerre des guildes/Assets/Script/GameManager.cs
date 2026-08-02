@@ -40,6 +40,15 @@ public class GameManager : NetworkBehaviour
         base.OnStopServer();
         TousLesJoueurs.Clear();
         ToutesLesCartes.Clear();
+        TousLesTerrains.Clear();
+    }
+
+    public override void OnStartClient()
+    {
+        base.OnStartClient();
+        TousLesJoueurs.Clear();
+        ToutesLesCartes.Clear();
+        TousLesTerrains.Clear();
     }
 
 
@@ -171,6 +180,7 @@ public class GameManager : NetworkBehaviour
     //Propositions
     public void Proposition(Carte carteDeplacee, Carte carteChoisie, string choix)
     {
+        if (carteChoisie.PlaceDeTerrain == null || carteDeplacee.PlaceDeTerrain == null) { UnityEngine.Debug.Log("On échange avec une place de deck"); return; }
         if (!DeplacementAutorise(carteChoisie.PlaceDeTerrain.Id, carteDeplacee.PlaceDeTerrain.Id)) { return; }
         EcranDeConfirmation.GameObject().SetActive(true);
         if (choix == "Echanger" && !carteDeplacee.EstStratege && !carteChoisie.EstStratege)

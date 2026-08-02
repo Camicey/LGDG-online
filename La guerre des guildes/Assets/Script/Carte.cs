@@ -147,6 +147,8 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
                 EstStratege = true;
                 EstVisible = true;
             }
+
+            UnityEngine.Debug.Log($"Est il stratège ? {EstStratege} et son terrain ? {PlaceDeTerrain.EstTerrainStratege}");
         }
         else if (nouveauTerrain == -1 || nouveauTerrain == 0) //Si je veux aller dans le deck ou mourir
         {
@@ -184,6 +186,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         CoutPouvoirT.text = " ";
         FamilleImageT.sprite = ImageDosCarte;
         TypeImageT.enabled = false;
+        VisibiliteT.enabled = false;
         LiensT.text = " ";
         EstVisible = false;
     }
