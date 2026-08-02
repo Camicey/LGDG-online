@@ -227,7 +227,7 @@ public class PlayerManager : NetworkBehaviour
     {
         if (PMEnCours - cout < 0)
         {
-            GameManager.Instance.Proposition("Cout");
+            TargetAfficherProposition(connectionToClient, "Cout");
             return false;
         }
         PMEnCours = PMEnCours - cout;
@@ -326,6 +326,12 @@ public class PlayerManager : NetworkBehaviour
 
 
     //Client RPC
+    [TargetRpc]
+    void TargetAfficherProposition(NetworkConnectionToClient target, string message)
+    {
+        GameManager.Instance.Proposition(message);
+    }
+
     [ClientRpc]
     private void RpcGagner()
     {

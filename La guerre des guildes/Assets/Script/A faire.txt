@@ -5,7 +5,7 @@ A faire :
 - Ok, tout le monde gagne si yen a un qui gagne, voir comment choisir un côté ou l'autre
     > Problème  : Quand j'ai plus de PM c'est l'autre qui voit le message
 - Tour par tour :
-        > Bloquer l'adversaire de faire une action pendant le tour de l'autre
+    > Bloquer l'adversaire de faire une action pendant le tour de l'autre
 
 - Attaquer le stratège 
 - Parfois mon stratège est pas visible
@@ -13,7 +13,7 @@ A faire :
 
 
 En train de faire :
-
+Echange buggé : IdVisé reste sur l'ancienne location au lieu d'être a 0 (car inutile pendant les échanges :eyes:)
 
 
 
