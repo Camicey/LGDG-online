@@ -26,6 +26,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     [SyncVar(hook = nameof(OnTerrainIdChanged))]
     public int TerrainId; // Id du terrain sur lequel il est, 0 est deck, -1 est mort, -2 dans la pioche
     public int TerrainIdVise;
+    [SyncVar] public bool EstEchange;
     public PlaceTerrain PlaceDeTerrain;
 
     public CarteSettings Stats;
@@ -164,7 +165,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
                 else { transform.SetParent(PlayerManager.DeckAdversaire.transform, false); }
             }
         }
-
+        TerrainIdVise = 0;
     }
 
     public void CacherCarte()

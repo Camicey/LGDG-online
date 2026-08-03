@@ -32,7 +32,7 @@ public class PlaceTerrain : NetworkBehaviour, IDropHandler
         Carte carteDeplace = eventData.pointerDrag.GetComponent<Carte>();
         if (!carteDeplace.isOwned || eventData.button == PointerEventData.InputButton.Right) { return; }
         if ((EstAMoi && carteDeplace.EstEnJeu == false) // Pose du deck au terrain
-        || (carteDeplace.EstEnJeu == true && GameManager.Instance.DeplacementAutorise(carteDeplace.PlaceDeTerrain.Id, Id))) // Pose de terrain en terrain
+        || (carteDeplace.EstEnJeu == true && GameManager.Instance.DeplacementAutorise(carteDeplace.PlaceDeTerrain.Id, Id))) // Pose de terrain en terrain 
         {
             carteDeplace.EstEnJeu = true; // Si je pose la carte sur la place, on pose un true
             if (carteDeplace.PlaceDeTerrain != null) { carteDeplace.PlaceDeTerrain.CartePlacee = null; }

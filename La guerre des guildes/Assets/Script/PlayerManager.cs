@@ -268,7 +268,6 @@ public class PlayerManager : NetworkBehaviour
         if (!NetworkServer.spawned.TryGetValue(carteNetId, out NetworkIdentity identity)) { return; }
         Carte carte = identity.GetComponent<Carte>();
         carte.TerrainId = terrainId; //Declanche tout
-        carte.TerrainIdVise = 0;
         if (terrainId == 1 || terrainId == 4)
         {
             carte.EstStratege = true;

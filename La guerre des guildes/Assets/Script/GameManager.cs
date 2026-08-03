@@ -18,6 +18,7 @@ public class GameManager : NetworkBehaviour
     public static GameManager Instance;
     public Sprite ImageVisible;
     public Sprite ImagePasVisible;
+    public GameObject Contour;
     public PlayerManager JoueurEnCours;
     [SyncVar(hook = nameof(OnTourChanged))]
     public int Tour;
