@@ -19,6 +19,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     [SyncVar] public bool EstStratege;
     [SyncVar] public bool EstEnJeu;
     [SyncVar] public bool EstRemise;
+    public bool EstMontree;
     private Vector2 offset;
 
     // Information importante carte
@@ -301,9 +302,17 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     }
     public void OnPointerDown(PointerEventData eventData)
     {
-        if (eventData.button != PointerEventData.InputButton.Middle) { return; }
-        if (!EstVisible && EstEnJeu) { MontrerCarte(); }
-        else if (EstEnJeu) { CacherCarte(); }
+        if (eventData.button == PointerEventData.InputButton.Middle && !EstVisible && EstEnJeu) { MontrerCarte(); }
+        bool essayerMontrer = eventData.button == PointerEventData.InputButton.Left;
+        RectTransform rt;
+        Vector2 addition = PlayerManager.TerrainsAdverse.GetComponent<RectTransform>().anchoredPosition;
+        if (PlaceDeTerrain.EstAMoi) { addition = PlayerManager.TerrainsJoueur.GetComponent<RectTransform>().anchoredPosition; }
+        if (isOwned) { rt = GameManager.Instance.ContourAllie.GetComponent<RectTransform>(); }
+        else { rt = GameManager.Instance.ContourEnnemi.GetComponent<RectTransform>(); }
+        if (essayerMontrer && EstEnJeu && !EstMontree)
+        { rt.anchoredPosition = PlaceDeTerrain.GetComponent<RectTransform>().anchoredPosition + addition; }
+        if (essayerMontrer && EstEnJeu && EstMontree) { rt.anchoredPosition = new Vector2(1200, 0); } //Je le renvoie loin
+
     }
     public void OnDrop(PointerEventData eventData)
     {

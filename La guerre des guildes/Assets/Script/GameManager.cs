@@ -18,7 +18,8 @@ public class GameManager : NetworkBehaviour
     public static GameManager Instance;
     public Sprite ImageVisible;
     public Sprite ImagePasVisible;
-    public GameObject Contour;
+    public GameObject ContourAllie;
+    public GameObject ContourEnnemi;
     public PlayerManager JoueurEnCours;
     [SyncVar(hook = nameof(OnTourChanged))]
     public int Tour;
@@ -166,7 +167,14 @@ public class GameManager : NetworkBehaviour
         EtatDuJeu = "Jouer";
     }
 
-
+    public void PlacerContour(RectTransform rect, bool estAMoi)
+    {
+        if (estAMoi)
+        {
+            ContourAllie.GetComponent<RectTransform>().anchoredPosition = rect.anchoredPosition;
+        }
+        else { ContourEnnemi.GetComponent<RectTransform>().anchoredPosition = rect.anchoredPosition; }
+    }
 
     private void Melanger(List<int> list)
     {
