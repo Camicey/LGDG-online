@@ -1,0 +1,26 @@
+A faire : 
+- Un état de sauvegarde pour le gamemanager pour restaurer pour les joueurs qui buggent. => avoir une liste 
+- Tout se "supprime" en fin de partie ; -; 
+    > Echange Deck / Terrain #183 
+- Ok, tout le monde gagne si yen a un qui gagne, voir comment choisir un côté ou l'autre
+    > Problème  : Quand j'ai plus de PM c'est l'autre qui voit le message
+- Tour par tour :
+    > Bloquer l'adversaire de faire une action pendant le tour de l'autre
+
+- Attaquer le stratège 
+- Les pouvoirs
+
+
+En train de faire :
+
+
+
+Problèmes résolus :
+Les cartes depop ;-; quand je quitte et revient > J'ai rajouté un bouton pour initialiser les cartes dans la pioche
+Les terrains ne s'initialient pas au bon endroit côté client. > J'ai enlevé le Network Transform
+> Je ne peux pas créer de pioche côté client. (Il parrait que le serveur est pas prêt) > Je pense que je vais laisser comme ça hein
+> PMEncours fonctionnent
+> Parfois mon stratège est pas visible
+Problème : si je ferme le serveur, les terrains sont bugguee (en gros tout tuer)
+Echange buggé : IdVisé reste sur l'ancienne location au lieu d'être a 0 (car inutile pendant les échanges :eyes:)
+
