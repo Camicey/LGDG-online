@@ -1875,7 +1875,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 1200, y: 0}
-  m_SizeDelta: {x: 280, y: 380}
+  m_SizeDelta: {x: 260, y: 380}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1887707977
 MonoBehaviour:
@@ -2509,6 +2509,7 @@ MonoBehaviour:
   JoueurEnCours: {fileID: 0}
   Tour: 0
   TourObject: {fileID: 1054705958}
+  CarteMontree: {fileID: 0}
   EtatDuJeu: 
   ToutesLesCartes: []
   TousLesTerrains: []

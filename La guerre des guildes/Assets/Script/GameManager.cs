@@ -24,6 +24,7 @@ public class GameManager : NetworkBehaviour
     [SyncVar(hook = nameof(OnTourChanged))]
     public int Tour;
     public GameObject TourObject;
+    public Carte CarteMontree;
     [SyncVar] public string EtatDuJeu;
     public List<Carte> ToutesLesCartes = new List<Carte>();
     public List<PlaceTerrain> TousLesTerrains = new List<PlaceTerrain>();
@@ -165,15 +166,6 @@ public class GameManager : NetworkBehaviour
     {
         Tour = 1;
         EtatDuJeu = "Jouer";
-    }
-
-    public void PlacerContour(RectTransform rect, bool estAMoi)
-    {
-        if (estAMoi)
-        {
-            ContourAllie.GetComponent<RectTransform>().anchoredPosition = rect.anchoredPosition;
-        }
-        else { ContourEnnemi.GetComponent<RectTransform>().anchoredPosition = rect.anchoredPosition; }
     }
 
     private void Melanger(List<int> list)

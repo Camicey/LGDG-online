@@ -166,6 +166,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
                 else { transform.SetParent(PlayerManager.DeckAdversaire.transform, false); }
             }
         }
+        if (EstMontree) { DeplacerContour(); }
         TerrainIdVise = 0;
     }
 
@@ -227,6 +228,34 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         rectTransform.anchorMin = new Vector2(0.5f, 0.5f); // Remettre le pivot au centre
         rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
         GetComponent<RectTransform>().anchoredPosition = new Vector3(0, 0, 0);
+    }
+    public void DeplacerContour()
+    {
+        GameManager JeuEnCours = GameManager.Instance;
+        RectTransform rt = JeuEnCours.ContourEnnemi.GetComponent<RectTransform>();
+        Vector2 addition = PlayerManager.TerrainsAdverse.GetComponent<RectTransform>().anchoredPosition;
+        if (PlaceDeTerrain.EstAMoi) { addition = PlayerManager.TerrainsJoueur.GetComponent<RectTransform>().anchoredPosition; }
+        if (isOwned) { rt = JeuEnCours.ContourAllie.GetComponent<RectTransform>(); }
+        if (!EstMontree) //Si la carte n'était pas montrée au moment du clic
+        {
+            EstMontree = true;
+            rt.anchoredPosition = PlaceDeTerrain.GetComponent<RectTransform>().anchoredPosition + addition;
+            if (JeuEnCours.CarteMontree != null)
+            {
+                JeuEnCours.CarteMontree.EstMontree = false;
+                if (JeuEnCours.CarteMontree.isOwned && !isOwned)
+                { JeuEnCours.ContourAllie.GetComponent<RectTransform>().anchoredPosition = new Vector2(1200, 0); }
+                else if (!JeuEnCours.CarteMontree.isOwned && isOwned)
+                { JeuEnCours.ContourEnnemi.GetComponent<RectTransform>().anchoredPosition = new Vector2(1200, 0); }
+            }
+            JeuEnCours.CarteMontree = this;
+        }
+        else if (EstMontree)
+        {
+            rt.anchoredPosition = new Vector2(1200, 0);
+            EstMontree = false;
+            JeuEnCours.CarteMontree = null;
+        } //Je le renvoie loin
     }
 
     //Tout en dessous c'est pour déplacer la carte
@@ -302,17 +331,8 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     }
     public void OnPointerDown(PointerEventData eventData)
     {
-        if (eventData.button == PointerEventData.InputButton.Middle && !EstVisible && EstEnJeu) { MontrerCarte(); }
-        bool essayerMontrer = eventData.button == PointerEventData.InputButton.Left;
-        RectTransform rt;
-        Vector2 addition = PlayerManager.TerrainsAdverse.GetComponent<RectTransform>().anchoredPosition;
-        if (PlaceDeTerrain.EstAMoi) { addition = PlayerManager.TerrainsJoueur.GetComponent<RectTransform>().anchoredPosition; }
-        if (isOwned) { rt = GameManager.Instance.ContourAllie.GetComponent<RectTransform>(); }
-        else { rt = GameManager.Instance.ContourEnnemi.GetComponent<RectTransform>(); }
-        if (essayerMontrer && EstEnJeu && !EstMontree)
-        { rt.anchoredPosition = PlaceDeTerrain.GetComponent<RectTransform>().anchoredPosition + addition; }
-        if (essayerMontrer && EstEnJeu && EstMontree) { rt.anchoredPosition = new Vector2(1200, 0); } //Je le renvoie loin
-
+        if (eventData.button == PointerEventData.InputButton.Middle && !EstVisible && EstEnJeu) { MontrerCarte(); } // A retirer
+        else if (eventData.button == PointerEventData.InputButton.Left && PlayerManager != null && PlaceDeTerrain != null) { DeplacerContour(); }
     }
     public void OnDrop(PointerEventData eventData)
     {
