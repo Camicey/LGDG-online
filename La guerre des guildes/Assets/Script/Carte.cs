@@ -306,10 +306,12 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         if (EstStratege) { return; }
         canvasGroup.alpha = 1f; // Opacité de la carte quand je clique dessus
         canvasGroup.blocksRaycasts = true;
+        GameManager gm = GameManager.Instance;
+        UnityEngine.Debug.Log($"J'essaie de jouer {gm.JePeuxJouer(PlayerManager, "Deplacer")}");
         PivotCentre();
-        if (TerrainIdVise != 0 && eventData.button == PointerEventData.InputButton.Left) // On joue la carte
+        if (TerrainIdVise != 0 && eventData.button == PointerEventData.InputButton.Left && gm.JePeuxJouer(PlayerManager, "Deplacer"))
         {
-            PlayerManager.JouerCarte(this, TerrainIdVise);
+            PlayerManager.JouerCarte(this, TerrainIdVise); // On joue la carte
         }
         else if (TerrainIdVise == 0 && PlaceDeTerrain == null && eventData.button == PointerEventData.InputButton.Left) // Elle revient dans le deck
         {
@@ -322,7 +324,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         {
             transform.SetParent(PlaceDeTerrain.transform, false);
         }
-        if (EstRemise == true)
+        if (EstRemise == true && gm.JePeuxJouer(PlayerManager, "Deplacer"))
         {
             PlayerManager.RangerCarte(this);
             LayoutRebuilder.MarkLayoutForRebuild(PlayerManager.DeckJoueur.GetComponent<RectTransform>());
@@ -343,16 +345,17 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     public void OnDrop(PointerEventData eventData)
     {
         if (eventData.pointerDrag == null) { return; }
+        GameManager gm = GameManager.Instance;
         Carte carteDeplace = eventData.pointerDrag.GetComponent<Carte>();
-        if (EstEnJeu && carteDeplace.isOwned && isOwned && eventData.button == PointerEventData.InputButton.Left)
+        if (EstEnJeu && carteDeplace.isOwned && isOwned && eventData.button == PointerEventData.InputButton.Left && gm.JePeuxJouer(PlayerManager, "Echange"))
         {
             UnityEngine.Debug.Log($"On échange entre {Stats.Prenom} et {carteDeplace.Stats.Prenom}");
-            GameManager.Instance.Proposition(carteDeplace, this, "Echanger");
+            gm.Proposition(carteDeplace, this, "Echanger");
         }
-        if (EstEnJeu && carteDeplace.EstEnJeu && carteDeplace.isOwned && eventData.button == PointerEventData.InputButton.Right)
+        if (EstEnJeu && carteDeplace.EstEnJeu && carteDeplace.isOwned && eventData.button == PointerEventData.InputButton.Right && gm.JePeuxJouer(PlayerManager, "Attaquer"))
         {
             UnityEngine.Debug.Log($"{carteDeplace.Stats.Prenom} attaque {Stats.Prenom}");
-            GameManager.Instance.Proposition(carteDeplace, this, "Attaquer");
+            gm.Proposition(carteDeplace, this, "Attaquer");
         }
     }
 }

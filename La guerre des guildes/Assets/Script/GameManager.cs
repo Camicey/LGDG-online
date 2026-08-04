@@ -253,4 +253,16 @@ public class GameManager : NetworkBehaviour
     {
         GrandeCarte.CacherCarte();
     }
+
+    public bool JePeuxJouer(PlayerManager joueur, string action)
+    {
+        UnityEngine.Debug.Log(action);
+        UnityEngine.Debug.Log(EtatDuJeu);
+        UnityEngine.Debug.Log(joueur.name);
+        if (joueur == JoueurEnCours) // On ne peut rien faire si on est pas le joueur actif
+        { return true; }
+        else if (EtatDuJeu == "Preparation" && (action == "Deplacer" || action == "Echanger" || action == "DeplacerDeck")) //On peut déplacer et échanger
+        { return true; }
+        return false;
+    }
 }

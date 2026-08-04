@@ -10,9 +10,11 @@ using Unity.VisualScripting;
 
 public class GrandeCarteMontree : MonoBehaviour  //Les suppléments sont les promesses de fonction
 {
+
+    public Button BouttonPouvoir;
+
     //Tous les paramètres de chaque carte.
     public TMP_Text PrenomT;
-
     public Image ImageT;
     public Image VisibiliteT;
 

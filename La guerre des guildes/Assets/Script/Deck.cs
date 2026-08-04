@@ -11,7 +11,7 @@ public class Deck : MonoBehaviour, IDropHandler
         if (eventData.pointerDrag == null) { return; }
 
         Carte carteDeplace = eventData.pointerDrag.GetComponent<Carte>();
-        if (!carteDeplace.isOwned || !carteDeplace.EstEnJeu || carteDeplace.EstStratege) { return; }
+        if (!carteDeplace.isOwned || !carteDeplace.EstEnJeu || carteDeplace.EstStratege || GameManager.Instance.JePeuxJouer(carteDeplace.PlayerManager, "DeplacerDeck")) { return; }
         carteDeplace.PlaceDeTerrain.CartePlacee = null;
         carteDeplace.PlaceDeTerrain = null;
         carteDeplace.TerrainIdVise = 0;
