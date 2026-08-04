@@ -332,7 +332,13 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     public void OnPointerDown(PointerEventData eventData)
     {
         if (eventData.button == PointerEventData.InputButton.Middle && !EstVisible && EstEnJeu) { MontrerCarte(); } // A retirer
-        else if (eventData.button == PointerEventData.InputButton.Left && PlayerManager != null && PlaceDeTerrain != null) { DeplacerContour(); }
+        else if (eventData.button == PointerEventData.InputButton.Left && PlayerManager != null && PlaceDeTerrain != null)
+        {
+            DeplacerContour();
+            if (GameManager.Instance.CarteMontree == null || (!EstVisible && !isOwned)) { GameManager.Instance.CacherGrandeCarte(); }
+            else if ((EstVisible || isOwned) && GameManager.Instance.CarteMontree == this)
+            { GameManager.Instance.MontrerGrandeCarte(); }
+        }
     }
     public void OnDrop(PointerEventData eventData)
     {

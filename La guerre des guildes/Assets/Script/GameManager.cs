@@ -24,6 +24,7 @@ public class GameManager : NetworkBehaviour
     [SyncVar(hook = nameof(OnTourChanged))]
     public int Tour;
     public GameObject TourObject;
+    public GrandeCarteMontree GrandeCarte;
     public Carte CarteMontree;
     [SyncVar] public string EtatDuJeu;
     public List<Carte> ToutesLesCartes = new List<Carte>();
@@ -52,6 +53,7 @@ public class GameManager : NetworkBehaviour
         TousLesJoueurs.Clear();
         ToutesLesCartes.Clear();
         TousLesTerrains.Clear();
+        CarteMontree = null;
     }
 
 
@@ -242,4 +244,13 @@ public class GameManager : NetworkBehaviour
         return false;
     }
 
+    public void MontrerGrandeCarte()
+    {
+        if (CarteMontree == null) { return; }
+        GrandeCarte.MontrerCarte(CarteMontree);
+    }
+    public void CacherGrandeCarte()
+    {
+        GrandeCarte.CacherCarte();
+    }
 }
