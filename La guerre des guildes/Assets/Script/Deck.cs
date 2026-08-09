@@ -8,10 +8,10 @@ public class Deck : MonoBehaviour, IDropHandler
     // Start is called before the first frame update
     public void OnDrop(PointerEventData eventData) // Quand une carte est lâchée sur le terrain
     {
-        if (eventData.pointerDrag == null) { return; }
+        if (eventData.pointerDrag == null || GameManager.Instance.JePeuxJouer(eventData.pointerDrag.GetComponent<Carte>().Player, "RetournerDeck")) { return; }
 
         Carte carteDeplace = eventData.pointerDrag.GetComponent<Carte>();
-        if (!carteDeplace.isOwned || !carteDeplace.EstEnJeu || carteDeplace.EstStratege || GameManager.Instance.JePeuxJouer(carteDeplace.PlayerManager, "DeplacerDeck")) { return; }
+        if (!carteDeplace.isOwned || !carteDeplace.EstEnJeu || carteDeplace.EstStratege || GameManager.Instance.JePeuxJouer(carteDeplace.Player, "DeplacerDeck")) { return; }
         carteDeplace.PlaceDeTerrain.CartePlacee = null;
         carteDeplace.PlaceDeTerrain = null;
         carteDeplace.TerrainIdVise = 0;

@@ -29,44 +29,58 @@ public class GameManager : NetworkBehaviour
     [SyncVar] public string EtatDuJeu;
     public List<Carte> ToutesLesCartes = new List<Carte>();
     public List<PlaceTerrain> TousLesTerrains = new List<PlaceTerrain>();
-    public List<PlayerManager> TousLesJoueurs = new List<PlayerManager>();
+    //public List<PlayerManager> TousLesJoueurs = new List<PlayerManager>();
+    public readonly SyncList<PlayerManager> TousLesJoueurs = new SyncList<PlayerManager>();
 
     public void Start()
     {
-        Instance = this;
         if (CartesSettings.Count == 0) { ImporterCartes(); }
         EtatDuJeu = "EnAttente";
     }
-    public void Awake()
-    { Instance = this; }
+    public void Awake() { Instance = this; }
     public override void OnStopServer()
     {
         base.OnStopServer();
         TousLesJoueurs.Clear();
-        ToutesLesCartes.Clear();
-        TousLesTerrains.Clear();
+        ReinitialiserPartie();
     }
 
     public override void OnStartClient()
     {
         base.OnStartClient();
-        TousLesJoueurs.Clear();
-        ToutesLesCartes.Clear();
-        TousLesTerrains.Clear();
         CarteMontree = null;
     }
 
 
+    [Server]
+    public void ReinitialiserPartie()
+    {
+        // Attention : il faut aussi détruire les objets réseau existants avant de vider les listes,
+        // sinon tu perds la référence à des cartes/terrains encore spawnés sur le réseau
+        foreach (Carte carte in ToutesLesCartes)
+        { NetworkServer.Destroy(carte.gameObject); }
+        foreach (PlaceTerrain terrain in TousLesTerrains)
+        { NetworkServer.Destroy(terrain.gameObject); }
+
+        ToutesLesCartes.Clear();
+        TousLesTerrains.Clear();
+        // TousLesJoueurs : NE PAS clear ici si les joueurs restent connectés pour une revanche !
+        // Sinon tu retombes dans le même bug qu'avant (Id recalculés à 0 pour tout le monde)
+
+        Tour = 0;
+        EtatDuJeu = "EnAttente";
+        CreerDeck(); // relance une nouvelle pioche mélangée
+    }
+
     public void OnTourChanged(int ancienneValeur, int nouvelleValeur)
     {
-        UnityEngine.Debug.Log($"OnTourChanged - {isServer} {isClient} {isLocalPlayer}");
-
+        if (TousLesJoueurs.Count == 0) return;
         if (TousLesJoueurs.Count >= 2)
         {
             JoueurEnCours = TousLesJoueurs[Tour % 2];
             PlayerManager.LocalPlayer.BoutonTourSuivant.GetComponent<Button>().interactable = JoueurEnCours == PlayerManager.LocalPlayer;
         }
-        else
+        else if (TousLesJoueurs.Count == 1)
         {
             JoueurEnCours = TousLesJoueurs[0];
         }
@@ -140,7 +154,7 @@ public class GameManager : NetworkBehaviour
         GameObject cardObj = Instantiate(joueur.PrefabCarte);
         Carte carte = cardObj.GetComponent<Carte>();
         carte.Id = dataId;
-        carte.PlayerManager = joueur;
+        carte.Player = joueur;
 
         NetworkServer.Spawn(cardObj, conn);
         joueur.PiocherCarte(cardObj);
@@ -168,6 +182,8 @@ public class GameManager : NetworkBehaviour
     {
         Tour = 1;
         EtatDuJeu = "Jouer";
+        foreach (PlayerManager joueur in TousLesJoueurs)
+        { joueur.BoutonTourSuivant.GetComponent<Button>().GetComponentInChildren<TMP_Text>().text = "Tour Suivant"; }
     }
 
     private void Melanger(List<int> list)
@@ -231,7 +247,7 @@ public class GameManager : NetworkBehaviour
 
     public bool AttaqueAutorisee(Carte attaquante)
     {
-        if (EtatDuJeu == "Jouer" && JoueurEnCours == attaquante.PlayerManager) { return true; }
+        if (EtatDuJeu == "Jouer" && JoueurEnCours == attaquante.Player) { return true; }
         return false;
     }
     public bool DeplacementAutorise(int IdOrigine, int IdVise)
@@ -256,9 +272,7 @@ public class GameManager : NetworkBehaviour
 
     public bool JePeuxJouer(PlayerManager joueur, string action)
     {
-        UnityEngine.Debug.Log(action);
-        UnityEngine.Debug.Log(EtatDuJeu);
-        UnityEngine.Debug.Log(joueur.name);
+        UnityEngine.Debug.Log($"{EtatDuJeu} avec joueur {joueur.Id} faisant {action}");
         if (joueur == JoueurEnCours) // On ne peut rien faire si on est pas le joueur actif
         { return true; }
         else if (EtatDuJeu == "Preparation" && (action == "Deplacer" || action == "Echanger" || action == "DeplacerDeck")) //On peut déplacer et échanger

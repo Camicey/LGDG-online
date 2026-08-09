@@ -7,9 +7,12 @@ using Mirror;
 using TMPro;
 using Mirror.BouncyCastle.Asn1.Misc;
 using Unity.VisualScripting;
+using System.Linq;
 
 public class PlayerManager : NetworkBehaviour
 {
+    [SyncVar]
+    public int Id; //1 ou 2
     public GameObject PrefabCarte;
     public GameObject PrefabTerrain;
     public GameObject DeckJoueur;
@@ -41,19 +44,25 @@ public class PlayerManager : NetworkBehaviour
         Defausse = GameObject.Find("Defausse");
         PMObjet = GameObject.Find("PMEnCoursObjet");
         BoutonTourSuivant = GameObject.Find("Bouton - Tour suivant");
-        GameManager.Instance.TousLesJoueurs.Add(this);
     }
+
+    public override void OnStartServer()
+    {
+        base.OnStartServer();
+        GameManager.Instance.TousLesJoueurs.Add(this);
+        Id = GameManager.Instance.TousLesJoueurs.IndexOf(this);
+    }
+
     public override void OnStartLocalPlayer()
     {
         base.OnStartLocalPlayer();
         LocalPlayer = this;
     }
-    public override void OnStopClient()
+    public override void OnStopServer()
     {
-        base.OnStopClient();
+        base.OnStopServer();
         GameManager.Instance.TousLesJoueurs.Remove(this);
     }
-
 
     //Fonction classiques
     public void OnPMChanged(float ancienneValeur, float nouvelleValeur)
@@ -210,7 +219,7 @@ public class PlayerManager : NetworkBehaviour
     public void CmdJeSuisPret()
     {
         EstPret = true;
-        if (GameManager.Instance.TousLesJoueurs.TrueForAll(j => j.EstPret))
+        if (GameManager.Instance.TousLesJoueurs.All(j => j.EstPret))
         { GameManager.Instance.CommencerLeJeu(); }
     }
     [Command]
@@ -273,7 +282,7 @@ public class PlayerManager : NetworkBehaviour
             carte.EstStratege = true;
             carte.EstVisible = true;
         }
-        RpcRendreStratege(carte, terrainId);
+        ServerRendreStratege(carte, terrainId);
         ViderTerrain("Normal");
     }
 
@@ -290,7 +299,7 @@ public class PlayerManager : NetworkBehaviour
     private void ServeurMourirCarte(GameObject carte)
     {
         Carte carteMourante = carte.GetComponent<Carte>();
-        if (carteMourante.EstStratege) { carteMourante.PlayerManager.Stratege = null; }
+        if (carteMourante.EstStratege) { carteMourante.Player.Stratege = null; }
         if (carteMourante.PlaceDeTerrain != null) { carteMourante.TerrainId = -1; }
         GameManager.Instance.ToutesLesCartes.Remove(carteMourante.GetComponent<Carte>());
 
@@ -313,13 +322,12 @@ public class PlayerManager : NetworkBehaviour
     }
 
     [Server]
-    private void RpcRendreStratege(Carte carte, int terrainId)
+    private void ServerRendreStratege(Carte carte, int terrainId)
     {
-        if ((isLocalPlayer && terrainId == 1) || (!isLocalPlayer && terrainId == 4))
+        if ((Id == 0 && terrainId == 1) || (Id == 1 && terrainId == 4))
         {
             Stratege = carte;
             PMEnCours = Stratege.PMVar;
-            BoutonTourSuivant.GetComponent<Button>().interactable = true;
         }
     }
 
@@ -329,15 +337,6 @@ public class PlayerManager : NetworkBehaviour
     void TargetAfficherProposition(NetworkConnectionToClient target, string message)
     {
         GameManager.Instance.Proposition(message);
-    }
-
-    [ClientRpc]
-    private void RpcGagner()
-    {
-        //IF moi joueur
-        GameManager.Instance.Proposition("Gagner");
-        // If pas moi joueur
-        GameManager.Instance.Proposition("Perdre");
     }
 
     [ClientRpc]

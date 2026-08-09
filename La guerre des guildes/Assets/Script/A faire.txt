@@ -5,13 +5,15 @@ A faire :
 - Ok, tout le monde gagne si yen a un qui gagne, voir comment choisir un côté ou l'autre
 - Tour par tour :
     > Bloquer l'adversaire de faire une action pendant le tour de l'autre
-
+- Je peux pas bouger le stratège s'il est seul
 - Attaquer le stratège 
 - Les pouvoirs
-
+- Tour suivant sur le client qui s'actualise :eyes:
 
 En train de faire :
-
+Vérifier JePeuxJouer (jepeux revenir dans le deck alors que c'est pas à moi et je peux  pas quand c'est la préparation (y compris les échanges :sob:))
+Rectifier les bugs de la modification (Le jepeuxjouer est cassééééé)
+J'étais en train de modifier le PlayerManager de Carte mais ca m'a pas l'air fameux
 
 Problèmes résolus :
 Les cartes depop ;-; quand je quitte et revient > J'ai rajouté un bouton pour initialiser les cartes dans la pioche
@@ -21,5 +23,5 @@ Les terrains ne s'initialient pas au bon endroit côté client. > J'ai enlevé l
 > Parfois mon stratège est pas visible
 Problème : si je ferme le serveur, les terrains sont bugguee (en gros tout tuer)
 Echange buggé : IdVisé reste sur l'ancienne location au lieu d'être a 0 (car inutile pendant les échanges :eyes:)
-
-    > Problème  : Quand j'ai plus de PM c'est l'autre qui voit le message
+> Problème  : Quand j'ai plus de PM c'est l'autre qui voit le message
+Enlever les IsLocalPlayer du server

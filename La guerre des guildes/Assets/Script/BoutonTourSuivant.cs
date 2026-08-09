@@ -2,12 +2,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class BoutonTourSuivant : MonoBehaviour
 {
     void Start()
     {
         GetComponent<Button>().interactable = false;
+        GetComponent<Button>().GetComponentInChildren<TMP_Text>().text = "Prêt";
     }
 
     public void OnClick()
