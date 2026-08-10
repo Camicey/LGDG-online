@@ -13,7 +13,6 @@ A faire :
 En train de faire :
 Vérifier JePeuxJouer (jepeux revenir dans le deck alors que c'est pas à moi et je peux  pas quand c'est la préparation (y compris les échanges :sob:))
 Rectifier les bugs de la modification (Le jepeuxjouer est cassééééé)
-J'étais en train de modifier le PlayerManager de Carte mais ca m'a pas l'air fameux
 
 Problèmes résolus :
 Les cartes depop ;-; quand je quitte et revient > J'ai rajouté un bouton pour initialiser les cartes dans la pioche

@@ -218,6 +218,7 @@ public class GameManager : NetworkBehaviour
             EcranDeConfirmation.Texte.text = $"{carteDeplacee.Stats.Prenom} apperçoit {carteChoisie.Stats.Prenom} et refuse de se battre \nLien";
             EcranDeConfirmation.BoutonConfirmer.gameObject.SetActive(false);
         }
+        GrandeCarte.CacherCarte();
         //Visuels
         EcranDeConfirmation.BoutonConfirmer.gameObject.SetActive(true);
         EcranDeConfirmation.BoutonConfirmer.GetComponentInChildren<TMP_Text>().text = choix;
@@ -229,6 +230,7 @@ public class GameManager : NetworkBehaviour
     {
         EcranDeConfirmation.GameObject().SetActive(true);
         EcranDeConfirmation.BoutonConfirmer.GetComponentInChildren<TMP_Text>().text = "Ok";
+        GrandeCarte.CacherCarte();
         if (choix == "Gagner")
         {
             EcranDeConfirmation.Texte.text = "Vous avez gagné :)";

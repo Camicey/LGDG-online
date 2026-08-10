@@ -283,6 +283,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
                 RectTransformUtility.ScreenPointToLocalPointInRectangle(rectTransform, eventData.position, eventData.pressEventCamera, out offset);
             }
         }
+        if (EstMontree) { CacherContour(); }
     }
     public void OnDrag(PointerEventData eventData)
     {
@@ -321,7 +322,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         {
             if (!EstEnJeu) // Deck =>
             {
-                if (TerrainIdVise != 0 && !envahiAdversaire) // => Terrain
+                if (TerrainIdVise != 0) // => Terrain
                 { Player.JouerCarte(this, TerrainIdVise); }
                 else if (TerrainIdVise == 0) // => Terrain Fail ou => Deck
                 {
@@ -333,7 +334,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
             {
                 if (TerrainIdVise != 0 && !envahiAdversaire) // => Terrain
                 { Player.JouerCarte(this, TerrainIdVise); }
-                else if (TerrainIdVise == 0) // => Deck
+                else // => Deck
                 {
                     UnityEngine.Debug.Log(EstRemise);
                     if (EstRemise) // Succès
@@ -341,7 +342,6 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
                         Player.RangerCarte(this);
                         LayoutRebuilder.MarkLayoutForRebuild(Player.DeckJoueur.GetComponent<RectTransform>());
                         EstRemise = false;
-                        if (EstMontree) { CacherContour(); }
                     }
                     else if (!EstRemise) // Fail
                     { transform.SetParent(PlaceDeTerrain.transform, false); }
