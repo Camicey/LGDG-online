@@ -24,8 +24,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
 
     // Information importante carte
     [SyncVar] public int Id;
-    [SyncVar(hook = nameof(OnTerrainIdChanged))]
-    public int TerrainId; // Id du terrain sur lequel il est, 0 est deck, -1 est mort, -2 dans la pioche
+    [SyncVar(hook = nameof(OnTerrainIdChanged))] public int TerrainId; // Id du terrain sur lequel il est, 0 est deck, -1 est mort
     public int TerrainIdVise;
     [SyncVar] public bool EstEchange;
     public PlaceTerrain PlaceDeTerrain;
@@ -134,7 +133,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
 
     public void OnTerrainIdChanged(int ancienTerrain, int nouveauTerrain)
     {
-        UnityEngine.Debug.Log($"Nous allons de {ancienTerrain} à {nouveauTerrain}");
+        //UnityEngine.Debug.Log($"Nous allons de {ancienTerrain} à {nouveauTerrain}"); //Quand j'ai des bugs
         if (nouveauTerrain > 0) //Si je vais vers un nouveau terrain
         {
             PlaceTerrain terrain = GameManager.Instance.TousLesTerrains.Find(t => t.Id == nouveauTerrain);
@@ -144,14 +143,11 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
             EstEnJeu = true;
             transform.SetParent(terrain.transform, false);
             PivotCentre(); // On le remet bien
-
-            UnityEngine.Debug.Log($"Est il stratège ? {EstStratege} et son terrain ? {PlaceDeTerrain.EstTerrainStratege}");
         }
         else if (nouveauTerrain == -1 || nouveauTerrain == 0) //Si je veux aller dans le deck ou mourir
         {
-
             PlaceTerrain vieuxTerrain = GameManager.Instance.TousLesTerrains.Find(t => t.Id == ancienTerrain);
-            if (vieuxTerrain != null) { vieuxTerrain.CartePlacee = null; }//Enlever la carte dessus
+            if (vieuxTerrain != null) { vieuxTerrain.CartePlacee = null; } //Enlever la carte dessus
             PlaceDeTerrain = null;
             if (nouveauTerrain == -1) //Si elle meurt
             {
@@ -160,13 +156,14 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
                 PVar = 0;
                 Player = null;
             }
-            else //Si elle retourne juste dans le deck
+            else if (nouveauTerrain == 0) //Si elle retourne juste dans le deck
             {
                 if (isOwned) { transform.SetParent(Player.DeckJoueur.transform, false); } //On choisit le bon deck
                 else { transform.SetParent(Player.DeckAdversaire.transform, false); }
+                EstEnJeu = false;
             }
         }
-        if (EstMontree) { DeplacerContour(); }
+        if (EstMontree) { CacherContour(); }
         TerrainIdVise = 0;
     }
 
@@ -231,31 +228,41 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     }
     public void DeplacerContour()
     {
+        if (!EstMontree && PlaceDeTerrain != null)
+        { MontrerContour(); } // Je met le contour
+        else if (EstMontree)
+        { CacherContour(); } // Je le renvoie loin
+    }
+
+    public void MontrerContour()
+    {
         GameManager JeuEnCours = GameManager.Instance;
         RectTransform rt = JeuEnCours.ContourEnnemi.GetComponent<RectTransform>();
+        if (isOwned) { rt = JeuEnCours.ContourAllie.GetComponent<RectTransform>(); }
         Vector2 addition = Player.TerrainsAdverse.GetComponent<RectTransform>().anchoredPosition;
         if (PlaceDeTerrain.EstAMoi) { addition = Player.TerrainsJoueur.GetComponent<RectTransform>().anchoredPosition; }
-        if (isOwned) { rt = JeuEnCours.ContourAllie.GetComponent<RectTransform>(); }
-        if (!EstMontree) //Si la carte n'était pas montrée au moment du clic
+        EstMontree = true;
+        rt.anchoredPosition = PlaceDeTerrain.GetComponent<RectTransform>().anchoredPosition + addition;
+        if (JeuEnCours.CarteMontree != null)
         {
-            EstMontree = true;
-            rt.anchoredPosition = PlaceDeTerrain.GetComponent<RectTransform>().anchoredPosition + addition;
-            if (JeuEnCours.CarteMontree != null)
-            {
-                JeuEnCours.CarteMontree.EstMontree = false;
-                if (JeuEnCours.CarteMontree.isOwned && !isOwned)
-                { JeuEnCours.ContourAllie.GetComponent<RectTransform>().anchoredPosition = new Vector2(1200, 0); }
-                else if (!JeuEnCours.CarteMontree.isOwned && isOwned)
-                { JeuEnCours.ContourEnnemi.GetComponent<RectTransform>().anchoredPosition = new Vector2(1200, 0); }
-            }
-            JeuEnCours.CarteMontree = this;
+            JeuEnCours.CarteMontree.EstMontree = false;
+            if (JeuEnCours.CarteMontree.isOwned && !isOwned)
+            { JeuEnCours.ContourAllie.GetComponent<RectTransform>().anchoredPosition = new Vector2(1200, 0); }
+            else if (!JeuEnCours.CarteMontree.isOwned && isOwned)
+            { JeuEnCours.ContourEnnemi.GetComponent<RectTransform>().anchoredPosition = new Vector2(1200, 0); }
         }
-        else if (EstMontree)
-        {
-            rt.anchoredPosition = new Vector2(1200, 0);
-            EstMontree = false;
-            JeuEnCours.CarteMontree = null;
-        } //Je le renvoie loin
+        JeuEnCours.CarteMontree = this;
+        if (EstVisible || isOwned) { GameManager.Instance.MontrerGrandeCarte(); }
+    }
+
+    public void CacherContour()
+    {
+        RectTransform rt = GameManager.Instance.ContourEnnemi.GetComponent<RectTransform>();
+        if (isOwned) { rt = GameManager.Instance.ContourAllie.GetComponent<RectTransform>(); }
+        rt.anchoredPosition = new Vector2(1200, 0);
+        EstMontree = false;
+        GameManager.Instance.CarteMontree = null;
+        if (GameManager.Instance.CarteMontree == null || (!EstVisible && !isOwned)) { GameManager.Instance.CacherGrandeCarte(); }
     }
 
     //Tout en dessous c'est pour déplacer la carte
@@ -310,38 +317,42 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         bool envahiAdversaire = (Player.Id == 0 && TerrainIdVise == 4) || (Player.Id == 1 && TerrainIdVise == 1);
         UnityEngine.Debug.Log($"J'essaie de jouer {gm.JePeuxJouer(Player, "Deplacer")}");
         PivotCentre();
-        if (TerrainIdVise != 0 && eventData.button == PointerEventData.InputButton.Left && gm.JePeuxJouer(Player, "Deplacer") && !envahiAdversaire)
+        if (eventData.button == PointerEventData.InputButton.Left && gm.JePeuxJouer(Player, "Deplacer")) //Si j'initie un déplacement
         {
-            Player.JouerCarte(this, TerrainIdVise); // On joue la carte
-        }
-        else if (TerrainIdVise == 0 && PlaceDeTerrain == null && eventData.button == PointerEventData.InputButton.Left) // Elle revient dans le deck
-        {
-            EstStratege = false;
-            EstVisible = false;
-            transform.SetParent(Player.DeckJoueur.transform, false);
-            LayoutRebuilder.MarkLayoutForRebuild(Player.DeckJoueur.GetComponent<RectTransform>());
-        }
-        else if (PlaceDeTerrain != null && eventData.button == PointerEventData.InputButton.Left) // Elle revient sur son terrain
-        {
-            transform.SetParent(PlaceDeTerrain.transform, false);
-        }
-        if (EstRemise == true && gm.JePeuxJouer(Player, "DeplacerDeck")) // Elle est remise dans le deck manuellement
-        {
-            Player.RangerCarte(this);
-            LayoutRebuilder.MarkLayoutForRebuild(Player.DeckJoueur.GetComponent<RectTransform>());
-            EstRemise = false;
+            if (!EstEnJeu) // Deck =>
+            {
+                if (TerrainIdVise != 0 && !envahiAdversaire) // => Terrain
+                { Player.JouerCarte(this, TerrainIdVise); }
+                else if (TerrainIdVise == 0) // => Terrain Fail ou => Deck
+                {
+                    LayoutRebuilder.MarkLayoutForRebuild(Player.DeckJoueur.GetComponent<RectTransform>());
+                    EstRemise = false; // Pour le => Deck
+                }
+            }
+            else if (EstEnJeu && TerrainId != TerrainIdVise) // Terrain =>
+            {
+                if (TerrainIdVise != 0 && !envahiAdversaire) // => Terrain
+                { Player.JouerCarte(this, TerrainIdVise); }
+                else if (TerrainIdVise == 0) // => Deck
+                {
+                    UnityEngine.Debug.Log(EstRemise);
+                    if (EstRemise) // Succès
+                    {
+                        Player.RangerCarte(this);
+                        LayoutRebuilder.MarkLayoutForRebuild(Player.DeckJoueur.GetComponent<RectTransform>());
+                        EstRemise = false;
+                        if (EstMontree) { CacherContour(); }
+                    }
+                    else if (!EstRemise) // Fail
+                    { transform.SetParent(PlaceDeTerrain.transform, false); }
+                }
+            }
         }
     }
     public void OnPointerDown(PointerEventData eventData)
     {
         if (eventData.button == PointerEventData.InputButton.Middle && !EstVisible && EstEnJeu) { MontrerCarte(); } // A retirer
-        else if (eventData.button == PointerEventData.InputButton.Left && Player != null && PlaceDeTerrain != null)
-        {
-            DeplacerContour();
-            if (GameManager.Instance.CarteMontree == null || (!EstVisible && !isOwned)) { GameManager.Instance.CacherGrandeCarte(); }
-            else if ((EstVisible || isOwned) && GameManager.Instance.CarteMontree == this)
-            { GameManager.Instance.MontrerGrandeCarte(); }
-        }
+        else if (eventData.button == PointerEventData.InputButton.Left && Player != null && PlaceDeTerrain != null) { DeplacerContour(); }
     }
     public void OnDrop(PointerEventData eventData)
     {
