@@ -18,7 +18,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     [SyncVar(hook = nameof(OnVisibleChanged))] public bool EstVisible;
     [SyncVar] public bool EstStratege;
     [SyncVar] public bool EstEnJeu;
-    [SyncVar] public bool EstRemise;
+    public bool EstRemise;
     public bool EstMontree;
     private Vector2 offset;
 
@@ -305,50 +305,49 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     }
     public void OnEndDrag(PointerEventData eventData)
     {
-        if (!isOwned) { return; }
-        if (eventData.button == PointerEventData.InputButton.Right)
+        if (!isOwned || eventData.button == PointerEventData.InputButton.Right || EstStratege)
         {
             FamilleImageT.color = Color.white;
             return;
         }
-        if (EstStratege) { return; }
+        PivotCentre();
         canvasGroup.alpha = 1f; // Opacité de la carte quand je clique dessus
         canvasGroup.blocksRaycasts = true;
-        GameManager gm = GameManager.Instance;
+        if (eventData.button == PointerEventData.InputButton.Left) { Cheminer(); } //Si j'initie un déplacement
+    }
+
+
+    public void Cheminer()
+    {
         bool envahiAdversaire = (Player.Id == 0 && TerrainIdVise == 4) || (Player.Id == 1 && TerrainIdVise == 1);
-        UnityEngine.Debug.Log($"J'essaie de jouer {gm.JePeuxJouer(Player, "Deplacer")}");
-        PivotCentre();
-        if (eventData.button == PointerEventData.InputButton.Left && gm.JePeuxJouer(Player, "Deplacer")) //Si j'initie un déplacement
+        string Depart = "Deck";
+        string Arrivee = "Deck";
+        if (EstEnJeu) Depart = "Terrain";
+        if (TerrainIdVise != 0) Arrivee = "Terrain";
+        UnityEngine.Debug.Log($" {Depart} => {Arrivee} ");
+        if (Arrivee == "Terrain")
         {
-            if (!EstEnJeu) // Deck =>
+            if (!envahiAdversaire && GameManager.Instance.JePeuxJouer(Player, "Deplacer")) { Player.JouerCarte(this, TerrainIdVise); }
+            else { RetourEnPlace(Depart); }
+        }
+        if (Arrivee == "Deck")
+        {
+            if (Depart == "Terrain" && EstRemise)
             {
-                if (TerrainIdVise != 0) // => Terrain
-                { Player.JouerCarte(this, TerrainIdVise); }
-                else if (TerrainIdVise == 0) // => Terrain Fail ou => Deck
-                {
-                    LayoutRebuilder.MarkLayoutForRebuild(Player.DeckJoueur.GetComponent<RectTransform>());
-                    EstRemise = false; // Pour le => Deck
-                }
+                Player.RangerCarte(this);
+                LayoutRebuilder.MarkLayoutForRebuild(Player.DeckJoueur.GetComponent<RectTransform>());
+                EstRemise = false;
             }
-            else if (EstEnJeu && TerrainId != TerrainIdVise) // Terrain =>
-            {
-                if (TerrainIdVise != 0 && !envahiAdversaire) // => Terrain
-                { Player.JouerCarte(this, TerrainIdVise); }
-                else // => Deck
-                {
-                    UnityEngine.Debug.Log(EstRemise);
-                    if (EstRemise) // Succès
-                    {
-                        Player.RangerCarte(this);
-                        LayoutRebuilder.MarkLayoutForRebuild(Player.DeckJoueur.GetComponent<RectTransform>());
-                        EstRemise = false;
-                    }
-                    else if (!EstRemise) // Fail
-                    { transform.SetParent(PlaceDeTerrain.transform, false); }
-                }
-            }
+            else { RetourEnPlace(Depart); }
         }
     }
+
+    public void RetourEnPlace(string place)
+    {
+        if (place == "Terrain") { transform.SetParent(PlaceDeTerrain.transform, false); }
+        else { LayoutRebuilder.MarkLayoutForRebuild(Player.DeckJoueur.GetComponent<RectTransform>()); }
+    }
+
     public void OnPointerDown(PointerEventData eventData)
     {
         if (eventData.button == PointerEventData.InputButton.Middle && !EstVisible && EstEnJeu) { MontrerCarte(); } // A retirer

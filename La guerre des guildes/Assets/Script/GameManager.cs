@@ -198,7 +198,7 @@ public class GameManager : NetworkBehaviour
     //Propositions
     public void Proposition(Carte carteDeplacee, Carte carteChoisie, string choix)
     {
-        if (carteChoisie.PlaceDeTerrain == null || carteDeplacee.PlaceDeTerrain == null) { UnityEngine.Debug.Log("On échange avec une place de deck"); return; }
+        if (carteChoisie.PlaceDeTerrain == null || carteDeplacee.PlaceDeTerrain == null) { return; } //Echange entre carte de deck
         if (!DeplacementAutorise(carteChoisie.PlaceDeTerrain.Id, carteDeplacee.PlaceDeTerrain.Id)) { return; }
         EcranDeConfirmation.GameObject().SetActive(true);
         if (choix == "Echanger" && !carteDeplacee.EstStratege && !carteChoisie.EstStratege)
@@ -274,10 +274,10 @@ public class GameManager : NetworkBehaviour
 
     public bool JePeuxJouer(PlayerManager joueur, string action)
     {
-        UnityEngine.Debug.Log($"{EtatDuJeu} avec joueur {joueur.Id} faisant {action}");
-        if (joueur == JoueurEnCours) // On ne peut rien faire si on est pas le joueur actif
+        UnityEngine.Debug.Log($"{EtatDuJeu} avec joueur {joueur.Id} alors que je suis joueur en cours ? {joueur == JoueurEnCours} faisant {action}");
+        if (EtatDuJeu == "Jouer" && joueur == JoueurEnCours) // On ne peut rien faire si on est pas le joueur actif
         { return true; }
-        else if (EtatDuJeu == "Preparation" && (action == "Deplacer" || action == "Echanger" || action == "DeplacerDeck")) //On peut déplacer et échanger
+        if (EtatDuJeu == "Preparation" && (action == "Deplacer" || action == "Echanger" || action == "RetournerDeck")) //On peut déplacer et échanger
         { return true; }
         return false;
     }

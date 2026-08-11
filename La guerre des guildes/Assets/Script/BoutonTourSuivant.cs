@@ -15,15 +15,10 @@ public class BoutonTourSuivant : MonoBehaviour
     public void OnClick()
     {
         PlayerManager joueur = PlayerManager.LocalPlayer;
-        if (GameManager.Instance.EtatDuJeu == "Jouer")
-        {
-            joueur.CmdFinTour();
-            UnityEngine.Debug.Log(GameManager.Instance.Tour);
-        }
+        if (GameManager.Instance.EtatDuJeu == "Jouer") { joueur.CmdFinTour(); }
         else if (GameManager.Instance.EtatDuJeu == "Preparation") //Si c'est le tour de pose
         {
             joueur.CmdJeSuisPret();
-            UnityEngine.Debug.Log("Le joueur est prêt ?" + joueur.EstPret);
             GetComponent<Button>().interactable = false;
         }
 

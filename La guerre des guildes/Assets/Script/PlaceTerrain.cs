@@ -40,7 +40,6 @@ public class PlaceTerrain : NetworkBehaviour, IDropHandler
         && GameManager.Instance.DeplacementAutorise(carteDeplace.PlaceDeTerrain.Id, Id)
         && GameManager.Instance.JePeuxJouer(carteDeplace.Player, "Deplacer"))) // Pose de terrain en terrain 
         {
-            carteDeplace.EstEnJeu = true; // Si je pose la carte sur la place, on pose un true
             if (carteDeplace.PlaceDeTerrain != null) { carteDeplace.PlaceDeTerrain.CartePlacee = null; }
             carteDeplace.TerrainIdVise = Id;
         }
