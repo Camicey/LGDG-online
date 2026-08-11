@@ -243,6 +243,10 @@ public class GameManager : NetworkBehaviour
         {
             EcranDeConfirmation.Texte.text = "Vous n'avez pas assez de Point de Mouvement";
         }
+        else if (choix == "StrategeProtege")
+        {
+            EcranDeConfirmation.Texte.text = "Ce Stratege est protégé. Eliminez les cartes alentours pour pouvoir l'attaquer";
+        }
         EcranDeConfirmation.ChoixTemp = choix;
         EcranDeConfirmation.BoutonConfirmer.gameObject.SetActive(true);
     }
@@ -272,13 +276,18 @@ public class GameManager : NetworkBehaviour
         GrandeCarte.CacherCarte();
     }
 
-    public bool JePeuxJouer(PlayerManager joueur, string action)
+    public bool JePeuxJouer(PlayerManager joueur, string action, Carte carte)
     {
-        UnityEngine.Debug.Log($"{EtatDuJeu} avec joueur {joueur.Id} alors que je suis joueur en cours ? {joueur == JoueurEnCours} faisant {action}");
+        //UnityEngine.Debug.Log($"{EtatDuJeu} avec joueur {joueur.Id} alors que je suis joueur en cours ? {joueur == JoueurEnCours} faisant {action}");
+        if ((carte.Player.Id == 0 && carte.TerrainIdVise == 4) || (carte.Player.Id == 1 && carte.TerrainIdVise == 1))
+        { return false; } // Si on essaie d'envahir son terrain
         if (EtatDuJeu == "Jouer" && joueur == JoueurEnCours) // On ne peut rien faire si on est pas le joueur actif
         { return true; }
         if (EtatDuJeu == "Preparation" && (action == "Deplacer" || action == "Echanger" || action == "RetournerDeck")) //On peut déplacer et échanger
-        { return true; }
+        {
+            if ((carte.Player.Id == 0 && carte.TerrainIdVise >= 4) || (carte.Player.Id == 1 && carte.TerrainIdVise < 4)) { return false; }
+            return true;
+        }
         return false;
     }
 }

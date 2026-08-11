@@ -112,10 +112,8 @@ public class PlayerManager : NetworkBehaviour
 
     private void AttaquerCarte(uint carteAttaquanteId, uint carteChoisieId)
     {
-        if (!NetworkClient.spawned.TryGetValue(carteAttaquanteId, out NetworkIdentity identity1))
-            return;
-        if (!NetworkClient.spawned.TryGetValue(carteChoisieId, out NetworkIdentity identity2))
-            return;
+        if (!NetworkClient.spawned.TryGetValue(carteAttaquanteId, out NetworkIdentity identity1)) { return; }
+        if (!NetworkClient.spawned.TryGetValue(carteChoisieId, out NetworkIdentity identity2)) { return; }
         Carte carteAttaquante = identity1.GetComponent<Carte>();
         Carte carteChoisie = identity2.GetComponent<Carte>();
 
@@ -127,23 +125,6 @@ public class PlayerManager : NetworkBehaviour
             return;
         }
 
-        if (carteChoisie.EstStratege)
-        {
-            PlaceTerrain terrain2 = GameManager.Instance.TousLesTerrains.Find(t => t.Id == 2);
-            PlaceTerrain terrain3 = GameManager.Instance.TousLesTerrains.Find(t => t.Id == 3);
-            PlaceTerrain terrain5 = GameManager.Instance.TousLesTerrains.Find(t => t.Id == 5);
-            PlaceTerrain terrain6 = GameManager.Instance.TousLesTerrains.Find(t => t.Id == 6);
-            // Si on attaque le stratège, on fait attention que les aversaires n'ont pas de carte a côté
-            //Penser a rajouter le moment ou le stratège sera SEUL
-            if (carteChoisie.PlaceDeTerrain.Id == 1 &&
-            ((terrain2.CartePlacee != null && !terrain2.CartePlacee.isOwned) ||
-            (terrain3.CartePlacee != null && !terrain3.CartePlacee.isOwned)))
-            { return; }
-            if (carteChoisie.PlaceDeTerrain.Id == 4 &&
-            ((terrain5.CartePlacee != null && !terrain5.CartePlacee.isOwned) ||
-            (terrain6.CartePlacee != null && !terrain6.CartePlacee.isOwned)))
-            { return; }
-        }
         int degats = carteAttaquante.PAVar;
         int degatsDef = carteChoisie.PAVar;
         if (carteChoisie.Stats.Type == "Robot") { degats = 1; }
@@ -271,19 +252,13 @@ public class PlayerManager : NetworkBehaviour
     }
 
     [Server]
-    void ServeurJouerCarte(uint carteNetId, int terrainId) //Les déplacements
+    private void ServeurJouerCarte(uint carteNetId, int terrainId) //Les déplacements
     {
 
         if (!NetworkServer.spawned.TryGetValue(carteNetId, out NetworkIdentity identity)) { return; }
         Carte carte = identity.GetComponent<Carte>();
         carte.TerrainId = terrainId; //Declanche tout
-        if (terrainId == 1 || terrainId == 4)
-        {
-            carte.EstStratege = true;
-            carte.EstVisible = true;
-        }
-        ServerRendreStratege(carte, terrainId);
-        ViderTerrain("Normal");
+        ServerRendreStratege(carte, terrainId); // Rendre Stratège si besoin est
     }
 
     [Server]
@@ -292,7 +267,6 @@ public class PlayerManager : NetworkBehaviour
         if (!NetworkServer.spawned.TryGetValue(carteNetId, out NetworkIdentity identity)) { return; }
         Carte carte = identity.GetComponent<Carte>();
         carte.TerrainId = 0;
-        ViderTerrain("Normal");
     }
 
     [Server]
@@ -318,7 +292,6 @@ public class PlayerManager : NetworkBehaviour
         if (!NetworkServer.spawned.TryGetValue(carteNetId2, out NetworkIdentity identity2)) { return; }
         Carte carte2 = identity2.GetComponent<Carte>();
         carte2.TerrainId = terrainId2;
-        ViderTerrain("Normal");
     }
 
     [Server]
@@ -328,6 +301,8 @@ public class PlayerManager : NetworkBehaviour
         {
             Stratege = carte;
             PMEnCours = Stratege.PMVar;
+            carte.EstStratege = true;
+            carte.EstVisible = true;
         }
     }
 
@@ -386,21 +361,4 @@ public class PlayerManager : NetworkBehaviour
         }
         GameManager.Instance.TousLesTerrains.Add(terrain.GetComponent<PlaceTerrain>());
     }
-
-
-    //Toutes petites fonctions
-    [Server]
-    private void ViderTerrain(string choix) // Pour enlever les cartes encore placées sur eux
-    {
-        switch (choix)
-        {
-            case "Tout":
-                foreach (PlaceTerrain terrainTest in GameManager.Instance.TousLesTerrains) { terrainTest.CartePlacee = null; }
-                break;
-            case "Normal":
-                foreach (PlaceTerrain terrainTest in GameManager.Instance.TousLesTerrains) { if (terrainTest.transform.childCount == 0) { terrainTest.CartePlacee = null; } }
-                break;
-        }
-    }
-
 }

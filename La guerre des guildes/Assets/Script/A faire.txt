@@ -1,18 +1,17 @@
 A faire : 
 - Un état de sauvegarde pour le gamemanager pour restaurer pour les joueurs qui buggent. => avoir une liste 
-- Tout se "supprime" en fin de partie ; -; 
-    > Echange Deck / Terrain #183 
+
 - Ok, tout le monde gagne si yen a un qui gagne, voir comment choisir un côté ou l'autre
-- Tour par tour :
+- Tour par tour : (A peu près)
     > Bloquer l'adversaire de faire une action pendant le tour de l'autre
 - Je peux pas bouger le stratège s'il est seul
 - Attaquer le stratège 
 - Les pouvoirs
 - Tour suivant sur le client qui s'actualise :eyes:
+- Gagner / Perdre
 
 En train de faire :
-Vérifier JePeuxJouer (jepeux revenir dans le deck alors que c'est pas à moi et je peux  pas quand c'est la préparation (y compris les échanges :sob:))
-Rectifier les bugs de la modification (Le jepeuxjouer est cassééééé)
+- Attaquer le stratège 
 
 Problèmes résolus :
 Les cartes depop ;-; quand je quitte et revient > J'ai rajouté un bouton pour initialiser les cartes dans la pioche
@@ -24,3 +23,7 @@ Problème : si je ferme le serveur, les terrains sont bugguee (en gros tout tuer
 Echange buggé : IdVisé reste sur l'ancienne location au lieu d'être a 0 (car inutile pendant les échanges :eyes:)
 > Problème  : Quand j'ai plus de PM c'est l'autre qui voit le message
 Enlever les IsLocalPlayer du server
+Vérifier JePeuxJouer (jepeux revenir dans le deck alors que c'est pas à moi et je peux  pas quand c'est la préparation (y compris les échanges :sob:))
+Rectifier les bugs de la modification (Le jepeuxjouer est cassééééé)
+- Tout se "supprime" en fin de partie ; -; 
+    > Echange Deck / Terrain #183 

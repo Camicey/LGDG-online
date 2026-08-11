@@ -21,7 +21,5 @@ public class BoutonTourSuivant : MonoBehaviour
             joueur.CmdJeSuisPret();
             GetComponent<Button>().interactable = false;
         }
-
     }
-
 }

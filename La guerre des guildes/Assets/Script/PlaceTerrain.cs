@@ -32,13 +32,12 @@ public class PlaceTerrain : NetworkBehaviour, IDropHandler
     {
         if (eventData.pointerDrag == null || CartePlacee != null) { return; }
         Carte carteDeplace = eventData.pointerDrag.GetComponent<Carte>();
-        if (carteDeplace == null) return;
-        if (!carteDeplace.isOwned || eventData.button == PointerEventData.InputButton.Right) { return; }
-
-        if ((EstAMoi && carteDeplace.EstEnJeu == false) // Pose du deck au terrain
+        if (carteDeplace == null || !carteDeplace.isOwned || eventData.button == PointerEventData.InputButton.Right) { return; }
+        // Pose du deck au terrain
+        if ((EstAMoi && carteDeplace.EstEnJeu == false)
         || (carteDeplace.EstEnJeu == true && carteDeplace.PlaceDeTerrain != null
         && GameManager.Instance.DeplacementAutorise(carteDeplace.PlaceDeTerrain.Id, Id)
-        && GameManager.Instance.JePeuxJouer(carteDeplace.Player, "Deplacer"))) // Pose de terrain en terrain 
+        && GameManager.Instance.JePeuxJouer(carteDeplace.Player, "Deplacer", carteDeplace))) // Pose de terrain en terrain 
         {
             if (carteDeplace.PlaceDeTerrain != null) { carteDeplace.PlaceDeTerrain.CartePlacee = null; }
             carteDeplace.TerrainIdVise = Id;
