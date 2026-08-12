@@ -7,6 +7,7 @@ using Mirror;
 using TMPro;
 using Mirror.Examples.Basic;
 using Unity.VisualScripting;
+using Mirror.BouncyCastle.Crypto.Macs;
 
 public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDragHandler, IPointerDownHandler, IDropHandler  //Les suppléments sont les promesses de fonction
 {
@@ -25,7 +26,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     [SyncVar] public int Id;
     [SyncVar(hook = nameof(OnTerrainIdChanged))] public int TerrainId; // Id du terrain sur lequel il est, 0 est deck, -1 est mort
     public int TerrainIdVise;
-    [SyncVar] public bool EstEchange;
+    public bool EstEchange;
     public PlaceTerrain PlaceDeTerrain;
 
     public CarteSettings Stats;
@@ -321,11 +322,13 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
 
     public void Cheminer()
     {
+        PlaceTerrain t = GameManager.Instance.TousLesTerrains.Find(t => t.Id == TerrainIdVise);
         string Depart = "Deck";
         string Arrivee = "Deck";
-        if (EstEnJeu) Depart = "Terrain";
-        if (TerrainIdVise != 0) Arrivee = "Terrain";
-        UnityEngine.Debug.Log($" {Depart} => {Arrivee} ");
+        if (EstEnJeu) { Depart = "Terrain"; }
+        if (TerrainIdVise != 0) { Arrivee = "Terrain"; }
+        if (EstEchange) { Arrivee = "Carte"; }
+        //UnityEngine.Debug.Log($" {Depart} => {Arrivee} ");
         if (Arrivee == "Terrain")
         {
             if (GameManager.Instance.JePeuxJouer(Player, "Deplacer", this)) { Player.JouerCarte(this, TerrainIdVise); }
@@ -333,14 +336,15 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         }
         if (Arrivee == "Deck")
         {
-            if (Depart == "Terrain" && EstRemise)
+            if (Depart == "Terrain" && EstRemise && GameManager.Instance.JePeuxJouer(Player, "RetournerDeck", this))
             {
                 Player.RangerCarte(this);
                 LayoutRebuilder.MarkLayoutForRebuild(Player.DeckJoueur.GetComponent<RectTransform>());
-                EstRemise = false;
             }
             else { RetourEnPlace(Depart); }
+            EstRemise = false;
         }
+        if (Arrivee == "Carte") { RetourEnPlace(Depart); EstEchange = false; }
     }
 
     public void RetourEnPlace(string place)
@@ -356,8 +360,11 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
 
     public void OnPointerDown(PointerEventData eventData)
     {
+        if (eventData.button == PointerEventData.InputButton.Left && Player != null && PlaceDeTerrain != null) { DeplacerContour(); }
+        //Cheat Code
+        if (Input.GetKey(KeyCode.D) && eventData.button == PointerEventData.InputButton.Left) { Player.CmdMourir(this.GameObject()); }
+        if (Input.GetKey(KeyCode.V) && eventData.button == PointerEventData.InputButton.Left) { GameManager.Instance.ViderPioche(); }
         if (eventData.button == PointerEventData.InputButton.Middle && !EstVisible && EstEnJeu) { MontrerCarte(); } // A retirer
-        else if (eventData.button == PointerEventData.InputButton.Left && Player != null && PlaceDeTerrain != null) { DeplacerContour(); }
     }
 
     public void OnDrop(PointerEventData eventData)
@@ -367,13 +374,13 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         Carte carteDeplace = eventData.pointerDrag.GetComponent<Carte>();
         if (EstEnJeu && carteDeplace.isOwned && isOwned && eventData.button == PointerEventData.InputButton.Left && gm.JePeuxJouer(Player, "Echanger", this))
         {
-            UnityEngine.Debug.Log($"On échange entre {Stats.Prenom} et {carteDeplace.Stats.Prenom}");
+            //UnityEngine.Debug.Log($"On échange entre {Stats.Prenom} et {carteDeplace.Stats.Prenom}");
+            carteDeplace.EstEchange = true;
             gm.Proposition(carteDeplace, this, "Echanger");
         }
         if (EstEnJeu && carteDeplace.EstEnJeu && carteDeplace.isOwned && eventData.button == PointerEventData.InputButton.Right && gm.JePeuxJouer(Player, "Attaquer", this))
         {
-            UnityEngine.Debug.Log($"{carteDeplace.Stats.Prenom} attaque {Stats.Prenom} qui Stratege {EstStratege} et Stratege Seul ? {StrategeSeul()}");
-
+            //UnityEngine.Debug.Log($"{carteDeplace.Stats.Prenom} attaque {Stats.Prenom} qui Stratege {EstStratege} et Stratege Seul ? {StrategeSeul()}");
             if (EstStratege && !StrategeSeul())
             {
                 // Si on attaque le stratège, on fait attention que les aversaires n'ont pas de carte a côté

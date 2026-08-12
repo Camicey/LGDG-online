@@ -55,8 +55,6 @@ public class GameManager : NetworkBehaviour
     [Server]
     public void ReinitialiserPartie()
     {
-        // Attention : il faut aussi détruire les objets réseau existants avant de vider les listes,
-        // sinon tu perds la référence à des cartes/terrains encore spawnés sur le réseau
         foreach (Carte carte in ToutesLesCartes)
         { NetworkServer.Destroy(carte.gameObject); }
         foreach (PlaceTerrain terrain in TousLesTerrains)
@@ -64,12 +62,17 @@ public class GameManager : NetworkBehaviour
 
         ToutesLesCartes.Clear();
         TousLesTerrains.Clear();
-        // TousLesJoueurs : NE PAS clear ici si les joueurs restent connectés pour une revanche !
-        // Sinon tu retombes dans le même bug qu'avant (Id recalculés à 0 pour tout le monde)
 
         Tour = 0;
         EtatDuJeu = "EnAttente";
-        CreerDeck(); // relance une nouvelle pioche mélangée
+        CreerDeck(); // Relance une nouvelle pioche mélangée
+    }
+
+    [Server]
+    public void ViderPioche()
+    {
+        Pioche.Clear();
+        UnityEngine.Debug.Log("Je vide la pioche :)");
     }
 
     public void OnTourChanged(int ancienneValeur, int nouvelleValeur)
@@ -84,7 +87,7 @@ public class GameManager : NetworkBehaviour
         {
             JoueurEnCours = TousLesJoueurs[0];
         }
-        if (JoueurEnCours.Stratege != null) { JoueurEnCours.ValeurPM(JoueurEnCours.Stratege.PMVar); } // On lui remet ses PMs //MAIS PAS ICI
+        //if (JoueurEnCours.Stratege != null) { JoueurEnCours.ValeurPM(JoueurEnCours.Stratege.PMVar); } // On lui remet ses PMs //MAIS PAS ICI
 
         TourObject.GetComponent<TMP_Text>().text = nouvelleValeur.ToString();
     }
@@ -145,9 +148,13 @@ public class GameManager : NetworkBehaviour
     [Server]
     public void Piocher(NetworkConnectionToClient conn)
     {
-        if (Pioche.Count == 0) return;
         PlayerManager joueur = conn.identity.GetComponent<PlayerManager>();
-        if (joueur.DeckJoueur.transform.childCount >= 5) return;
+        if (Pioche.Count == 0)
+        {
+            PlayerManager joueurVide = conn.identity.GetComponent<PlayerManager>();
+            joueurVide.TargetTransfertProposition(conn, "PiocheVide"); // à créer, voir plus bas
+            return;
+        }
 
         int dataId = Pioche[0];
         Pioche.RemoveAt(0);
@@ -247,6 +254,18 @@ public class GameManager : NetworkBehaviour
         {
             EcranDeConfirmation.Texte.text = "Ce Stratege est protégé. Eliminez les cartes alentours pour pouvoir l'attaquer";
         }
+        else if (choix == "DeckPlein")
+        {
+            EcranDeConfirmation.Texte.text = "Il n'y a plus de place dans votre deck";
+        }
+        else if (choix == "PiochePreparation")
+        {
+            EcranDeConfirmation.Texte.text = "Vous ne pouvez pas piocher pendant la phase de préparation. \nAppuyez sur Prêt.";
+        }
+        else if (choix == "PiocheVide")
+        {
+            EcranDeConfirmation.Texte.text = "La pioche est vide.";
+        }
         EcranDeConfirmation.ChoixTemp = choix;
         EcranDeConfirmation.BoutonConfirmer.gameObject.SetActive(true);
     }
@@ -278,15 +297,28 @@ public class GameManager : NetworkBehaviour
 
     public bool JePeuxJouer(PlayerManager joueur, string action, Carte carte)
     {
-        //UnityEngine.Debug.Log($"{EtatDuJeu} avec joueur {joueur.Id} alors que je suis joueur en cours ? {joueur == JoueurEnCours} faisant {action}");
-        if ((carte.Player.Id == 0 && carte.TerrainIdVise == 4) || (carte.Player.Id == 1 && carte.TerrainIdVise == 1))
-        { return false; } // Si on essaie d'envahir son terrain
-        if (EtatDuJeu == "Jouer" && joueur == JoueurEnCours) // On ne peut rien faire si on est pas le joueur actif
-        { return true; }
-        if (EtatDuJeu == "Preparation" && (action == "Deplacer" || action == "Echanger" || action == "RetournerDeck")) //On peut déplacer et échanger
+        if (joueur == null || action == null) { UnityEngine.Debug.LogError("Joueur ou Action est null"); return false; }
+        if (carte != null)
         {
-            if ((carte.Player.Id == 0 && carte.TerrainIdVise >= 4) || (carte.Player.Id == 1 && carte.TerrainIdVise < 4)) { return false; }
-            return true;
+            UnityEngine.Debug.Log($"{EtatDuJeu} avec joueur {joueur.Id} alors que je suis joueur en cours ? {joueur == JoueurEnCours} faisant {action}");
+            if ((action == "Deplacer" || action == "Echanger" || action == "RetournerDeck") &&
+            ((carte.Player.Id == 0 && carte.TerrainIdVise == 4) || (carte.Player.Id == 1 && carte.TerrainIdVise == 1)))
+            { return false; } // Si on essaie d'envahir son terrain
+            if (EtatDuJeu == "Jouer" && joueur == JoueurEnCours) // Non si on n'est pas le joueur actif
+            { return true; }
+            if (EtatDuJeu == "Preparation" && (action == "Deplacer" || action == "Echanger" || action == "RetournerDeck")) //On peut déplacer et échanger
+            {
+                if ((carte.Player.Id == 0 && carte.TerrainIdVise < 4)
+                || (carte.Player.Id == 1 && (carte.TerrainIdVise >= 4 || carte.TerrainIdVise == 0)))
+                { return true; }
+            }
+        }
+        else
+        {
+            if (action == "Piocher" && EtatDuJeu == "Jouer" && joueur == JoueurEnCours)
+            {
+                return true;
+            }
         }
         return false;
     }

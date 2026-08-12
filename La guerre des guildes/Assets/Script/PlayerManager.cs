@@ -134,19 +134,61 @@ public class PlayerManager : NetworkBehaviour
 
     private void VerifierGagnant()
     {
-        int joueurNbCarte = 0;
-        int autreJoueurNbCarte = 0;
+        List<Carte> CartesJoueur1 = new List<Carte>();
+        List<Carte> CartesJoueur2 = new List<Carte>();
         foreach (Carte carte in GameManager.Instance.ToutesLesCartes)
         {
-            if (carte.isOwned) { joueurNbCarte++; }
-            else { autreJoueurNbCarte++; }
+            if (carte.isOwned) { CartesJoueur1.Add(carte); }
+            else { CartesJoueur2.Add(carte); }
         }
-        if (joueurNbCarte == 0 || autreJoueurNbCarte == 0)
-        { GameManager.Instance.Proposition("Gagner"); }
+
+        UnityEngine.Debug.LogError($"Joueur 0 a {CartesJoueur1.Count} carte , joueur 1 a {CartesJoueur2.Count} carte");
+        if (CartesJoueur1.Count == 0 || CartesJoueur2.Count == 0)
+        {
+            if (CartesJoueur1.Count != CartesJoueur2.Count)
+            {
+                int idPerdant = (CartesJoueur1.Count == 0) ? 0 : 1;
+                int idGagnant = (idPerdant == 0) ? 1 : 0;
+                PlayerManager joueurPerdant = GameManager.Instance.TousLesJoueurs.Find(j => j.Id == idPerdant);
+                PlayerManager joueurGagnant = GameManager.Instance.TousLesJoueurs.Find(j => j.Id == idGagnant);
+
+                if (joueurPerdant != null) { joueurPerdant.TargetAfficherProposition(joueurPerdant.connectionToClient, "Perdre"); }// false = perdu
+                if (joueurGagnant != null) { joueurGagnant.TargetAfficherProposition(joueurGagnant.connectionToClient, "Gagner"); } // true = gagné
+            }
+            else { UnityEngine.Debug.LogError($"égalité les gars, tout le monde la même"); }
+        }
+        else if (LienBlocked(CartesJoueur1, CartesJoueur2)) { UnityEngine.Debug.LogError($"égalité les gars, tout le monde la même, mais en lien"); }
     }
 
-
-
+    public void TransfertProposition(string choix)
+    {
+        GameManager.Instance.Proposition(choix);
+    }
+    [TargetRpc]
+    public void TargetTransfertProposition(NetworkConnectionToClient target, string type)
+    {
+        TransfertProposition(type); // réutilise ta fonction existante côté client
+    }
+    private bool LienBlocked(List<Carte> CartesJoueur1, List<Carte> CartesJoueur2)
+    {
+        foreach (Carte carte in CartesJoueur1)
+        {
+            foreach (Carte carteLien in CartesJoueur2)
+            {
+                if (!carteLien.liensVar.Contains(carte.Id))
+                { return false; }
+            }
+        }
+        foreach (Carte carte in CartesJoueur2)
+        {
+            foreach (Carte carteLien in CartesJoueur1)
+            {
+                if (!carteLien.liensVar.Contains(carte.Id))
+                { return false; }
+            }
+        }
+        return true;
+    }
 
     //Commands
     [Command]
@@ -165,6 +207,7 @@ public class PlayerManager : NetworkBehaviour
     [Command]
     public void CmdMourir(GameObject carte)
     {
+        UnityEngine.Debug.Log("Je meurs");
         ServeurMourirCarte(carte);
     }
 
@@ -180,6 +223,7 @@ public class PlayerManager : NetworkBehaviour
         if (choix == "Echanger" && !carteDeplacee.EstStratege && !carteChoisie.EstStratege)
         {
             EchangerCarte(carteDeplaceeId, carteChoisieId);
+
             CoutAction(2);
         }
         else if (choix == "Attaquer")
@@ -226,7 +270,10 @@ public class PlayerManager : NetworkBehaviour
 
     [Server]
     public void ValeurPM(float nouvelleValeur)
-    { PMEnCours = nouvelleValeur; }
+    {
+        PMEnCours = nouvelleValeur;
+        if (Stratege != null) { ValeurPM(Stratege.PMVar); }
+    }
 
 
     [Server]

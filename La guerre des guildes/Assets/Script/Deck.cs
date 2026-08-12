@@ -10,9 +10,8 @@ public class Deck : MonoBehaviour, IDropHandler
     {
         if (eventData.pointerDrag == null || eventData.pointerDrag.GetComponent<Carte>() == null) { return; }
         Carte carteDeplace = eventData.pointerDrag.GetComponent<Carte>();
-        bool jePeuxJouer = GameManager.Instance.JePeuxJouer(carteDeplace.Player, "RetournerDeck", carteDeplace);
         //UnityEngine.Debug.Log($"Elle est pas en jeu {!carteDeplace.EstEnJeu} Pas a moi {!carteDeplace.isOwned} Je peux pas la jouer {!jePeuxJouer} ");
-        if (!carteDeplace.isOwned || !carteDeplace.EstEnJeu || carteDeplace.EstStratege || !jePeuxJouer) { return; }
+        if (!carteDeplace.isOwned || !carteDeplace.EstEnJeu || carteDeplace.EstStratege) { return; }
         carteDeplace.EstRemise = true;
     }
 }

@@ -1,17 +1,17 @@
 A faire : 
 - Un état de sauvegarde pour le gamemanager pour restaurer pour les joueurs qui buggent. => avoir une liste 
-
 - Ok, tout le monde gagne si yen a un qui gagne, voir comment choisir un côté ou l'autre
 - Tour par tour : (A peu près)
     > Bloquer l'adversaire de faire une action pendant le tour de l'autre
 - Je peux pas bouger le stratège s'il est seul
-- Attaquer le stratège 
+- Attaquer le stratège + Bouger le stratège + Remettre un stratège
 - Les pouvoirs
 - Tour suivant sur le client qui s'actualise :eyes:
-- Gagner / Perdre
+
 
 En train de faire :
-- Attaquer le stratège 
+- J'ai cassé les PMs 
+- Améliorer le target message, je pourrais l'utiliser +
 
 Problèmes résolus :
 Les cartes depop ;-; quand je quitte et revient > J'ai rajouté un bouton pour initialiser les cartes dans la pioche
@@ -27,3 +27,6 @@ Vérifier JePeuxJouer (jepeux revenir dans le deck alors que c'est pas à moi et
 Rectifier les bugs de la modification (Le jepeuxjouer est cassééééé)
 - Tout se "supprime" en fin de partie ; -; 
     > Echange Deck / Terrain #183 
+- Attaquer le stratège 
+- Gagner / Perdre
+Piocher uniquement quand voulu
