@@ -33,3 +33,5 @@ if (!NetworkClient.spawned.TryGetValue(carteNetId, out NetworkIdentity identity)
     Carte carte = identity.GetComponent<Carte>();
 
 PlaceTerrain terrain = GameManager.Instance.TousLesTerrains.Find(t => t.Id == terrainId);
+
+if (Stratege != null) { ValeurPM(Stratege.PMVar); }

@@ -153,6 +153,7 @@ public class GameManager : NetworkBehaviour
         {
             PlayerManager joueurVide = conn.identity.GetComponent<PlayerManager>();
             joueurVide.TargetTransfertProposition(conn, "PiocheVide"); // à créer, voir plus bas
+            UnityEngine.Debug.LogError("La pioche est vide :/");
             return;
         }
 
@@ -183,14 +184,28 @@ public class GameManager : NetworkBehaviour
     public void PasserAuTourSuivant()
     {
         Tour++;
+        if (JoueurEnCours.Stratege != null)
+        { JoueurEnCours.ValeurPM(JoueurEnCours.Stratege.PMVar); }
+
     }
     [Server]
     public void CommencerLeJeu()
     {
         Tour = 1;
         EtatDuJeu = "Jouer";
-        foreach (PlayerManager joueur in TousLesJoueurs)
-        { joueur.BoutonTourSuivant.GetComponent<Button>().GetComponentInChildren<TMP_Text>().text = "Tour Suivant"; }
+        if (JoueurEnCours.Stratege != null)
+        { JoueurEnCours.ValeurPM(JoueurEnCours.Stratege.PMVar); }
+        RpcMettreAJourTousLesBoutons();
+    }
+
+    [ClientRpc]
+    void RpcMettreAJourTousLesBoutons()
+    {
+        // ce code s'exécute UNE fois par client, localement
+        if (PlayerManager.LocalPlayer != null)
+        {
+            PlayerManager.LocalPlayer.BoutonTourSuivant.GetComponent<Button>().GetComponentInChildren<TMP_Text>().text = "Tour Suivant";
+        }
     }
 
     private void Melanger(List<int> list)
@@ -208,25 +223,27 @@ public class GameManager : NetworkBehaviour
         if (carteChoisie.PlaceDeTerrain == null || carteDeplacee.PlaceDeTerrain == null) { return; } //Echange entre carte de deck
         if (!DeplacementAutorise(carteChoisie.PlaceDeTerrain.Id, carteDeplacee.PlaceDeTerrain.Id)) { return; }
         EcranDeConfirmation.GameObject().SetActive(true);
+        string texteAffiche = "";
         if (choix == "Echanger" && !carteDeplacee.EstStratege && !carteChoisie.EstStratege)
-        { EcranDeConfirmation.Texte.text = $"Voulez-vous échanger {carteDeplacee.Stats.Prenom} et {carteChoisie.Stats.Prenom} ?"; }
+        { texteAffiche = $"Voulez-vous échanger {carteDeplacee.Stats.Prenom} et {carteChoisie.Stats.Prenom} ?"; }
         else if (choix == "Echanger" && (carteDeplacee.EstStratege || carteChoisie.EstStratege))
-        { EcranDeConfirmation.Texte.text = $"Voulez-vous changer de stratège et mettre {carteDeplacee.Stats.Prenom} à la place ?"; }
+        { texteAffiche = $"Voulez-vous changer de stratège et mettre {carteDeplacee.Stats.Prenom} à la place ?"; }
         else if (choix == "Attaquer")
         {
-            EcranDeConfirmation.Texte.text = $"Voulez-vous attaquer ";
+            texteAffiche = $"Voulez-vous attaquer ";
             if (carteChoisie.EstVisible)
-            { EcranDeConfirmation.Texte.text += $"{carteChoisie.Stats.Prenom} "; }
-            EcranDeConfirmation.Texte.text += $"avec {carteDeplacee.Stats.Prenom}, en infligeant {carteDeplacee.PAVar.ToString()} dégâts ?";
-            if (carteChoisie.isOwned) { EcranDeConfirmation.Texte.text += "\nAttention c'est votre carte."; }
+            { texteAffiche += $"{carteChoisie.Stats.Prenom} "; }
+            texteAffiche += $"avec {carteDeplacee.Stats.Prenom}, en infligeant {carteDeplacee.PAVar.ToString()} dégâts ?";
+            if (carteChoisie.isOwned) { texteAffiche += "\nAttention c'est votre carte."; }
         }
         else if (choix == "Lien")
         {
-            EcranDeConfirmation.Texte.text = $"{carteDeplacee.Stats.Prenom} apperçoit {carteChoisie.Stats.Prenom} et refuse de se battre \nLien";
+            texteAffiche = $"{carteDeplacee.Stats.Prenom} apperçoit {carteChoisie.Stats.Prenom} et refuse de se battre \nLien";
             EcranDeConfirmation.BoutonConfirmer.gameObject.SetActive(false);
         }
         GrandeCarte.CacherCarte();
         //Visuels
+        EcranDeConfirmation.Texte.text = texteAffiche;
         EcranDeConfirmation.BoutonConfirmer.gameObject.SetActive(true);
         EcranDeConfirmation.BoutonConfirmer.GetComponentInChildren<TMP_Text>().text = choix;
         EcranDeConfirmation.CarteDeplaceeTemp = carteDeplacee;
@@ -238,34 +255,35 @@ public class GameManager : NetworkBehaviour
         EcranDeConfirmation.GameObject().SetActive(true);
         EcranDeConfirmation.BoutonConfirmer.GetComponentInChildren<TMP_Text>().text = "Ok";
         GrandeCarte.CacherCarte();
-        if (choix == "Gagner")
+        string texteAffiche = "";
+        switch (choix)
         {
-            EcranDeConfirmation.Texte.text = "Vous avez gagné :)";
+            case "Gagner":
+                texteAffiche = "Vous avez gagné :)";
+                break;
+            case "Perdre":
+                texteAffiche = "Vous avez perdu :(";
+                break;
+            case "Cout":
+                texteAffiche = "Vous n'avez pas assez de Point de Mouvement";
+                break;
+            case "StrategeProtege":
+                texteAffiche = "Ce Stratege est protégé. Eliminez les cartes alentours pour pouvoir l'attaquer";
+                break;
+            case "DeckPlein":
+                texteAffiche = "Il n'y a plus de place dans votre deck";
+                break;
+            case "PiochePreparation":
+                texteAffiche = "Vous ne pouvez pas piocher pendant la phase de préparation. \nAppuyez sur Prêt.";
+                break;
+            case "PiocheVide":
+                texteAffiche = "La pioche est vide.";
+                break;
+            case "AttendreStratege":
+                texteAffiche = "Vous devez attendre que l'autre joueur choisisse un stratège.";
+                break;
         }
-        else if (choix == "Perdre")
-        {
-            EcranDeConfirmation.Texte.text = "Vous avez perdu :(";
-        }
-        else if (choix == "Cout")
-        {
-            EcranDeConfirmation.Texte.text = "Vous n'avez pas assez de Point de Mouvement";
-        }
-        else if (choix == "StrategeProtege")
-        {
-            EcranDeConfirmation.Texte.text = "Ce Stratege est protégé. Eliminez les cartes alentours pour pouvoir l'attaquer";
-        }
-        else if (choix == "DeckPlein")
-        {
-            EcranDeConfirmation.Texte.text = "Il n'y a plus de place dans votre deck";
-        }
-        else if (choix == "PiochePreparation")
-        {
-            EcranDeConfirmation.Texte.text = "Vous ne pouvez pas piocher pendant la phase de préparation. \nAppuyez sur Prêt.";
-        }
-        else if (choix == "PiocheVide")
-        {
-            EcranDeConfirmation.Texte.text = "La pioche est vide.";
-        }
+        EcranDeConfirmation.Texte.text = texteAffiche;
         EcranDeConfirmation.ChoixTemp = choix;
         EcranDeConfirmation.BoutonConfirmer.gameObject.SetActive(true);
     }
@@ -298,9 +316,21 @@ public class GameManager : NetworkBehaviour
     public bool JePeuxJouer(PlayerManager joueur, string action, Carte carte)
     {
         if (joueur == null || action == null) { UnityEngine.Debug.LogError("Joueur ou Action est null"); return false; }
+        if (joueur.DoisAttendreStratege)
+        {
+            Proposition("AttendreStratege");
+            UnityEngine.Debug.LogError("Attend le stratege");
+            return false;
+        }
+        else if (joueur.DoisChoisirStratege)// Si je dois choisir un nouveau stratege
+        {
+            if (action == "Deplacer" && ((carte.Player.Id == 0 && carte.TerrainIdVise == 1) || (carte.Player.Id == 1 && carte.TerrainIdVise == 4)))
+            { return true; }
+            else { return false; }
+        }
         if (carte != null)
         {
-            UnityEngine.Debug.Log($"{EtatDuJeu} avec joueur {joueur.Id} alors que je suis joueur en cours ? {joueur == JoueurEnCours} faisant {action}");
+            //UnityEngine.Debug.Log($"{EtatDuJeu} avec joueur {joueur.Id} alors que je suis joueur en cours ? {joueur == JoueurEnCours} faisant {action}");
             if ((action == "Deplacer" || action == "Echanger" || action == "RetournerDeck") &&
             ((carte.Player.Id == 0 && carte.TerrainIdVise == 4) || (carte.Player.Id == 1 && carte.TerrainIdVise == 1)))
             { return false; } // Si on essaie d'envahir son terrain
@@ -313,13 +343,7 @@ public class GameManager : NetworkBehaviour
                 { return true; }
             }
         }
-        else
-        {
-            if (action == "Piocher" && EtatDuJeu == "Jouer" && joueur == JoueurEnCours)
-            {
-                return true;
-            }
-        }
+        else if (carte == null && action == "Piocher" && EtatDuJeu == "Jouer" && joueur == JoueurEnCours) { return true; }
         return false;
     }
 }

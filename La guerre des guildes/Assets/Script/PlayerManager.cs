@@ -30,7 +30,8 @@ public class PlayerManager : NetworkBehaviour
     public float PMEnCours;
     [SyncVar]
     public bool EstPret;
-
+    public bool DoisChoisirStratege;
+    public bool DoisAttendreStratege;
 
     //Fonction Network
     public override void OnStartClient()
@@ -44,6 +45,7 @@ public class PlayerManager : NetworkBehaviour
         Defausse = GameObject.Find("Defausse");
         PMObjet = GameObject.Find("PMEnCoursObjet");
         BoutonTourSuivant = GameObject.Find("Bouton - Tour suivant");
+        Initialiser();
     }
 
     public override void OnStartServer()
@@ -64,6 +66,12 @@ public class PlayerManager : NetworkBehaviour
         GameManager.Instance.TousLesJoueurs.Remove(this);
     }
 
+    private void Initialiser()
+    {
+        DoisChoisirStratege = false;
+        DoisAttendreStratege = false;
+    }
+
     //Fonction classiques
     public void OnPMChanged(float ancienneValeur, float nouvelleValeur)
     {
@@ -77,7 +85,30 @@ public class PlayerManager : NetworkBehaviour
     public void OnStrategeChanged(Carte ancienneCarte, Carte nouvelleCarte)
     {
         if (!isLocalPlayer) return;
-        BoutonTourSuivant.GetComponent<Button>().interactable = (nouvelleCarte != null);
+        BoutonTourSuivant.GetComponent<Button>().interactable = nouvelleCarte != null;
+        if (nouvelleCarte == null)
+        {
+            //Truc en plus en mode aha, tu joues plus.
+            DoisChoisirStratege = true;
+            UnityEngine.Debug.LogError("Il dois choisir son stratège, zou");
+            if (ancienneCarte.Player.Id == 0 && GameManager.Instance.TousLesJoueurs.Count >= 2)
+            { GameManager.Instance.TousLesJoueurs[1].DoisAttendreStratege = true; }
+            else if (ancienneCarte.Player.Id == 1)
+            { GameManager.Instance.TousLesJoueurs[0].DoisAttendreStratege = true; }
+        }
+        else
+        {
+            UnityEngine.Debug.LogError("J'ai un stratege");
+            TargetNattendPlus();
+        }
+    }
+    [TargetRpc]
+    private void TargetNattendPlus()
+    {
+        DoisAttendreStratege = false;
+        DoisChoisirStratege = false;
+        UnityEngine.Debug.LogError("Je n'attends plus !");
+
     }
 
     public void JouerCarte(Carte carte, int terrainId)
@@ -250,6 +281,7 @@ public class PlayerManager : NetworkBehaviour
     [Command]
     public void CmdFinTour()
     {
+        UnityEngine.Debug.Log("Je te parle");
         GameManager.Instance.PasserAuTourSuivant();
     }
 
@@ -272,7 +304,6 @@ public class PlayerManager : NetworkBehaviour
     public void ValeurPM(float nouvelleValeur)
     {
         PMEnCours = nouvelleValeur;
-        if (Stratege != null) { ValeurPM(Stratege.PMVar); }
     }
 
 
@@ -320,12 +351,16 @@ public class PlayerManager : NetworkBehaviour
     private void ServeurMourirCarte(GameObject carte)
     {
         Carte carteMourante = carte.GetComponent<Carte>();
-        if (carteMourante.EstStratege) { carteMourante.Player.Stratege = null; }
+        if (carteMourante.EstStratege)
+        {
+            carteMourante.Player.Stratege = null;
+            carteMourante.EstStratege = false;
+        }
         if (carteMourante.PlaceDeTerrain != null) { carteMourante.TerrainId = -1; }
         GameManager.Instance.ToutesLesCartes.Remove(carteMourante.GetComponent<Carte>());
 
         carteMourante.EstEnJeu = false;
-        carteMourante.EstStratege = false;
+
         VerifierGagnant();
     }
 

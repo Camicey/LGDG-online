@@ -1,16 +1,12 @@
 A faire : 
 - Un état de sauvegarde pour le gamemanager pour restaurer pour les joueurs qui buggent. => avoir une liste 
-- Ok, tout le monde gagne si yen a un qui gagne, voir comment choisir un côté ou l'autre
-- Tour par tour : (A peu près)
-    > Bloquer l'adversaire de faire une action pendant le tour de l'autre
 - Je peux pas bouger le stratège s'il est seul
-- Attaquer le stratège + Bouger le stratège + Remettre un stratège
+- Attaquer le stratège 
+- Remettre un stratège
 - Les pouvoirs
-- Tour suivant sur le client qui s'actualise :eyes:
 
 
 En train de faire :
-- J'ai cassé les PMs 
 - Améliorer le target message, je pourrais l'utiliser +
 
 Problèmes résolus :
@@ -30,3 +26,8 @@ Rectifier les bugs de la modification (Le jepeuxjouer est cassééééé)
 - Attaquer le stratège 
 - Gagner / Perdre
 Piocher uniquement quand voulu
+- J'ai cassé les PMs 
+- Tour suivant sur le client qui s'actualise :eyes:
+- Tour par tour : (A peu près)
+    > Bloquer l'adversaire de faire une action pendant le tour de l'autre
+- Ok, tout le monde gagne si yen a un qui gagne, voir comment choisir un côté ou l'autre
