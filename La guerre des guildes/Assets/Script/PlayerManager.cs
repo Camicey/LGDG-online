@@ -161,7 +161,10 @@ public class PlayerManager : NetworkBehaviour
         {
             carteAttaquante.EstVisible = true;
             carteChoisie.EstVisible = true;
-            GameManager.Instance.Proposition(carteAttaquante, carteChoisie, "Lien");
+            foreach (PlayerManager joueur in GameManager.Instance.TousLesJoueurs)
+            {
+                TargetTransfertProposition(joueur.connectionToClient, carteAttaquante, carteChoisie, "Lien");
+            }
             return;
         }
 
@@ -209,6 +212,18 @@ public class PlayerManager : NetworkBehaviour
     {
         TransfertProposition(type); // réutilise ta fonction existante côté client
     }
+
+
+    public void TransfertProposition(Carte carteAttaquante, Carte carteChoisie, string choix)
+    {
+        GameManager.Instance.Proposition(carteAttaquante, carteChoisie, choix);
+    }
+    [TargetRpc]
+    public void TargetTransfertProposition(NetworkConnectionToClient target, Carte carteAttaquante, Carte carteChoisie, string choix)
+    {
+        TransfertProposition(carteAttaquante, carteChoisie, choix); // réutilise ta fonction existante côté client
+    }
+
     private bool LienBlocked(List<Carte> CartesJoueur1, List<Carte> CartesJoueur2)
     {
         foreach (Carte carte in CartesJoueur1)
@@ -283,10 +298,7 @@ public class PlayerManager : NetworkBehaviour
     }
     [Command]
     public void CmdFinTour()
-    {
-        UnityEngine.Debug.Log("Je te parle");
-        GameManager.Instance.PasserAuTourSuivant();
-    }
+    { GameManager.Instance.PasserAuTourSuivant(); }
 
 
 
@@ -326,7 +338,7 @@ public class PlayerManager : NetworkBehaviour
         carteChoisie.PVar = carteChoisie.PVar - degatsAtt; //Deja bon pour robots et piège (bon je dois le faire)
         if (carteChoisie.PVar > 0) // Si elle survit, elle réplique
         {
-            carteAttaquante.PVar = carteAttaquante.PVar - carteChoisie.PAVar;
+            carteAttaquante.PVar = carteAttaquante.PVar - degatDef;
             if (carteAttaquante.PVar <= 0) { carteAttaquante.Mourir(); }
         }
         else { carteChoisie.Mourir(); }
