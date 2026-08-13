@@ -7,9 +7,12 @@ using Mirror;
 using TMPro;
 using Mirror.BouncyCastle.Asn1.Misc;
 using Unity.VisualScripting;
+using System.Linq;
 
 public class PlayerManager : NetworkBehaviour
 {
+    [SyncVar]
+    public int Id; //1 ou 2
     public GameObject PrefabCarte;
     public GameObject PrefabTerrain;
     public GameObject DeckJoueur;
@@ -27,7 +30,11 @@ public class PlayerManager : NetworkBehaviour
     public float PMEnCours;
     [SyncVar]
     public bool EstPret;
+    [SyncVar(hook = nameof(OnDoisChoisirChanged))]
+    public bool DoisChoisirStratege;
 
+    [SyncVar(hook = nameof(OnDoisAttendreChanged))]
+    public bool DoisAttendreStratege;
 
     //Fonction Network
     public override void OnStartClient()
@@ -41,19 +48,32 @@ public class PlayerManager : NetworkBehaviour
         Defausse = GameObject.Find("Defausse");
         PMObjet = GameObject.Find("PMEnCoursObjet");
         BoutonTourSuivant = GameObject.Find("Bouton - Tour suivant");
-        GameManager.Instance.TousLesJoueurs.Add(this);
+        Initialiser();
     }
+
+    public override void OnStartServer()
+    {
+        base.OnStartServer();
+        GameManager.Instance.TousLesJoueurs.Add(this);
+        Id = GameManager.Instance.TousLesJoueurs.IndexOf(this);
+    }
+
     public override void OnStartLocalPlayer()
     {
         base.OnStartLocalPlayer();
         LocalPlayer = this;
     }
-    public override void OnStopClient()
+    public override void OnStopServer()
     {
-        base.OnStopClient();
+        base.OnStopServer();
         GameManager.Instance.TousLesJoueurs.Remove(this);
     }
 
+    private void Initialiser()
+    {
+        DoisChoisirStratege = false;
+        DoisAttendreStratege = false;
+    }
 
     //Fonction classiques
     public void OnPMChanged(float ancienneValeur, float nouvelleValeur)
@@ -68,7 +88,36 @@ public class PlayerManager : NetworkBehaviour
     public void OnStrategeChanged(Carte ancienneCarte, Carte nouvelleCarte)
     {
         if (!isLocalPlayer) return;
-        BoutonTourSuivant.GetComponent<Button>().interactable = (nouvelleCarte != null);
+        BoutonTourSuivant.GetComponent<Button>().interactable = nouvelleCarte != null;
+        // plus rien d'autre ici — juste de l'affichage
+    }
+
+    void OnDoisChoisirChanged(bool ancienneValeur, bool nouvelleValeur)
+    {
+        if (!isLocalPlayer) return;
+        if (nouvelleValeur)
+        {
+            UnityEngine.Debug.LogError("Il dois choisir son stratège, zou");
+            // afficher l'UI de choix de stratège
+        }
+    }
+
+    void OnDoisAttendreChanged(bool ancienneValeur, bool nouvelleValeur)
+    {
+        if (!isLocalPlayer) return;
+        if (nouvelleValeur)
+        {
+            // afficher l'UI "attends que l'adversaire choisisse"
+        }
+    }
+
+    [TargetRpc]
+    private void TargetNattendPlus()
+    {
+        DoisAttendreStratege = false;
+        DoisChoisirStratege = false;
+        UnityEngine.Debug.LogError("Je n'attends plus !");
+
     }
 
     public void JouerCarte(Carte carte, int terrainId)
@@ -103,10 +152,8 @@ public class PlayerManager : NetworkBehaviour
 
     private void AttaquerCarte(uint carteAttaquanteId, uint carteChoisieId)
     {
-        if (!NetworkClient.spawned.TryGetValue(carteAttaquanteId, out NetworkIdentity identity1))
-            return;
-        if (!NetworkClient.spawned.TryGetValue(carteChoisieId, out NetworkIdentity identity2))
-            return;
+        if (!NetworkClient.spawned.TryGetValue(carteAttaquanteId, out NetworkIdentity identity1)) { return; }
+        if (!NetworkClient.spawned.TryGetValue(carteChoisieId, out NetworkIdentity identity2)) { return; }
         Carte carteAttaquante = identity1.GetComponent<Carte>();
         Carte carteChoisie = identity2.GetComponent<Carte>();
 
@@ -114,27 +161,13 @@ public class PlayerManager : NetworkBehaviour
         {
             carteAttaquante.EstVisible = true;
             carteChoisie.EstVisible = true;
-            GameManager.Instance.Proposition(carteAttaquante, carteChoisie, "Lien");
+            foreach (PlayerManager joueur in GameManager.Instance.TousLesJoueurs)
+            {
+                TargetTransfertProposition(joueur.connectionToClient, carteAttaquante, carteChoisie, "Lien");
+            }
             return;
         }
 
-        if (carteChoisie.EstStratege)
-        {
-            PlaceTerrain terrain2 = GameManager.Instance.TousLesTerrains.Find(t => t.Id == 2);
-            PlaceTerrain terrain3 = GameManager.Instance.TousLesTerrains.Find(t => t.Id == 3);
-            PlaceTerrain terrain5 = GameManager.Instance.TousLesTerrains.Find(t => t.Id == 5);
-            PlaceTerrain terrain6 = GameManager.Instance.TousLesTerrains.Find(t => t.Id == 6);
-            // Si on attaque le stratège, on fait attention que les aversaires n'ont pas de carte a côté
-            //Penser a rajouter le moment ou le stratège sera SEUL
-            if (carteChoisie.PlaceDeTerrain.Id == 1 &&
-            ((terrain2.CartePlacee != null && !terrain2.CartePlacee.isOwned) ||
-            (terrain3.CartePlacee != null && !terrain3.CartePlacee.isOwned)))
-            { return; }
-            if (carteChoisie.PlaceDeTerrain.Id == 4 &&
-            ((terrain5.CartePlacee != null && !terrain5.CartePlacee.isOwned) ||
-            (terrain6.CartePlacee != null && !terrain6.CartePlacee.isOwned)))
-            { return; }
-        }
         int degats = carteAttaquante.PAVar;
         int degatsDef = carteChoisie.PAVar;
         if (carteChoisie.Stats.Type == "Robot") { degats = 1; }
@@ -144,19 +177,73 @@ public class PlayerManager : NetworkBehaviour
 
     private void VerifierGagnant()
     {
-        int joueurNbCarte = 0;
-        int autreJoueurNbCarte = 0;
+        List<Carte> CartesJoueur1 = new List<Carte>();
+        List<Carte> CartesJoueur2 = new List<Carte>();
         foreach (Carte carte in GameManager.Instance.ToutesLesCartes)
         {
-            if (carte.isOwned) { joueurNbCarte++; }
-            else { autreJoueurNbCarte++; }
+            if (carte.isOwned) { CartesJoueur1.Add(carte); }
+            else { CartesJoueur2.Add(carte); }
         }
-        if (joueurNbCarte == 0 || autreJoueurNbCarte == 0)
-        { GameManager.Instance.Proposition("Gagner"); }
+
+        UnityEngine.Debug.LogError($"Joueur 0 a {CartesJoueur1.Count} carte , joueur 1 a {CartesJoueur2.Count} carte");
+        if (CartesJoueur1.Count == 0 || CartesJoueur2.Count == 0)
+        {
+            if (CartesJoueur1.Count != CartesJoueur2.Count)
+            {
+                int idPerdant = (CartesJoueur1.Count == 0) ? 0 : 1;
+                int idGagnant = (idPerdant == 0) ? 1 : 0;
+                PlayerManager joueurPerdant = GameManager.Instance.TousLesJoueurs.Find(j => j.Id == idPerdant);
+                PlayerManager joueurGagnant = GameManager.Instance.TousLesJoueurs.Find(j => j.Id == idGagnant);
+
+                if (joueurPerdant != null) { joueurPerdant.TargetAfficherProposition(joueurPerdant.connectionToClient, "Perdre"); }// false = perdu
+                if (joueurGagnant != null) { joueurGagnant.TargetAfficherProposition(joueurGagnant.connectionToClient, "Gagner"); } // true = gagné
+            }
+            else { UnityEngine.Debug.LogError($"égalité les gars, tout le monde la même"); }
+        }
+        else if (LienBlocked(CartesJoueur1, CartesJoueur2)) { UnityEngine.Debug.LogError($"égalité les gars, tout le monde la même, mais en lien"); }
+    }
+
+    public void TransfertProposition(string choix)
+    {
+        GameManager.Instance.Proposition(choix);
+    }
+    [TargetRpc]
+    public void TargetTransfertProposition(NetworkConnectionToClient target, string type)
+    {
+        TransfertProposition(type); // réutilise ta fonction existante côté client
     }
 
 
+    public void TransfertProposition(Carte carteAttaquante, Carte carteChoisie, string choix)
+    {
+        GameManager.Instance.Proposition(carteAttaquante, carteChoisie, choix);
+    }
+    [TargetRpc]
+    public void TargetTransfertProposition(NetworkConnectionToClient target, Carte carteAttaquante, Carte carteChoisie, string choix)
+    {
+        TransfertProposition(carteAttaquante, carteChoisie, choix); // réutilise ta fonction existante côté client
+    }
 
+    private bool LienBlocked(List<Carte> CartesJoueur1, List<Carte> CartesJoueur2)
+    {
+        foreach (Carte carte in CartesJoueur1)
+        {
+            foreach (Carte carteLien in CartesJoueur2)
+            {
+                if (!carteLien.liensVar.Contains(carte.Id))
+                { return false; }
+            }
+        }
+        foreach (Carte carte in CartesJoueur2)
+        {
+            foreach (Carte carteLien in CartesJoueur1)
+            {
+                if (!carteLien.liensVar.Contains(carte.Id))
+                { return false; }
+            }
+        }
+        return true;
+    }
 
     //Commands
     [Command]
@@ -172,11 +259,6 @@ public class PlayerManager : NetworkBehaviour
         CoutAction(1);
     }
 
-    [Command]
-    public void CmdMourir(GameObject carte)
-    {
-        ServeurMourirCarte(carte);
-    }
 
     [Command]
     public void CmdConfirmerAction(uint carteDeplaceeId, uint carteChoisieId, string choix)
@@ -190,6 +272,7 @@ public class PlayerManager : NetworkBehaviour
         if (choix == "Echanger" && !carteDeplacee.EstStratege && !carteChoisie.EstStratege)
         {
             EchangerCarte(carteDeplaceeId, carteChoisieId);
+
             CoutAction(2);
         }
         else if (choix == "Attaquer")
@@ -210,14 +293,12 @@ public class PlayerManager : NetworkBehaviour
     public void CmdJeSuisPret()
     {
         EstPret = true;
-        if (GameManager.Instance.TousLesJoueurs.TrueForAll(j => j.EstPret))
+        if (GameManager.Instance.TousLesJoueurs.All(j => j.EstPret))
         { GameManager.Instance.CommencerLeJeu(); }
     }
     [Command]
     public void CmdFinTour()
-    {
-        GameManager.Instance.PasserAuTourSuivant();
-    }
+    { GameManager.Instance.PasserAuTourSuivant(); }
 
 
 
@@ -236,7 +317,9 @@ public class PlayerManager : NetworkBehaviour
 
     [Server]
     public void ValeurPM(float nouvelleValeur)
-    { PMEnCours = nouvelleValeur; }
+    {
+        PMEnCours = nouvelleValeur;
+    }
 
 
     [Server]
@@ -255,26 +338,20 @@ public class PlayerManager : NetworkBehaviour
         carteChoisie.PVar = carteChoisie.PVar - degatsAtt; //Deja bon pour robots et piège (bon je dois le faire)
         if (carteChoisie.PVar > 0) // Si elle survit, elle réplique
         {
-            carteAttaquante.PVar = carteAttaquante.PVar - carteChoisie.PAVar;
+            carteAttaquante.PVar = carteAttaquante.PVar - degatDef;
             if (carteAttaquante.PVar <= 0) { carteAttaquante.Mourir(); }
         }
         else { carteChoisie.Mourir(); }
     }
 
     [Server]
-    void ServeurJouerCarte(uint carteNetId, int terrainId) //Les déplacements
+    private void ServeurJouerCarte(uint carteNetId, int terrainId) //Les déplacements
     {
 
         if (!NetworkServer.spawned.TryGetValue(carteNetId, out NetworkIdentity identity)) { return; }
         Carte carte = identity.GetComponent<Carte>();
         carte.TerrainId = terrainId; //Declanche tout
-        if (terrainId == 1 || terrainId == 4)
-        {
-            carte.EstStratege = true;
-            carte.EstVisible = true;
-        }
-        RpcRendreStratege(carte, terrainId);
-        ViderTerrain("Normal");
+        ServerRendreStratege(carte, terrainId); // Rendre Stratège si besoin est
     }
 
     [Server]
@@ -283,19 +360,22 @@ public class PlayerManager : NetworkBehaviour
         if (!NetworkServer.spawned.TryGetValue(carteNetId, out NetworkIdentity identity)) { return; }
         Carte carte = identity.GetComponent<Carte>();
         carte.TerrainId = 0;
-        ViderTerrain("Normal");
     }
 
     [Server]
-    private void ServeurMourirCarte(GameObject carte)
+    internal void ServeurMourirCarte(GameObject carte)
     {
         Carte carteMourante = carte.GetComponent<Carte>();
-        if (carteMourante.EstStratege) { carteMourante.PlayerManager.Stratege = null; }
+        if (carteMourante.EstStratege)
+        {
+            carteMourante.Player.Stratege = null;
+            carteMourante.EstStratege = false;
+        }
         if (carteMourante.PlaceDeTerrain != null) { carteMourante.TerrainId = -1; }
         GameManager.Instance.ToutesLesCartes.Remove(carteMourante.GetComponent<Carte>());
 
         carteMourante.EstEnJeu = false;
-        carteMourante.EstStratege = false;
+
         VerifierGagnant();
     }
 
@@ -309,35 +389,39 @@ public class PlayerManager : NetworkBehaviour
         if (!NetworkServer.spawned.TryGetValue(carteNetId2, out NetworkIdentity identity2)) { return; }
         Carte carte2 = identity2.GetComponent<Carte>();
         carte2.TerrainId = terrainId2;
-        ViderTerrain("Normal");
     }
 
     [Server]
-    private void RpcRendreStratege(Carte carte, int terrainId)
+    private void ServerRendreStratege(Carte carte, int terrainId)
     {
-        if ((isLocalPlayer && terrainId == 1) || (!isLocalPlayer && terrainId == 4))
+        if ((Id == 0 && terrainId == 1) || (Id == 1 && terrainId == 4))
         {
             Stratege = carte;
             PMEnCours = Stratege.PMVar;
-            BoutonTourSuivant.GetComponent<Button>().interactable = true;
+            carte.EstStratege = true;
+            carte.EstVisible = true;
+
+            ServeurStrategeChoisi(this); // ← ici, "this" car ServerRendreStratege est déjà une méthode de PlayerManager
         }
     }
 
+    [Server]
+    private void ServeurStrategeChoisi(PlayerManager joueurConcerne)
+    {
+        joueurConcerne.DoisChoisirStratege = false;
+
+        PlayerManager adversaire = GameManager.Instance.TousLesJoueurs.Find(j => j.Id != joueurConcerne.Id);
+        if (adversaire != null)
+        {
+            adversaire.DoisAttendreStratege = false;
+        }
+    }
 
     //Client RPC
     [TargetRpc]
-    void TargetAfficherProposition(NetworkConnectionToClient target, string message)
+    public void TargetAfficherProposition(NetworkConnectionToClient target, string message)
     {
         GameManager.Instance.Proposition(message);
-    }
-
-    [ClientRpc]
-    private void RpcGagner()
-    {
-        //IF moi joueur
-        GameManager.Instance.Proposition("Gagner");
-        // If pas moi joueur
-        GameManager.Instance.Proposition("Perdre");
     }
 
     [ClientRpc]
@@ -387,21 +471,4 @@ public class PlayerManager : NetworkBehaviour
         }
         GameManager.Instance.TousLesTerrains.Add(terrain.GetComponent<PlaceTerrain>());
     }
-
-
-    //Toutes petites fonctions
-    [Server]
-    private void ViderTerrain(string choix) // Pour enlever les cartes encore placées sur eux
-    {
-        switch (choix)
-        {
-            case "Tout":
-                foreach (PlaceTerrain terrainTest in GameManager.Instance.TousLesTerrains) { terrainTest.CartePlacee = null; }
-                break;
-            case "Normal":
-                foreach (PlaceTerrain terrainTest in GameManager.Instance.TousLesTerrains) { if (terrainTest.transform.childCount == 0) { terrainTest.CartePlacee = null; } }
-                break;
-        }
-    }
-
 }

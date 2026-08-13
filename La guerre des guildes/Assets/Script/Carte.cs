@@ -7,26 +7,28 @@ using Mirror;
 using TMPro;
 using Mirror.Examples.Basic;
 using Unity.VisualScripting;
+using Mirror.BouncyCastle.Crypto.Macs;
 
 public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDragHandler, IPointerDownHandler, IDropHandler  //Les suppléments sont les promesses de fonction
 {
-
     [SerializeField] public Canvas canvas;
     public CanvasGroup canvasGroup;
-    public PlayerManager PlayerManager; //Joueur a qui appartient la carte
     public RectTransform rectTransform;
     [SyncVar(hook = nameof(OnVisibleChanged))] public bool EstVisible;
     [SyncVar] public bool EstStratege;
     [SyncVar] public bool EstEnJeu;
-    [SyncVar] public bool EstRemise;
+    public bool EstRemise;
+    public bool EstMontree;
+    public bool EstEchange;
     private Vector2 offset;
 
     // Information importante carte
     [SyncVar] public int Id;
-    [SyncVar(hook = nameof(OnTerrainIdChanged))]
-    public int TerrainId; // Id du terrain sur lequel il est, 0 est deck, -1 est mort, -2 dans la pioche
+    [SyncVar(hook = nameof(OnTerrainIdChanged))] public int TerrainId; // Id du terrain sur lequel il est, 0 est deck, -1 est mort
     public int TerrainIdVise;
-    [SyncVar] public bool EstEchange;
+    [SyncVar]
+    public PlayerManager Player; //Joueur a qui appartient la carte
+
     public PlaceTerrain PlaceDeTerrain;
 
     public CarteSettings Stats;
@@ -95,8 +97,8 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         PMVar = Stats.PM;
         IdPouvoirVar = Stats.IdPouvoir;
         PouvoirVar = Stats.Pouvoir;
-        NetworkIdentity networkIdentity = NetworkClient.connection.identity;
-        PlayerManager = networkIdentity.GetComponent<PlayerManager>();
+        //NetworkIdentity networkIdentity = NetworkClient.connection.identity;
+        //Player = networkIdentity.GetComponent<PlayerManager>();
         ImageDosCarte = Resources.Load<Sprite>("Images/" + "DosAdversaires");
         CoutPouvoirVar = Stats.CoutPouvoir;
         liensVar.Clear();
@@ -133,7 +135,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
 
     public void OnTerrainIdChanged(int ancienTerrain, int nouveauTerrain)
     {
-        UnityEngine.Debug.Log($"Nous allons de {ancienTerrain} à {nouveauTerrain}");
+        //UnityEngine.Debug.Log($"Nous allons de {ancienTerrain} à {nouveauTerrain}"); //Quand j'ai des bugs
         if (nouveauTerrain > 0) //Si je vais vers un nouveau terrain
         {
             PlaceTerrain terrain = GameManager.Instance.TousLesTerrains.Find(t => t.Id == nouveauTerrain);
@@ -143,28 +145,27 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
             EstEnJeu = true;
             transform.SetParent(terrain.transform, false);
             PivotCentre(); // On le remet bien
-
-            UnityEngine.Debug.Log($"Est il stratège ? {EstStratege} et son terrain ? {PlaceDeTerrain.EstTerrainStratege}");
         }
         else if (nouveauTerrain == -1 || nouveauTerrain == 0) //Si je veux aller dans le deck ou mourir
         {
-
             PlaceTerrain vieuxTerrain = GameManager.Instance.TousLesTerrains.Find(t => t.Id == ancienTerrain);
-            if (vieuxTerrain != null) { vieuxTerrain.CartePlacee = null; }//Enlever la carte dessus
+            if (vieuxTerrain != null) { vieuxTerrain.CartePlacee = null; } //Enlever la carte dessus
             PlaceDeTerrain = null;
             if (nouveauTerrain == -1) //Si elle meurt
             {
-                transform.SetParent(PlayerManager.Defausse.transform, false);
+                transform.SetParent(Player.Defausse.transform, false);
                 GetComponent<RectTransform>().anchoredPosition = new Vector3(0, 0, 0);
                 PVar = 0;
-                PlayerManager = null;
+                Player = null;
             }
-            else //Si elle retourne juste dans le deck
+            else if (nouveauTerrain == 0) //Si elle retourne juste dans le deck
             {
-                if (isOwned) { transform.SetParent(PlayerManager.DeckJoueur.transform, false); } //On choisit le bon deck
-                else { transform.SetParent(PlayerManager.DeckAdversaire.transform, false); }
+                if (isOwned) { transform.SetParent(Player.DeckJoueur.transform, false); } //On choisit le bon deck
+                else { transform.SetParent(Player.DeckAdversaire.transform, false); }
+                EstEnJeu = false;
             }
         }
+        if (EstMontree) { CacherContour(); }
         TerrainIdVise = 0;
     }
 
@@ -219,13 +220,64 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     public void Mourir()
     {
         UnityEngine.Debug.Log($"{Stats.Prenom} est mort.e.");
-        PlayerManager.CmdMourir(this.GameObject());
+        Player.ServeurMourirCarte(this.GameObject());
     }
     public void PivotCentre() // Pour enlever les cartes encore placées sur eux
     {
         rectTransform.anchorMin = new Vector2(0.5f, 0.5f); // Remettre le pivot au centre
         rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
         GetComponent<RectTransform>().anchoredPosition = new Vector3(0, 0, 0);
+    }
+    public void DeplacerContour()
+    {
+        if (!EstMontree && PlaceDeTerrain != null)
+        { MontrerContour(); } // Je met le contour
+        else if (EstMontree)
+        { CacherContour(); } // Je le renvoie loin
+    }
+
+    public void MontrerContour()
+    {
+        GameManager JeuEnCours = GameManager.Instance;
+        RectTransform rt = JeuEnCours.ContourEnnemi.GetComponent<RectTransform>();
+        if (isOwned) { rt = JeuEnCours.ContourAllie.GetComponent<RectTransform>(); }
+        Vector2 addition = Player.TerrainsAdverse.GetComponent<RectTransform>().anchoredPosition;
+        if (PlaceDeTerrain.EstAMoi) { addition = Player.TerrainsJoueur.GetComponent<RectTransform>().anchoredPosition; }
+        EstMontree = true;
+        rt.anchoredPosition = PlaceDeTerrain.GetComponent<RectTransform>().anchoredPosition + addition;
+        if (JeuEnCours.CarteMontree != null)
+        {
+            JeuEnCours.CarteMontree.EstMontree = false;
+            if (JeuEnCours.CarteMontree.isOwned && !isOwned)
+            { JeuEnCours.ContourAllie.GetComponent<RectTransform>().anchoredPosition = new Vector2(1200, 0); }
+            else if (!JeuEnCours.CarteMontree.isOwned && isOwned)
+            { JeuEnCours.ContourEnnemi.GetComponent<RectTransform>().anchoredPosition = new Vector2(1200, 0); }
+        }
+        JeuEnCours.CarteMontree = this;
+        if (EstVisible || isOwned) { GameManager.Instance.MontrerGrandeCarte(); }
+    }
+
+    public void CacherContour()
+    {
+        RectTransform rt = GameManager.Instance.ContourEnnemi.GetComponent<RectTransform>();
+        if (isOwned) { rt = GameManager.Instance.ContourAllie.GetComponent<RectTransform>(); }
+        rt.anchoredPosition = new Vector2(1200, 0);
+        EstMontree = false;
+        GameManager.Instance.CarteMontree = null;
+        if (GameManager.Instance.CarteMontree == null || (!EstVisible && !isOwned)) { GameManager.Instance.CacherGrandeCarte(); }
+    }
+
+    public bool StrategeSeul()
+    {
+        int decompte = 0;
+
+        UnityEngine.Debug.Log($"La carte seule est {Player.Id}");
+        foreach (Carte carte in GameManager.Instance.ToutesLesCartes)
+        {
+            if (carte.Player != null && (carte.Player.Id == Player.Id)) { decompte++; }
+        }
+        if (decompte == 1 && GameManager.Instance.NombreCartesPioche == 0) { return true; }
+        return false;
     }
 
     //Tout en dessous c'est pour déplacer la carte
@@ -234,90 +286,125 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         if (canvas == null) { canvas = GetComponentInParent<Canvas>(); }
         if (!isOwned) { return; }//Si la carte n'est pas à moi, YEET
         if (eventData.button == PointerEventData.InputButton.Right) { FamilleImageT.color = Color.red; } //C'est l'attaque
-        if (EstStratege) { return; }
+        if (EstStratege && !StrategeSeul()) { return; }
         if (eventData.button == PointerEventData.InputButton.Left)
         {
             canvasGroup.alpha = .7f; // Opacité de la carte quand je clique dessus
             canvasGroup.blocksRaycasts = false;
-
-            if (PlaceDeTerrain != null)
-            {
-                transform.SetParent(canvas.transform, false);
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(rectTransform, eventData.position, eventData.pressEventCamera, out offset);
-            }
+            PivotCentre();
+            transform.SetParent(canvas.transform, false);
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(rectTransform, eventData.position, eventData.pressEventCamera, out offset);
         }
+        if (EstMontree) { Invoke(nameof(CacherContour), 0.6f); }
     }
+
     public void OnDrag(PointerEventData eventData)
     {
-        if (!isOwned || EstStratege) { return; }
+        if (!isOwned || (EstStratege && !StrategeSeul())) { return; }
         if (eventData.button == PointerEventData.InputButton.Left)
         {
-            if (PlaceDeTerrain != null)
-            {
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    canvas.transform as RectTransform,
-                    eventData.position,
-                    eventData.pressEventCamera,
-                    out Vector2 localPoint
-                    );
-                rectTransform.anchoredPosition = localPoint;
-            }
-            else { rectTransform.anchoredPosition += eventData.delta / canvas.scaleFactor; }
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                rectTransform.parent as RectTransform,
+                eventData.position,
+                eventData.pressEventCamera,
+                out Vector2 localPoint);
+            rectTransform.anchoredPosition = localPoint;
         }
     }
     public void OnEndDrag(PointerEventData eventData)
     {
-        if (!isOwned) { return; }
-        if (eventData.button == PointerEventData.InputButton.Right)
+        if (!isOwned || eventData.button == PointerEventData.InputButton.Right || (EstStratege && !StrategeSeul()))
         {
             FamilleImageT.color = Color.white;
             return;
         }
-        if (EstStratege) { return; }
+        PivotCentre();
         canvasGroup.alpha = 1f; // Opacité de la carte quand je clique dessus
         canvasGroup.blocksRaycasts = true;
-        PivotCentre();
-        if (TerrainIdVise != 0 && eventData.button == PointerEventData.InputButton.Left) // On joue la carte
+        if (eventData.button == PointerEventData.InputButton.Left) { Cheminer(); } //Si j'initie un déplacement
+    }
+
+    public void Cheminer()
+    {
+        PlaceTerrain t = GameManager.Instance.TousLesTerrains.Find(t => t.Id == TerrainIdVise);
+        string Depart = "Deck";
+        string Arrivee = "Deck";
+        if (EstEnJeu) { Depart = "Terrain"; }
+        if (TerrainIdVise != 0) { Arrivee = "Terrain"; }
+        if (EstEchange) { Arrivee = "Carte"; }
+        //UnityEngine.Debug.Log($" {Depart} => {Arrivee} ");
+        if (Arrivee == "Terrain")
         {
-            PlayerManager.JouerCarte(this, TerrainIdVise);
+            if (GameManager.Instance.JePeuxJouer(Player, "Deplacer", this)) { Player.JouerCarte(this, TerrainIdVise); }
+            else { RetourEnPlace(Depart); }
         }
-        else if (TerrainIdVise == 0 && PlaceDeTerrain == null && eventData.button == PointerEventData.InputButton.Left) // Elle revient dans le deck
+        if (Arrivee == "Deck")
         {
-            EstStratege = false;
-            EstVisible = false;
-            transform.SetParent(PlayerManager.DeckJoueur.transform, false);
-            LayoutRebuilder.MarkLayoutForRebuild(PlayerManager.DeckJoueur.GetComponent<RectTransform>());
-        }
-        if (PlaceDeTerrain != null && eventData.button == PointerEventData.InputButton.Left) // Elle revient sur son terrain
-        {
-            transform.SetParent(PlaceDeTerrain.transform, false);
-        }
-        if (EstRemise == true)
-        {
-            PlayerManager.RangerCarte(this);
-            LayoutRebuilder.MarkLayoutForRebuild(PlayerManager.DeckJoueur.GetComponent<RectTransform>());
+            if (Depart == "Terrain" && EstRemise && GameManager.Instance.JePeuxJouer(Player, "RetournerDeck", this))
+            {
+                Player.RangerCarte(this);
+                LayoutRebuilder.MarkLayoutForRebuild(Player.DeckJoueur.GetComponent<RectTransform>());
+            }
+            else { RetourEnPlace(Depart); }
             EstRemise = false;
         }
+        if (Arrivee == "Carte") { RetourEnPlace(Depart); EstEchange = false; }
     }
+
+    public void RetourEnPlace(string place)
+    {
+        if (place == "Terrain") { transform.SetParent(PlaceDeTerrain.transform, false); }
+        else
+        {
+            transform.SetParent(Player.DeckJoueur.transform, false);
+            LayoutRebuilder.MarkLayoutForRebuild(Player.DeckJoueur.GetComponent<RectTransform>());
+        }
+        TerrainIdVise = 0;
+    }
+
     public void OnPointerDown(PointerEventData eventData)
     {
-        if (eventData.button != PointerEventData.InputButton.Middle) { return; }
-        if (!EstVisible && EstEnJeu) { MontrerCarte(); }
-        else if (EstEnJeu) { CacherCarte(); }
+        if (eventData.button == PointerEventData.InputButton.Left && Player != null && PlaceDeTerrain != null) { DeplacerContour(); }
+        //Cheat Code
+        if (Input.GetKey(KeyCode.D) && eventData.button == PointerEventData.InputButton.Left) { Player.ServeurMourirCarte(this.GameObject()); }
+        if (Input.GetKey(KeyCode.V) && eventData.button == PointerEventData.InputButton.Left) { GameManager.Instance.ViderPioche(); }
+        if (eventData.button == PointerEventData.InputButton.Middle && !EstVisible && EstEnJeu) { MontrerCarte(); } // A retirer
     }
+
     public void OnDrop(PointerEventData eventData)
     {
         if (eventData.pointerDrag == null) { return; }
+        GameManager gm = GameManager.Instance;
         Carte carteDeplace = eventData.pointerDrag.GetComponent<Carte>();
-        if (EstEnJeu && carteDeplace.isOwned && isOwned && eventData.button == PointerEventData.InputButton.Left)
+        if (EstEnJeu && carteDeplace.isOwned && isOwned && eventData.button == PointerEventData.InputButton.Left && gm.JePeuxJouer(Player, "Echanger", this))
         {
-            UnityEngine.Debug.Log($"On échange entre {Stats.Prenom} et {carteDeplace.Stats.Prenom}");
-            GameManager.Instance.Proposition(carteDeplace, this, "Echanger");
+            //UnityEngine.Debug.Log($"On échange entre {Stats.Prenom} et {carteDeplace.Stats.Prenom}");
+            carteDeplace.EstEchange = true;
+            gm.Proposition(carteDeplace, this, "Echanger");
         }
-        if (EstEnJeu && carteDeplace.EstEnJeu && carteDeplace.isOwned && eventData.button == PointerEventData.InputButton.Right)
+        if (EstEnJeu && carteDeplace.EstEnJeu && carteDeplace.isOwned && eventData.button == PointerEventData.InputButton.Right && gm.JePeuxJouer(carteDeplace.Player, "Attaquer", carteDeplace))
         {
-            UnityEngine.Debug.Log($"{carteDeplace.Stats.Prenom} attaque {Stats.Prenom}");
-            GameManager.Instance.Proposition(carteDeplace, this, "Attaquer");
+            //UnityEngine.Debug.Log($"{carteDeplace.Stats.Prenom} attaque {Stats.Prenom} qui Stratege {EstStratege} et Stratege Seul ? {StrategeSeul()}");
+            if (EstStratege && !StrategeSeul())
+            {
+                // Si on attaque le stratège, on fait attention que les aversaires n'ont pas de carte a côté
+                PlaceTerrain t2 = GameManager.Instance.TousLesTerrains.Find(t => t.Id == 2);
+                PlaceTerrain t3 = GameManager.Instance.TousLesTerrains.Find(t => t.Id == 3);
+                PlaceTerrain t5 = GameManager.Instance.TousLesTerrains.Find(t => t.Id == 5);
+                PlaceTerrain t6 = GameManager.Instance.TousLesTerrains.Find(t => t.Id == 6);
+
+                bool conclusion = false;
+                if (TerrainId == 1 && ((t2.CartePlacee != null && !t2.CartePlacee.isOwned)
+                || (t3.CartePlacee != null && !t3.CartePlacee.isOwned))) { conclusion = true; }
+                else if (TerrainId == 4 && ((t5.CartePlacee != null && !t5.CartePlacee.isOwned)
+                || (t6.CartePlacee != null && !t6.CartePlacee.isOwned))) { conclusion = true; }
+                if (conclusion)
+                {
+                    gm.Proposition("StrategeProtege");
+                    return;
+                }
+            }
+            gm.Proposition(carteDeplace, this, "Attaquer");
         }
     }
 }

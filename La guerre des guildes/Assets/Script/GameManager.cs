@@ -13,61 +13,99 @@ public class GameManager : NetworkBehaviour
 {
 
     public List<int> Pioche = new List<int>();
+    [SyncVar] public int NombreCartesPioche;
     public List<CarteSettings> CartesSettings = new List<CarteSettings>(); //Ajoutees manuellement
     public EcranDeConfirmation EcranDeConfirmation;
     public static GameManager Instance;
     public Sprite ImageVisible;
     public Sprite ImagePasVisible;
-    public GameObject Contour;
+    public GameObject ContourAllie;
+    public GameObject ContourEnnemi;
     public PlayerManager JoueurEnCours;
+    public bool JEnCoursAPioche;
+    private int decalageTour = 1; // champ de classe, pas variable locale
     [SyncVar(hook = nameof(OnTourChanged))]
     public int Tour;
     public GameObject TourObject;
+    public GrandeCarteMontree GrandeCarte;
+    public Carte CarteMontree;
     [SyncVar] public string EtatDuJeu;
     public List<Carte> ToutesLesCartes = new List<Carte>();
     public List<PlaceTerrain> TousLesTerrains = new List<PlaceTerrain>();
-    public List<PlayerManager> TousLesJoueurs = new List<PlayerManager>();
+    //public List<PlayerManager> TousLesJoueurs = new List<PlayerManager>();
+    public readonly SyncList<PlayerManager> TousLesJoueurs = new SyncList<PlayerManager>();
 
     public void Start()
     {
-        Instance = this;
         if (CartesSettings.Count == 0) { ImporterCartes(); }
         EtatDuJeu = "EnAttente";
     }
-    public void Awake()
-    { Instance = this; }
+    public void Awake() { Instance = this; }
     public override void OnStopServer()
     {
         base.OnStopServer();
         TousLesJoueurs.Clear();
-        ToutesLesCartes.Clear();
-        TousLesTerrains.Clear();
+        ReinitialiserPartie();
     }
 
     public override void OnStartClient()
     {
         base.OnStartClient();
-        TousLesJoueurs.Clear();
+        CarteMontree = null;
+    }
+
+
+    [Server]
+    public void ReinitialiserPartie()
+    {
+        foreach (Carte carte in ToutesLesCartes)
+        { NetworkServer.Destroy(carte.gameObject); }
+        foreach (PlaceTerrain terrain in TousLesTerrains)
+        { NetworkServer.Destroy(terrain.gameObject); }
+
         ToutesLesCartes.Clear();
         TousLesTerrains.Clear();
+
+        Tour = 0;
+        EtatDuJeu = "EnAttente";
+        CreerDeck(); // Relance une nouvelle pioche mélangée
+    }
+
+    [Server]
+    public void ViderPioche()
+    {
+        Pioche.Clear();
+        NombreCartesPioche = Pioche.Count;
+        UnityEngine.Debug.Log("Je vide la pioche :)");
     }
 
 
     public void OnTourChanged(int ancienneValeur, int nouvelleValeur)
     {
-        UnityEngine.Debug.Log($"OnTourChanged - {isServer} {isClient} {isLocalPlayer}");
+        if (TousLesJoueurs.Count <= 0) return;
 
         if (TousLesJoueurs.Count >= 2)
         {
-            JoueurEnCours = TousLesJoueurs[Tour % 2];
+            if (nouvelleValeur == 1) // calcul UNIQUEMENT au premier tour
+            {
+                decalageTour = 1;
+                if (TousLesJoueurs[1].Stratege.PMVar < TousLesJoueurs[0].Stratege.PMVar)
+                { decalageTour = 0; }
+                if (TousLesJoueurs[1].Stratege.PMVar == TousLesJoueurs[0].Stratege.PMVar)
+                {
+                    int choix = UnityEngine.Random.Range(0, 2);
+                    if (choix == 1) { decalageTour = 0; }
+                }
+            }
+            JoueurEnCours = TousLesJoueurs[(Tour + decalageTour) % 2]; // réutilise la valeur mémorisée
             PlayerManager.LocalPlayer.BoutonTourSuivant.GetComponent<Button>().interactable = JoueurEnCours == PlayerManager.LocalPlayer;
         }
-        else
+        else if (TousLesJoueurs.Count == 1)
         {
             JoueurEnCours = TousLesJoueurs[0];
+            TousLesJoueurs[0].BoutonTourSuivant.GetComponent<Button>().interactable = true;
         }
-        if (JoueurEnCours.Stratege != null) { JoueurEnCours.ValeurPM(JoueurEnCours.Stratege.PMVar); } // On lui remet ses PMs //MAIS PAS ICI
-
+        JEnCoursAPioche = false;
         TourObject.GetComponent<TMP_Text>().text = nouvelleValeur.ToString();
     }
 
@@ -123,23 +161,32 @@ public class GameManager : NetworkBehaviour
         { Pioche.Add(carteStats.Id); }
         Melanger(Pioche);
         EtatDuJeu = "Preparation";
+        NombreCartesPioche = Pioche.Count;
     }
+
     [Server]
     public void Piocher(NetworkConnectionToClient conn)
     {
-        if (Pioche.Count == 0) return;
         PlayerManager joueur = conn.identity.GetComponent<PlayerManager>();
-        if (joueur.DeckJoueur.transform.childCount >= 5) return;
+        if (Pioche.Count == 0)
+        {
+            PlayerManager joueurVide = conn.identity.GetComponent<PlayerManager>();
+            joueurVide.TargetTransfertProposition(conn, "PiocheVide"); // à créer, voir plus bas
+            UnityEngine.Debug.LogError("La pioche est vide :/");
+            return;
+        }
 
         int dataId = Pioche[0];
         Pioche.RemoveAt(0);
+        NombreCartesPioche = Pioche.Count;
         GameObject cardObj = Instantiate(joueur.PrefabCarte);
         Carte carte = cardObj.GetComponent<Carte>();
         carte.Id = dataId;
-        carte.PlayerManager = joueur;
+        carte.Player = joueur;
 
         NetworkServer.Spawn(cardObj, conn);
         joueur.PiocherCarte(cardObj);
+        JEnCoursAPioche = true;
     }
     [Server]
     public void CreerTerrain(NetworkConnectionToClient conn, int i)
@@ -158,15 +205,29 @@ public class GameManager : NetworkBehaviour
     public void PasserAuTourSuivant()
     {
         Tour++;
+        if (JoueurEnCours.Stratege != null)
+        { JoueurEnCours.ValeurPM(JoueurEnCours.Stratege.PMVar); }
+
     }
     [Server]
     public void CommencerLeJeu()
     {
         Tour = 1;
         EtatDuJeu = "Jouer";
+        if (JoueurEnCours.Stratege != null)
+        { JoueurEnCours.ValeurPM(JoueurEnCours.Stratege.PMVar); }
+        RpcMettreAJourTousLesBoutons();
     }
 
-
+    [ClientRpc]
+    void RpcMettreAJourTousLesBoutons()
+    {
+        // ce code s'exécute UNE fois par client, localement
+        if (PlayerManager.LocalPlayer != null)
+        {
+            PlayerManager.LocalPlayer.BoutonTourSuivant.GetComponent<Button>().GetComponentInChildren<TMP_Text>().text = "Tour Suivant";
+        }
+    }
 
     private void Melanger(List<int> list)
     {
@@ -180,27 +241,30 @@ public class GameManager : NetworkBehaviour
     //Propositions
     public void Proposition(Carte carteDeplacee, Carte carteChoisie, string choix)
     {
-        if (carteChoisie.PlaceDeTerrain == null || carteDeplacee.PlaceDeTerrain == null) { UnityEngine.Debug.Log("On échange avec une place de deck"); return; }
+        if (carteChoisie.PlaceDeTerrain == null || carteDeplacee.PlaceDeTerrain == null) { return; } //Echange entre carte de deck
         if (!DeplacementAutorise(carteChoisie.PlaceDeTerrain.Id, carteDeplacee.PlaceDeTerrain.Id)) { return; }
         EcranDeConfirmation.GameObject().SetActive(true);
+        string texteAffiche = "";
         if (choix == "Echanger" && !carteDeplacee.EstStratege && !carteChoisie.EstStratege)
-        { EcranDeConfirmation.Texte.text = $"Voulez-vous échanger {carteDeplacee.Stats.Prenom} et {carteChoisie.Stats.Prenom} ?"; }
+        { texteAffiche = $"Voulez-vous échanger {carteDeplacee.Stats.Prenom} et {carteChoisie.Stats.Prenom} ?"; }
         else if (choix == "Echanger" && (carteDeplacee.EstStratege || carteChoisie.EstStratege))
-        { EcranDeConfirmation.Texte.text = $"Voulez-vous changer de stratège et mettre {carteDeplacee.Stats.Prenom} à la place ?"; }
+        { texteAffiche = $"Voulez-vous changer de stratège et mettre {carteDeplacee.Stats.Prenom} à la place ?"; }
         else if (choix == "Attaquer")
         {
-            EcranDeConfirmation.Texte.text = $"Voulez-vous attaquer ";
+            texteAffiche = $"Voulez-vous attaquer ";
             if (carteChoisie.EstVisible)
-            { EcranDeConfirmation.Texte.text += $"{carteChoisie.Stats.Prenom} "; }
-            EcranDeConfirmation.Texte.text += $"avec {carteDeplacee.Stats.Prenom}, en infligeant {carteDeplacee.PAVar.ToString()} dégâts ?";
-            if (carteChoisie.isOwned) { EcranDeConfirmation.Texte.text += "\nAttention c'est votre carte."; }
+            { texteAffiche += $"{carteChoisie.Stats.Prenom} "; }
+            texteAffiche += $"avec {carteDeplacee.Stats.Prenom}, en infligeant {carteDeplacee.PAVar.ToString()} dégâts ?";
+            if (carteChoisie.isOwned) { texteAffiche += "\nAttention c'est votre carte."; }
         }
         else if (choix == "Lien")
         {
-            EcranDeConfirmation.Texte.text = $"{carteDeplacee.Stats.Prenom} apperçoit {carteChoisie.Stats.Prenom} et refuse de se battre \nLien";
+            texteAffiche = $"{carteDeplacee.Stats.Prenom} apperçoit {carteChoisie.Stats.Prenom} et refuse de se battre \nLien";
             EcranDeConfirmation.BoutonConfirmer.gameObject.SetActive(false);
         }
+        GrandeCarte.CacherCarte();
         //Visuels
+        EcranDeConfirmation.Texte.text = texteAffiche;
         EcranDeConfirmation.BoutonConfirmer.gameObject.SetActive(true);
         EcranDeConfirmation.BoutonConfirmer.GetComponentInChildren<TMP_Text>().text = choix;
         EcranDeConfirmation.CarteDeplaceeTemp = carteDeplacee;
@@ -211,25 +275,47 @@ public class GameManager : NetworkBehaviour
     {
         EcranDeConfirmation.GameObject().SetActive(true);
         EcranDeConfirmation.BoutonConfirmer.GetComponentInChildren<TMP_Text>().text = "Ok";
-        if (choix == "Gagner")
+        GrandeCarte.CacherCarte();
+        string texteAffiche = "";
+        switch (choix)
         {
-            EcranDeConfirmation.Texte.text = "Vous avez gagné :)";
+            case "Gagner":
+                texteAffiche = "Vous avez gagné :)";
+                break;
+            case "Perdre":
+                texteAffiche = "Vous avez perdu :(";
+                break;
+            case "Cout":
+                texteAffiche = "Vous n'avez pas assez de Point de Mouvement";
+                break;
+            case "StrategeProtege":
+                texteAffiche = "Ce Stratege est protégé. Eliminez les cartes alentours pour pouvoir l'attaquer";
+                break;
+            case "DeckPlein":
+                texteAffiche = "Il n'y a plus de place dans votre deck";
+                break;
+            case "PiochePreparation":
+                texteAffiche = "Vous ne pouvez pas piocher pendant la phase de préparation. \nAppuyez sur Prêt.";
+                break;
+            case "PiocheVide":
+                texteAffiche = "La pioche est vide.";
+                break;
+            case "AttendreStratege":
+                texteAffiche = "Vous devez attendre que l'autre joueur choisisse un stratège.";
+                break;
+            case "DejaPioche":
+                texteAffiche = "Vous avez déjà pioché !";
+                break;
         }
-        else if (choix == "Perdre")
-        {
-            EcranDeConfirmation.Texte.text = "Vous avez perdu :(";
-        }
-        else if (choix == "Cout")
-        {
-            EcranDeConfirmation.Texte.text = "Vous n'avez pas assez de Point de Mouvement";
-        }
+
+        EcranDeConfirmation.Texte.text = texteAffiche;
         EcranDeConfirmation.ChoixTemp = choix;
         EcranDeConfirmation.BoutonConfirmer.gameObject.SetActive(true);
     }
 
     public bool AttaqueAutorisee(Carte attaquante)
     {
-        if (EtatDuJeu == "Jouer" && JoueurEnCours == attaquante.PlayerManager) { return true; }
+        if (EtatDuJeu == "Jouer" && JoueurEnCours == attaquante.Player) { return true; }
         return false;
     }
     public bool DeplacementAutorise(int IdOrigine, int IdVise)
@@ -242,4 +328,61 @@ public class GameManager : NetworkBehaviour
         return false;
     }
 
+    public void MontrerGrandeCarte()
+    {
+        if (CarteMontree == null) { return; }
+        GrandeCarte.MontrerCarte(CarteMontree);
+    }
+    public void CacherGrandeCarte()
+    {
+        GrandeCarte.CacherCarte();
+    }
+
+    public bool JePeuxJouer(PlayerManager joueur, string action, Carte carte)
+    {
+        if (joueur == null || action == null) { UnityEngine.Debug.LogError("Joueur ou Action est null"); return false; }
+        if (joueur.DoisAttendreStratege)
+        {
+            Proposition("AttendreStratege");
+            UnityEngine.Debug.Log("Attend le stratege");
+            return false;
+        }
+        else if (joueur.DoisChoisirStratege)// Si je dois choisir un nouveau stratege
+        {
+            if (action == "Deplacer" && ((carte.Player.Id == 0 && carte.TerrainIdVise == 1) || (carte.Player.Id == 1 && carte.TerrainIdVise == 4)))
+            { return true; }
+            else { return false; }
+        }
+        if (carte != null)
+        {
+            //UnityEngine.Debug.Log($"{EtatDuJeu} avec joueur {joueur.Id} alors que je suis joueur en cours ? {joueur == JoueurEnCours} faisant {action}");
+            if ((action == "Deplacer" || action == "Echanger" || action == "RetournerDeck") &&
+            ((carte.Player.Id == 0 && carte.TerrainIdVise == 4) || (carte.Player.Id == 1 && carte.TerrainIdVise == 1)))
+            { return false; } // Si on essaie d'envahir son terrain
+            if (EtatDuJeu == "Jouer" && joueur == JoueurEnCours) // Non si on n'est pas le joueur actif
+            { return true; }
+            if (EtatDuJeu == "Preparation" && (action == "Deplacer" || action == "Echanger" || action == "RetournerDeck")) //On peut déplacer et échanger
+            {
+                if ((carte.Player.Id == 0 && carte.TerrainIdVise < 4)
+                || (carte.Player.Id == 1 && (carte.TerrainIdVise >= 4 || carte.TerrainIdVise == 0)))
+                { return true; }
+            }
+        }
+        else if (carte == null && action == "Piocher" && EtatDuJeu == "Jouer" && joueur == JoueurEnCours)
+        {
+            if (JEnCoursAPioche)
+            {
+                Proposition("DejaPioche");
+                return false;
+            }
+            else { return true; }
+        }
+        else if (carte == null && action == "Piocher" && EtatDuJeu == "Preparation")
+        {
+            Proposition("PiochePreparation");
+            JEnCoursAPioche = false;
+            return false;
+        }
+        return false;
+    }
 }

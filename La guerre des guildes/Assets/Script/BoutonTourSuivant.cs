@@ -2,12 +2,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class BoutonTourSuivant : MonoBehaviour
 {
     void Start()
     {
         GetComponent<Button>().interactable = false;
+        GetComponent<Button>().GetComponentInChildren<TMP_Text>().text = "Prêt";
     }
 
     public void OnClick()
@@ -16,15 +18,11 @@ public class BoutonTourSuivant : MonoBehaviour
         if (GameManager.Instance.EtatDuJeu == "Jouer")
         {
             joueur.CmdFinTour();
-            UnityEngine.Debug.Log(GameManager.Instance.Tour);
         }
         else if (GameManager.Instance.EtatDuJeu == "Preparation") //Si c'est le tour de pose
         {
             joueur.CmdJeSuisPret();
-            UnityEngine.Debug.Log("Le joueur est prêt ?" + joueur.EstPret);
             GetComponent<Button>().interactable = false;
         }
-
     }
-
 }

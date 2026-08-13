@@ -8,7 +8,8 @@ On ne peut pas appeler un RPC dans un RPC
 Ca c'est un hook, il s'active dès que la variable est changée, ca aurait été plus facile avec a peu près tout HEIN
 Ctrl K + Ctrl C et Ctrl K et Ctrl U
 
-
+Le networkHUD est le composant dans le network manager qui permet de se connecter.
+A remettre dans la scène Jeu, si je veux faire des tests rapides
 
 
 
@@ -32,3 +33,5 @@ if (!NetworkClient.spawned.TryGetValue(carteNetId, out NetworkIdentity identity)
     Carte carte = identity.GetComponent<Carte>();
 
 PlaceTerrain terrain = GameManager.Instance.TousLesTerrains.Find(t => t.Id == terrainId);
+
+if (Stratege != null) { ValeurPM(Stratege.PMVar); }

@@ -1,17 +1,11 @@
 A faire : 
 - Un état de sauvegarde pour le gamemanager pour restaurer pour les joueurs qui buggent. => avoir une liste 
-- Tout se "supprime" en fin de partie ; -; 
-    > Echange Deck / Terrain #183 
-- Ok, tout le monde gagne si yen a un qui gagne, voir comment choisir un côté ou l'autre
-    > Problème  : Quand j'ai plus de PM c'est l'autre qui voit le message
-- Tour par tour :
-    > Bloquer l'adversaire de faire une action pendant le tour de l'autre
-
-- Attaquer le stratège 
 - Les pouvoirs
-
+- Echange avec le stratège
 
 En train de faire :
+- Améliorer le target message, je pourrais l'utiliser +
+- Attaquer le stratège / Remettre un stratège
 
 
 
@@ -23,4 +17,20 @@ Les terrains ne s'initialient pas au bon endroit côté client. > J'ai enlevé l
 > Parfois mon stratège est pas visible
 Problème : si je ferme le serveur, les terrains sont bugguee (en gros tout tuer)
 Echange buggé : IdVisé reste sur l'ancienne location au lieu d'être a 0 (car inutile pendant les échanges :eyes:)
-
+> Problème  : Quand j'ai plus de PM c'est l'autre qui voit le message
+Enlever les IsLocalPlayer du server
+Vérifier JePeuxJouer (jepeux revenir dans le deck alors que c'est pas à moi et je peux  pas quand c'est la préparation (y compris les échanges :sob:))
+Rectifier les bugs de la modification (Le jepeuxjouer est cassééééé)
+- Tout se "supprime" en fin de partie ; -; 
+    > Echange Deck / Terrain #183 
+- Attaquer le stratège 
+- Gagner / Perdre
+Piocher uniquement quand voulu
+- J'ai cassé les PMs 
+- Tour suivant sur le client qui s'actualise :eyes:
+- Tour par tour : (A peu près)
+    > Bloquer l'adversaire de faire une action pendant le tour de l'autre
+- Ok, tout le monde gagne si yen a un qui gagne, voir comment choisir un côté ou l'autre
+- Je peux pas bouger le stratège s'il est seul
+- Refuse de se battre qui n'apparait que d'un côté alors qu'il devrait être des deux
+- Réplique des robots les tuent sur le coup ; -; 
