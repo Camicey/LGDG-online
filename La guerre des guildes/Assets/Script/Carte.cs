@@ -13,20 +13,22 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
 {
     [SerializeField] public Canvas canvas;
     public CanvasGroup canvasGroup;
-    public PlayerManager Player; //Joueur a qui appartient la carte
     public RectTransform rectTransform;
     [SyncVar(hook = nameof(OnVisibleChanged))] public bool EstVisible;
     [SyncVar] public bool EstStratege;
     [SyncVar] public bool EstEnJeu;
     public bool EstRemise;
     public bool EstMontree;
+    public bool EstEchange;
     private Vector2 offset;
 
     // Information importante carte
     [SyncVar] public int Id;
     [SyncVar(hook = nameof(OnTerrainIdChanged))] public int TerrainId; // Id du terrain sur lequel il est, 0 est deck, -1 est mort
     public int TerrainIdVise;
-    public bool EstEchange;
+    [SyncVar]
+    public PlayerManager Player; //Joueur a qui appartient la carte
+
     public PlaceTerrain PlaceDeTerrain;
 
     public CarteSettings Stats;
@@ -95,8 +97,8 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         PMVar = Stats.PM;
         IdPouvoirVar = Stats.IdPouvoir;
         PouvoirVar = Stats.Pouvoir;
-        NetworkIdentity networkIdentity = NetworkClient.connection.identity;
-        Player = networkIdentity.GetComponent<PlayerManager>();
+        //NetworkIdentity networkIdentity = NetworkClient.connection.identity;
+        //Player = networkIdentity.GetComponent<PlayerManager>();
         ImageDosCarte = Resources.Load<Sprite>("Images/" + "DosAdversaires");
         CoutPouvoirVar = Stats.CoutPouvoir;
         liensVar.Clear();
@@ -218,7 +220,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     public void Mourir()
     {
         UnityEngine.Debug.Log($"{Stats.Prenom} est mort.e.");
-        Player.CmdMourir(this.GameObject());
+        Player.ServeurMourirCarte(this.GameObject());
     }
     public void PivotCentre() // Pour enlever les cartes encore placées sur eux
     {
@@ -268,11 +270,13 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     public bool StrategeSeul()
     {
         int decompte = 0;
+
+        UnityEngine.Debug.Log($"La carte seule est {Player.Id}");
         foreach (Carte carte in GameManager.Instance.ToutesLesCartes)
         {
             if (carte.Player != null && (carte.Player.Id == Player.Id)) { decompte++; }
         }
-        if (decompte == 1 && GameManager.Instance.Pioche.Count == 0) { return true; }
+        if (decompte == 1 && GameManager.Instance.NombreCartesPioche == 0) { return true; }
         return false;
     }
 
@@ -362,7 +366,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     {
         if (eventData.button == PointerEventData.InputButton.Left && Player != null && PlaceDeTerrain != null) { DeplacerContour(); }
         //Cheat Code
-        if (Input.GetKey(KeyCode.D) && eventData.button == PointerEventData.InputButton.Left) { Player.CmdMourir(this.GameObject()); }
+        if (Input.GetKey(KeyCode.D) && eventData.button == PointerEventData.InputButton.Left) { Player.ServeurMourirCarte(this.GameObject()); }
         if (Input.GetKey(KeyCode.V) && eventData.button == PointerEventData.InputButton.Left) { GameManager.Instance.ViderPioche(); }
         if (eventData.button == PointerEventData.InputButton.Middle && !EstVisible && EstEnJeu) { MontrerCarte(); } // A retirer
     }
@@ -378,7 +382,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
             carteDeplace.EstEchange = true;
             gm.Proposition(carteDeplace, this, "Echanger");
         }
-        if (EstEnJeu && carteDeplace.EstEnJeu && carteDeplace.isOwned && eventData.button == PointerEventData.InputButton.Right && gm.JePeuxJouer(Player, "Attaquer", this))
+        if (EstEnJeu && carteDeplace.EstEnJeu && carteDeplace.isOwned && eventData.button == PointerEventData.InputButton.Right && gm.JePeuxJouer(carteDeplace.Player, "Attaquer", carteDeplace))
         {
             //UnityEngine.Debug.Log($"{carteDeplace.Stats.Prenom} attaque {Stats.Prenom} qui Stratege {EstStratege} et Stratege Seul ? {StrategeSeul()}");
             if (EstStratege && !StrategeSeul())

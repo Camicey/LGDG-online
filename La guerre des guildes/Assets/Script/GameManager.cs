@@ -13,6 +13,7 @@ public class GameManager : NetworkBehaviour
 {
 
     public List<int> Pioche = new List<int>();
+    [SyncVar] public int NombreCartesPioche;
     public List<CarteSettings> CartesSettings = new List<CarteSettings>(); //Ajoutees manuellement
     public EcranDeConfirmation EcranDeConfirmation;
     public static GameManager Instance;
@@ -21,6 +22,8 @@ public class GameManager : NetworkBehaviour
     public GameObject ContourAllie;
     public GameObject ContourEnnemi;
     public PlayerManager JoueurEnCours;
+    public bool JEnCoursAPioche;
+    private int decalageTour = 1; // champ de classe, pas variable locale
     [SyncVar(hook = nameof(OnTourChanged))]
     public int Tour;
     public GameObject TourObject;
@@ -72,23 +75,37 @@ public class GameManager : NetworkBehaviour
     public void ViderPioche()
     {
         Pioche.Clear();
+        NombreCartesPioche = Pioche.Count;
         UnityEngine.Debug.Log("Je vide la pioche :)");
     }
 
+
     public void OnTourChanged(int ancienneValeur, int nouvelleValeur)
     {
-        if (TousLesJoueurs.Count == 0) return;
+        if (TousLesJoueurs.Count <= 0) return;
+
         if (TousLesJoueurs.Count >= 2)
         {
-            JoueurEnCours = TousLesJoueurs[Tour % 2];
+            if (nouvelleValeur == 1) // calcul UNIQUEMENT au premier tour
+            {
+                decalageTour = 1;
+                if (TousLesJoueurs[1].Stratege.PMVar < TousLesJoueurs[0].Stratege.PMVar)
+                { decalageTour = 0; }
+                if (TousLesJoueurs[1].Stratege.PMVar == TousLesJoueurs[0].Stratege.PMVar)
+                {
+                    int choix = UnityEngine.Random.Range(0, 2);
+                    if (choix == 1) { decalageTour = 0; }
+                }
+            }
+            JoueurEnCours = TousLesJoueurs[(Tour + decalageTour) % 2]; // réutilise la valeur mémorisée
             PlayerManager.LocalPlayer.BoutonTourSuivant.GetComponent<Button>().interactable = JoueurEnCours == PlayerManager.LocalPlayer;
         }
         else if (TousLesJoueurs.Count == 1)
         {
             JoueurEnCours = TousLesJoueurs[0];
+            TousLesJoueurs[0].BoutonTourSuivant.GetComponent<Button>().interactable = true;
         }
-        //if (JoueurEnCours.Stratege != null) { JoueurEnCours.ValeurPM(JoueurEnCours.Stratege.PMVar); } // On lui remet ses PMs //MAIS PAS ICI
-
+        JEnCoursAPioche = false;
         TourObject.GetComponent<TMP_Text>().text = nouvelleValeur.ToString();
     }
 
@@ -144,7 +161,9 @@ public class GameManager : NetworkBehaviour
         { Pioche.Add(carteStats.Id); }
         Melanger(Pioche);
         EtatDuJeu = "Preparation";
+        NombreCartesPioche = Pioche.Count;
     }
+
     [Server]
     public void Piocher(NetworkConnectionToClient conn)
     {
@@ -159,6 +178,7 @@ public class GameManager : NetworkBehaviour
 
         int dataId = Pioche[0];
         Pioche.RemoveAt(0);
+        NombreCartesPioche = Pioche.Count;
         GameObject cardObj = Instantiate(joueur.PrefabCarte);
         Carte carte = cardObj.GetComponent<Carte>();
         carte.Id = dataId;
@@ -166,6 +186,7 @@ public class GameManager : NetworkBehaviour
 
         NetworkServer.Spawn(cardObj, conn);
         joueur.PiocherCarte(cardObj);
+        JEnCoursAPioche = true;
     }
     [Server]
     public void CreerTerrain(NetworkConnectionToClient conn, int i)
@@ -282,7 +303,11 @@ public class GameManager : NetworkBehaviour
             case "AttendreStratege":
                 texteAffiche = "Vous devez attendre que l'autre joueur choisisse un stratège.";
                 break;
+            case "DejaPioche":
+                texteAffiche = "Vous avez déjà pioché !";
+                break;
         }
+
         EcranDeConfirmation.Texte.text = texteAffiche;
         EcranDeConfirmation.ChoixTemp = choix;
         EcranDeConfirmation.BoutonConfirmer.gameObject.SetActive(true);
@@ -319,7 +344,7 @@ public class GameManager : NetworkBehaviour
         if (joueur.DoisAttendreStratege)
         {
             Proposition("AttendreStratege");
-            UnityEngine.Debug.LogError("Attend le stratege");
+            UnityEngine.Debug.Log("Attend le stratege");
             return false;
         }
         else if (joueur.DoisChoisirStratege)// Si je dois choisir un nouveau stratege
@@ -343,7 +368,21 @@ public class GameManager : NetworkBehaviour
                 { return true; }
             }
         }
-        else if (carte == null && action == "Piocher" && EtatDuJeu == "Jouer" && joueur == JoueurEnCours) { return true; }
+        else if (carte == null && action == "Piocher" && EtatDuJeu == "Jouer" && joueur == JoueurEnCours)
+        {
+            if (JEnCoursAPioche)
+            {
+                Proposition("DejaPioche");
+                return false;
+            }
+            else { return true; }
+        }
+        else if (carte == null && action == "Piocher" && EtatDuJeu == "Preparation")
+        {
+            Proposition("PiochePreparation");
+            JEnCoursAPioche = false;
+            return false;
+        }
         return false;
     }
 }

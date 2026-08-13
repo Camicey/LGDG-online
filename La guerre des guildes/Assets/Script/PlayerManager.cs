@@ -30,7 +30,10 @@ public class PlayerManager : NetworkBehaviour
     public float PMEnCours;
     [SyncVar]
     public bool EstPret;
+    [SyncVar(hook = nameof(OnDoisChoisirChanged))]
     public bool DoisChoisirStratege;
+
+    [SyncVar(hook = nameof(OnDoisAttendreChanged))]
     public bool DoisAttendreStratege;
 
     //Fonction Network
@@ -86,22 +89,28 @@ public class PlayerManager : NetworkBehaviour
     {
         if (!isLocalPlayer) return;
         BoutonTourSuivant.GetComponent<Button>().interactable = nouvelleCarte != null;
-        if (nouvelleCarte == null)
+        // plus rien d'autre ici — juste de l'affichage
+    }
+
+    void OnDoisChoisirChanged(bool ancienneValeur, bool nouvelleValeur)
+    {
+        if (!isLocalPlayer) return;
+        if (nouvelleValeur)
         {
-            //Truc en plus en mode aha, tu joues plus.
-            DoisChoisirStratege = true;
             UnityEngine.Debug.LogError("Il dois choisir son stratège, zou");
-            if (ancienneCarte.Player.Id == 0 && GameManager.Instance.TousLesJoueurs.Count >= 2)
-            { GameManager.Instance.TousLesJoueurs[1].DoisAttendreStratege = true; }
-            else if (ancienneCarte.Player.Id == 1)
-            { GameManager.Instance.TousLesJoueurs[0].DoisAttendreStratege = true; }
-        }
-        else
-        {
-            UnityEngine.Debug.LogError("J'ai un stratege");
-            TargetNattendPlus();
+            // afficher l'UI de choix de stratège
         }
     }
+
+    void OnDoisAttendreChanged(bool ancienneValeur, bool nouvelleValeur)
+    {
+        if (!isLocalPlayer) return;
+        if (nouvelleValeur)
+        {
+            // afficher l'UI "attends que l'adversaire choisisse"
+        }
+    }
+
     [TargetRpc]
     private void TargetNattendPlus()
     {
@@ -235,12 +244,6 @@ public class PlayerManager : NetworkBehaviour
         CoutAction(1);
     }
 
-    [Command]
-    public void CmdMourir(GameObject carte)
-    {
-        UnityEngine.Debug.Log("Je meurs");
-        ServeurMourirCarte(carte);
-    }
 
     [Command]
     public void CmdConfirmerAction(uint carteDeplaceeId, uint carteChoisieId, string choix)
@@ -348,7 +351,7 @@ public class PlayerManager : NetworkBehaviour
     }
 
     [Server]
-    private void ServeurMourirCarte(GameObject carte)
+    internal void ServeurMourirCarte(GameObject carte)
     {
         Carte carteMourante = carte.GetComponent<Carte>();
         if (carteMourante.EstStratege)
@@ -385,13 +388,26 @@ public class PlayerManager : NetworkBehaviour
             PMEnCours = Stratege.PMVar;
             carte.EstStratege = true;
             carte.EstVisible = true;
+
+            ServeurStrategeChoisi(this); // ← ici, "this" car ServerRendreStratege est déjà une méthode de PlayerManager
         }
     }
 
+    [Server]
+    private void ServeurStrategeChoisi(PlayerManager joueurConcerne)
+    {
+        joueurConcerne.DoisChoisirStratege = false;
+
+        PlayerManager adversaire = GameManager.Instance.TousLesJoueurs.Find(j => j.Id != joueurConcerne.Id);
+        if (adversaire != null)
+        {
+            adversaire.DoisAttendreStratege = false;
+        }
+    }
 
     //Client RPC
     [TargetRpc]
-    void TargetAfficherProposition(NetworkConnectionToClient target, string message)
+    public void TargetAfficherProposition(NetworkConnectionToClient target, string message)
     {
         GameManager.Instance.Proposition(message);
     }

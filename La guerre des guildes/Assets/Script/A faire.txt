@@ -1,13 +1,15 @@
 A faire : 
 - Un état de sauvegarde pour le gamemanager pour restaurer pour les joueurs qui buggent. => avoir une liste 
-- Je peux pas bouger le stratège s'il est seul
-- Attaquer le stratège 
-- Remettre un stratège
 - Les pouvoirs
-
+- Refuse de se battre qui n'apparait que d'un côté alors qu'il devrait être des deux
+- Echange avec le stratège
+- Réplique des robots les tuent sur le coup ; -; 
 
 En train de faire :
 - Améliorer le target message, je pourrais l'utiliser +
+- Attaquer le stratège / Remettre un stratège
+
+
 
 Problèmes résolus :
 Les cartes depop ;-; quand je quitte et revient > J'ai rajouté un bouton pour initialiser les cartes dans la pioche
@@ -31,3 +33,4 @@ Piocher uniquement quand voulu
 - Tour par tour : (A peu près)
     > Bloquer l'adversaire de faire une action pendant le tour de l'autre
 - Ok, tout le monde gagne si yen a un qui gagne, voir comment choisir un côté ou l'autre
+- Je peux pas bouger le stratège s'il est seul
