@@ -2502,6 +2502,7 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0
   Pioche: 
+  NombreCartesPioche: 0
   CartesSettings: []
   EcranDeConfirmation: {fileID: 1510128569}
   ImageVisible: {fileID: 21300000, guid: 430eeab4f520fc64184a2654a33fff89, type: 3}
@@ -2509,6 +2510,8 @@ MonoBehaviour:
   ContourAllie: {fileID: 702525670}
   ContourEnnemi: {fileID: 1887707975}
   JoueurEnCours: {fileID: 0}
+  JEnCoursAPioche: 0
+  Defausse: {fileID: 907281906}
   Tour: 0
   TourObject: {fileID: 1054705958}
   GrandeCarte: {fileID: 1719638572}

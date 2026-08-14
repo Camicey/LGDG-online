@@ -8,15 +8,10 @@ public class PlaceTerrain : NetworkBehaviour, IDropHandler
 {
     [SyncVar] public int Id;
     [SyncVar] public Carte CartePlacee;
-    //public PlayerManager PlayerManager;
     public bool EstTerrainStratege;
     public bool EstAMoi;
 
-    public void Start()
-    {
-        CartePlacee = null;
-    }
-
+    public void Start() { CartePlacee = null; }
 
     public void Placement(int i)
     {
@@ -26,7 +21,6 @@ public class PlaceTerrain : NetworkBehaviour, IDropHandler
         else if (Id == 1) { rt.anchoredPosition = new Vector3(0, -50 * i, 0); }
         else if (Id == 4) { rt.anchoredPosition = new Vector3(0, 50 * i, 0); }
     }
-
 
     public void OnDrop(PointerEventData eventData) // Quand une carte est lâchée sur le terrain
     {
@@ -38,10 +32,7 @@ public class PlaceTerrain : NetworkBehaviour, IDropHandler
         if ((EstAMoi && carteDeplace.EstEnJeu == false)
         || (carteDeplace.EstEnJeu == true && carteDeplace.PlaceDeTerrain != null
         && GameManager.Instance.DeplacementAutorise(carteDeplace.PlaceDeTerrain.Id, Id))) // Pose de terrain en terrain 
-        {
-            if (carteDeplace.PlaceDeTerrain != null) { carteDeplace.PlaceDeTerrain.CartePlacee = null; }
-            carteDeplace.TerrainIdVise = Id;
-        }
+        { carteDeplace.TerrainIdVise = Id; }
     }
 
 }

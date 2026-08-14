@@ -23,6 +23,7 @@ public class GameManager : NetworkBehaviour
     public GameObject ContourEnnemi;
     public PlayerManager JoueurEnCours;
     public bool JEnCoursAPioche;
+    public GameObject Defausse;
     private int decalageTour = 1; // champ de classe, pas variable locale
     [SyncVar(hook = nameof(OnTourChanged))]
     public int Tour;
@@ -31,10 +32,12 @@ public class GameManager : NetworkBehaviour
     public Carte CarteMontree;
     [SyncVar] public string EtatDuJeu;
     public List<Carte> ToutesLesCartes = new List<Carte>();
+    public List<Carte> TouteLaDefausse = new List<Carte>();
     public List<PlaceTerrain> TousLesTerrains = new List<PlaceTerrain>();
     //public List<PlayerManager> TousLesJoueurs = new List<PlayerManager>();
     public readonly SyncList<PlayerManager> TousLesJoueurs = new SyncList<PlayerManager>();
 
+    // Fonction de Start / Stop
     public void Start()
     {
         if (CartesSettings.Count == 0) { ImporterCartes(); }
@@ -45,41 +48,16 @@ public class GameManager : NetworkBehaviour
     {
         base.OnStopServer();
         TousLesJoueurs.Clear();
+        TouteLaDefausse.Clear();
         ReinitialiserPartie();
     }
-
     public override void OnStartClient()
     {
         base.OnStartClient();
         CarteMontree = null;
     }
 
-
-    [Server]
-    public void ReinitialiserPartie()
-    {
-        foreach (Carte carte in ToutesLesCartes)
-        { NetworkServer.Destroy(carte.gameObject); }
-        foreach (PlaceTerrain terrain in TousLesTerrains)
-        { NetworkServer.Destroy(terrain.gameObject); }
-
-        ToutesLesCartes.Clear();
-        TousLesTerrains.Clear();
-
-        Tour = 0;
-        EtatDuJeu = "EnAttente";
-        CreerDeck(); // Relance une nouvelle pioche mélangée
-    }
-
-    [Server]
-    public void ViderPioche()
-    {
-        Pioche.Clear();
-        NombreCartesPioche = Pioche.Count;
-        UnityEngine.Debug.Log("Je vide la pioche :)");
-    }
-
-
+    //On Chose Changed
     public void OnTourChanged(int ancienneValeur, int nouvelleValeur)
     {
         if (TousLesJoueurs.Count <= 0) return;
@@ -109,10 +87,10 @@ public class GameManager : NetworkBehaviour
         TourObject.GetComponent<TMP_Text>().text = nouvelleValeur.ToString();
     }
 
+    // Fonction de début
     public void ImporterCartes()
     {
         CartesSettings.Clear(); //On enlève tout
-        //string[] export = File.ReadAllLines("Assets/Resources/ExportCartes.csv"); // Lire CSV
         TextAsset csv = Resources.Load<TextAsset>("ExportCartes");
 
         if (csv == null)
@@ -149,86 +127,7 @@ public class GameManager : NetworkBehaviour
             //Id,Prenom,PM,PV,PA,Image,Pouvoir,IdPouvoir,Complement Pouvoir,Cout,LienID,Liens,Particularite,Famille,Role
             CartesSettings.Add(carte);
         }
-
     }
-
-    //Server
-    [Server]
-    public void CreerDeck()
-    {
-        Pioche.Clear();
-        foreach (var carteStats in CartesSettings)
-        { Pioche.Add(carteStats.Id); }
-        Melanger(Pioche);
-        EtatDuJeu = "Preparation";
-        NombreCartesPioche = Pioche.Count;
-    }
-
-    [Server]
-    public void Piocher(NetworkConnectionToClient conn)
-    {
-        PlayerManager joueur = conn.identity.GetComponent<PlayerManager>();
-        if (Pioche.Count == 0)
-        {
-            PlayerManager joueurVide = conn.identity.GetComponent<PlayerManager>();
-            joueurVide.TargetTransfertProposition(conn, "PiocheVide"); // à créer, voir plus bas
-            UnityEngine.Debug.LogError("La pioche est vide :/");
-            return;
-        }
-
-        int dataId = Pioche[0];
-        Pioche.RemoveAt(0);
-        NombreCartesPioche = Pioche.Count;
-        GameObject cardObj = Instantiate(joueur.PrefabCarte);
-        Carte carte = cardObj.GetComponent<Carte>();
-        carte.Id = dataId;
-        carte.Player = joueur;
-
-        NetworkServer.Spawn(cardObj, conn);
-        joueur.PiocherCarte(cardObj);
-        JEnCoursAPioche = true;
-    }
-    [Server]
-    public void CreerTerrain(NetworkConnectionToClient conn, int i)
-    {
-        //if terrain déjà instancié return;
-        PlayerManager joueur = conn.identity.GetComponent<PlayerManager>();
-
-        GameObject terrainObj = Instantiate(joueur.PrefabTerrain);
-        PlaceTerrain terrain = terrainObj.GetComponent<PlaceTerrain>();
-        terrain.Id = i;
-
-        NetworkServer.Spawn(terrainObj, conn);
-        joueur.PiocherTerrain(terrainObj);
-    }
-    [Server]
-    public void PasserAuTourSuivant()
-    {
-        Tour++;
-        if (JoueurEnCours.Stratege != null)
-        { JoueurEnCours.ValeurPM(JoueurEnCours.Stratege.PMVar); }
-
-    }
-    [Server]
-    public void CommencerLeJeu()
-    {
-        Tour = 1;
-        EtatDuJeu = "Jouer";
-        if (JoueurEnCours.Stratege != null)
-        { JoueurEnCours.ValeurPM(JoueurEnCours.Stratege.PMVar); }
-        RpcMettreAJourTousLesBoutons();
-    }
-
-    [ClientRpc]
-    void RpcMettreAJourTousLesBoutons()
-    {
-        // ce code s'exécute UNE fois par client, localement
-        if (PlayerManager.LocalPlayer != null)
-        {
-            PlayerManager.LocalPlayer.BoutonTourSuivant.GetComponent<Button>().GetComponentInChildren<TMP_Text>().text = "Tour Suivant";
-        }
-    }
-
     private void Melanger(List<int> list)
     {
         for (int i = 0; i < list.Count; i++)
@@ -313,6 +212,18 @@ public class GameManager : NetworkBehaviour
         EcranDeConfirmation.BoutonConfirmer.gameObject.SetActive(true);
     }
 
+    // Grande Carte
+    public void MontrerGrandeCarte()
+    {
+        if (CarteMontree == null) { return; }
+        GrandeCarte.MontrerCarte(CarteMontree);
+    }
+    public void CacherGrandeCarte()
+    {
+        GrandeCarte.CacherCarte();
+    }
+
+    // Vérification autorise
     public bool AttaqueAutorisee(Carte attaquante)
     {
         if (EtatDuJeu == "Jouer" && JoueurEnCours == attaquante.Player) { return true; }
@@ -327,17 +238,6 @@ public class GameManager : NetworkBehaviour
         else if ((IdOrigine == 5 || IdOrigine == 6) && (IdVise == 4)) { return true; }
         return false;
     }
-
-    public void MontrerGrandeCarte()
-    {
-        if (CarteMontree == null) { return; }
-        GrandeCarte.MontrerCarte(CarteMontree);
-    }
-    public void CacherGrandeCarte()
-    {
-        GrandeCarte.CacherCarte();
-    }
-
     public bool JePeuxJouer(PlayerManager joueur, string action, Carte carte)
     {
         if (joueur == null || action == null) { UnityEngine.Debug.LogError("Joueur ou Action est null"); return false; }
@@ -384,5 +284,111 @@ public class GameManager : NetworkBehaviour
             return false;
         }
         return false;
+    }
+
+
+    //Server
+    [Server]
+    public void ReinitialiserPartie()
+    {
+        foreach (Carte carte in ToutesLesCartes)
+        { NetworkServer.Destroy(carte.gameObject); }
+        foreach (PlaceTerrain terrain in TousLesTerrains)
+        { NetworkServer.Destroy(terrain.gameObject); }
+
+        ToutesLesCartes.Clear();
+        TousLesTerrains.Clear();
+        TouteLaDefausse.Clear();
+
+        Tour = 0;
+        EtatDuJeu = "EnAttente";
+        CreerDeck(); // Relance une nouvelle pioche mélangée
+    }
+    [Server]
+    public void CreerDeck()
+    {
+        Pioche.Clear();
+        for (int i = 0; i < CartesSettings.Count; i++) // JAI CHANGE ICI POUR LES AMBIVALENTS
+        {
+            if (CartesSettings[i].Id < 200)
+            { Pioche.Add(CartesSettings[i].Id); }
+            if (CartesSettings[i].Type == "Ambivalent")
+            { i++; }
+        }
+        Melanger(Pioche);
+        EtatDuJeu = "Preparation";
+        NombreCartesPioche = Pioche.Count;
+    }
+    [Server]
+    public void ViderPioche()
+    {
+        Pioche.Clear();
+        NombreCartesPioche = Pioche.Count;
+        UnityEngine.Debug.Log("Je vide la pioche :)");
+    }
+    [Server]
+    public void Piocher(NetworkConnectionToClient conn)
+    {
+        PlayerManager joueur = conn.identity.GetComponent<PlayerManager>();
+        if (Pioche.Count == 0)
+        {
+            PlayerManager joueurVide = conn.identity.GetComponent<PlayerManager>();
+            joueurVide.TargetTransfertProposition(conn, "PiocheVide"); // à créer, voir plus bas
+            UnityEngine.Debug.LogError("La pioche est vide :/");
+            return;
+        }
+
+        int dataId = Pioche[0];
+        Pioche.RemoveAt(0);
+        NombreCartesPioche = Pioche.Count;
+        GameObject cardObj = Instantiate(joueur.PrefabCarte);
+        Carte carte = cardObj.GetComponent<Carte>();
+        carte.Id = dataId;
+        carte.Player = joueur;
+
+        NetworkServer.Spawn(cardObj, conn);
+        joueur.PiocherCarte(cardObj);
+        JEnCoursAPioche = true;
+    }
+    [Server]
+    public void CreerTerrain(NetworkConnectionToClient conn, int i)
+    {
+        //if terrain déjà instancié return;
+        PlayerManager joueur = conn.identity.GetComponent<PlayerManager>();
+
+        GameObject terrainObj = Instantiate(joueur.PrefabTerrain);
+        PlaceTerrain terrain = terrainObj.GetComponent<PlaceTerrain>();
+        terrain.Id = i;
+
+        NetworkServer.Spawn(terrainObj, conn);
+        joueur.PiocherTerrain(terrainObj);
+    }
+    [Server]
+    public void PasserAuTourSuivant()
+    {
+        Tour++;
+        if (JoueurEnCours.Stratege != null)
+        { JoueurEnCours.ValeurPM(JoueurEnCours.Stratege.PMVar); }
+
+    }
+    [Server]
+    public void CommencerLeJeu()
+    {
+        Tour = 1;
+        EtatDuJeu = "Jouer";
+        if (JoueurEnCours.Stratege != null)
+        { JoueurEnCours.ValeurPM(JoueurEnCours.Stratege.PMVar); }
+        RpcMettreAJourTousLesBoutons();
+    }
+
+    // Client RPCs
+    [ClientRpc]
+    void RpcMettreAJourTousLesBoutons()
+    {
+        // ce code s'exécute UNE fois par client, localement
+        if (PlayerManager.LocalPlayer != null)
+        {
+            PlayerManager.LocalPlayer.BoutonTourSuivant.GetComponent<Button>().GetComponentInChildren<TMP_Text>().text = "Tour Suivant";
+        }
     }
 }

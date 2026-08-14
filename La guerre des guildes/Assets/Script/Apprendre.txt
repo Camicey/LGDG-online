@@ -35,3 +35,6 @@ if (!NetworkClient.spawned.TryGetValue(carteNetId, out NetworkIdentity identity)
 PlaceTerrain terrain = GameManager.Instance.TousLesTerrains.Find(t => t.Id == terrainId);
 
 if (Stratege != null) { ValeurPM(Stratege.PMVar); }
+
+
+//string[] export = File.ReadAllLines("Assets/Resources/ExportCartes.csv"); // Lire CSV

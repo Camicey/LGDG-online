@@ -7,7 +7,6 @@ using Mirror;
 using TMPro;
 using Mirror.Examples.Basic;
 using Unity.VisualScripting;
-using Mirror.BouncyCastle.Crypto.Macs;
 
 public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDragHandler, IPointerDownHandler, IDropHandler  //Les suppléments sont les promesses de fonction
 {
@@ -97,8 +96,6 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         PMVar = Stats.PM;
         IdPouvoirVar = Stats.IdPouvoir;
         PouvoirVar = Stats.Pouvoir;
-        //NetworkIdentity networkIdentity = NetworkClient.connection.identity;
-        //Player = networkIdentity.GetComponent<PlayerManager>();
         ImageDosCarte = Resources.Load<Sprite>("Images/" + "DosAdversaires");
         CoutPouvoirVar = Stats.CoutPouvoir;
         liensVar.Clear();
@@ -108,6 +105,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         }
     }
 
+    // On chose changed
     public void OnVisibleChanged(bool ancienneValeur, bool nouvelleValeur)
     {
         if (nouvelleValeur == true)
@@ -127,18 +125,18 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
             if (PrenomT.text == " ") { VisibiliteT.enabled = false; }
         }
     }
-
     public void OnPVarChanged(int ancienneValeur, int nouvelleValeur)
     {
         PVT.text = nouvelleValeur.ToString();
     }
-
     public void OnTerrainIdChanged(int ancienTerrain, int nouveauTerrain)
     {
-        //UnityEngine.Debug.Log($"Nous allons de {ancienTerrain} à {nouveauTerrain}"); //Quand j'ai des bugs
+        UnityEngine.Debug.Log($"Nous allons de {ancienTerrain} à {nouveauTerrain}"); //Quand j'ai des bugs
+        PlaceTerrain vieuxTerrain = GameManager.Instance.TousLesTerrains.Find(t => t.Id == ancienTerrain);
+        PlaceTerrain terrain = GameManager.Instance.TousLesTerrains.Find(t => t.Id == nouveauTerrain);
+        if (vieuxTerrain != null && ancienTerrain != nouveauTerrain) { vieuxTerrain.CartePlacee = null; }
         if (nouveauTerrain > 0) //Si je vais vers un nouveau terrain
         {
-            PlaceTerrain terrain = GameManager.Instance.TousLesTerrains.Find(t => t.Id == nouveauTerrain);
             if (terrain == null) { return; }
             PlaceDeTerrain = terrain;
             terrain.CartePlacee = this;
@@ -148,15 +146,13 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         }
         else if (nouveauTerrain == -1 || nouveauTerrain == 0) //Si je veux aller dans le deck ou mourir
         {
-            PlaceTerrain vieuxTerrain = GameManager.Instance.TousLesTerrains.Find(t => t.Id == ancienTerrain);
-            if (vieuxTerrain != null) { vieuxTerrain.CartePlacee = null; } //Enlever la carte dessus
             PlaceDeTerrain = null;
             if (nouveauTerrain == -1) //Si elle meurt
             {
-                transform.SetParent(Player.Defausse.transform, false);
+                transform.SetParent(GameManager.Instance.Defausse.transform, false);
                 GetComponent<RectTransform>().anchoredPosition = new Vector3(0, 0, 0);
                 PVar = 0;
-                Player = null;
+                //Player = null; 
             }
             else if (nouveauTerrain == 0) //Si elle retourne juste dans le deck
             {
@@ -169,6 +165,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         TerrainIdVise = 0;
     }
 
+    //Cacher et montrer carte
     public void CacherCarte()
     {
         //Retirer tout ce qui est visible
@@ -205,37 +202,19 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         string description = " ";
         foreach (int lien in liensVar)
         {
-            if (lien == 0)
-            {
-                description += "?" + "\n";
-            }
-            else
-            {
-                description += GameManager.Instance.CartesSettings.Find(c => c.Id == lien).Prenom + "\n";
-            }
+            if (lien == 0) { description += "?" + "\n"; }
+            else { description += GameManager.Instance.CartesSettings.Find(c => c.Id == lien).Prenom + "\n"; }
         }
         if (description == " ") { description = "Personne"; }
         return description;
     }
-    public void Mourir()
-    {
-        UnityEngine.Debug.Log($"{Stats.Prenom} est mort.e.");
-        Player.ServeurMourirCarte(this.GameObject());
-    }
-    public void PivotCentre() // Pour enlever les cartes encore placées sur eux
-    {
-        rectTransform.anchorMin = new Vector2(0.5f, 0.5f); // Remettre le pivot au centre
-        rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-        GetComponent<RectTransform>().anchoredPosition = new Vector3(0, 0, 0);
-    }
+
+    // Contour time
     public void DeplacerContour()
     {
-        if (!EstMontree && PlaceDeTerrain != null)
-        { MontrerContour(); } // Je met le contour
-        else if (EstMontree)
-        { CacherContour(); } // Je le renvoie loin
+        if (!EstMontree && PlaceDeTerrain != null) { MontrerContour(); } // Je met le contour
+        else if (EstMontree) { CacherContour(); } // Je le renvoie loin
     }
-
     public void MontrerContour()
     {
         GameManager JeuEnCours = GameManager.Instance;
@@ -256,7 +235,6 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         JeuEnCours.CarteMontree = this;
         if (EstVisible || isOwned) { GameManager.Instance.MontrerGrandeCarte(); }
     }
-
     public void CacherContour()
     {
         RectTransform rt = GameManager.Instance.ContourEnnemi.GetComponent<RectTransform>();
@@ -267,10 +245,10 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         if (GameManager.Instance.CarteMontree == null || (!EstVisible && !isOwned)) { GameManager.Instance.CacherGrandeCarte(); }
     }
 
+    // Fonctions classiques
     public bool StrategeSeul()
     {
         int decompte = 0;
-
         UnityEngine.Debug.Log($"La carte seule est {Player.Id}");
         foreach (Carte carte in GameManager.Instance.ToutesLesCartes)
         {
@@ -279,8 +257,19 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         if (decompte == 1 && GameManager.Instance.NombreCartesPioche == 0) { return true; }
         return false;
     }
+    public void Mourir()
+    {
+        UnityEngine.Debug.Log($"{Stats.Prenom} est mort.e.");
+        Player.ServeurMourirCarte(this.GameObject());
+    }
+    public void PivotCentre() // Pour enlever les cartes encore placées sur eux
+    {
+        rectTransform.anchorMin = new Vector2(0.5f, 0.5f); // Remettre le pivot au centre
+        rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+        GetComponent<RectTransform>().anchoredPosition = new Vector3(0, 0, 0);
+    }
 
-    //Tout en dessous c'est pour déplacer la carte
+    // Tout en dessous c'est pour déplacer la carte
     public void OnBeginDrag(PointerEventData eventData)
     {
         if (canvas == null) { canvas = GetComponentInParent<Canvas>(); }
@@ -297,7 +286,6 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         }
         if (EstMontree) { Invoke(nameof(CacherContour), 0.6f); }
     }
-
     public void OnDrag(PointerEventData eventData)
     {
         if (!isOwned || (EstStratege && !StrategeSeul())) { return; }
@@ -323,7 +311,6 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         canvasGroup.blocksRaycasts = true;
         if (eventData.button == PointerEventData.InputButton.Left) { Cheminer(); } //Si j'initie un déplacement
     }
-
     public void Cheminer()
     {
         PlaceTerrain t = GameManager.Instance.TousLesTerrains.Find(t => t.Id == TerrainIdVise);
@@ -350,7 +337,6 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         }
         if (Arrivee == "Carte") { RetourEnPlace(Depart); EstEchange = false; }
     }
-
     public void RetourEnPlace(string place)
     {
         if (place == "Terrain") { transform.SetParent(PlaceDeTerrain.transform, false); }
@@ -362,6 +348,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         TerrainIdVise = 0;
     }
 
+    // Cliquer sur la carte et se laisser drop dessus
     public void OnPointerDown(PointerEventData eventData)
     {
         if (eventData.button == PointerEventData.InputButton.Left && Player != null && PlaceDeTerrain != null) { DeplacerContour(); }
@@ -370,7 +357,6 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         if (Input.GetKey(KeyCode.V) && eventData.button == PointerEventData.InputButton.Left) { GameManager.Instance.ViderPioche(); }
         if (eventData.button == PointerEventData.InputButton.Middle && !EstVisible && EstEnJeu) { MontrerCarte(); } // A retirer
     }
-
     public void OnDrop(PointerEventData eventData)
     {
         if (eventData.pointerDrag == null) { return; }

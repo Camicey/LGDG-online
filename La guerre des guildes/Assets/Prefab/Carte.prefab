@@ -1008,17 +1008,17 @@ MonoBehaviour:
   syncInterval: 0
   canvas: {fileID: 0}
   canvasGroup: {fileID: 0}
-  PlayerManager: {fileID: 0}
   rectTransform: {fileID: 0}
   EstVisible: 0
   EstStratege: 0
   EstEnJeu: 0
   EstRemise: 0
   EstMontree: 0
+  EstEchange: 0
   Id: 0
   TerrainId: 0
   TerrainIdVise: 0
-  EstEchange: 0
+  Player: {fileID: 0}
   PlaceDeTerrain: {fileID: 0}
   Stats: {fileID: 11400000, guid: 3b269cc11c4fd764b95d6cea22f9b59a, type: 2}
   ImageDosCarte: {fileID: 0}
