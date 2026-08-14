@@ -364,11 +364,13 @@ public class GameManager : NetworkBehaviour
     public void CommencerLeJeu()
     {
         DecalageTour = 1;
-        if (TousLesJoueurs[1].Stratege.PMVar < TousLesJoueurs[0].Stratege.PMVar)
-        { DecalageTour = 0; }
-        if (TousLesJoueurs[1].Stratege.PMVar == TousLesJoueurs[0].Stratege.PMVar && UnityEngine.Random.Range(0, 2) == 1)
-        { DecalageTour = 0; }
-
+        if (TousLesJoueurs.Count >= 2)
+        {
+            if (TousLesJoueurs[1].Stratege.PMVar < TousLesJoueurs[0].Stratege.PMVar)
+            { DecalageTour = 0; }
+            if (TousLesJoueurs[1].Stratege.PMVar == TousLesJoueurs[0].Stratege.PMVar && UnityEngine.Random.Range(0, 2) == 1)
+            { DecalageTour = 0; }
+        }
         Tour = 1;
         EtatDuJeu = "Jouer";
         if (JoueurEnCours.Stratege != null)
