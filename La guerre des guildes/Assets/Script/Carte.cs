@@ -353,8 +353,10 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     {
         if (eventData.button == PointerEventData.InputButton.Left && Player != null && PlaceDeTerrain != null) { DeplacerContour(); }
         //Cheat Code
+#if DEVELOPMENT_BUILD
         if (Input.GetKey(KeyCode.D) && eventData.button == PointerEventData.InputButton.Left) { Player.ServeurMourirCarte(this.GameObject()); }
         if (Input.GetKey(KeyCode.V) && eventData.button == PointerEventData.InputButton.Left) { GameManager.Instance.ViderPioche(); }
+#endif
         if (eventData.button == PointerEventData.InputButton.Middle && !EstVisible && EstEnJeu) { MontrerCarte(); } // A retirer
     }
     public void OnDrop(PointerEventData eventData)

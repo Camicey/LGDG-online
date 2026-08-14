@@ -24,7 +24,7 @@ public class GameManager : NetworkBehaviour
     public PlayerManager JoueurEnCours;
     public bool JEnCoursAPioche;
     public GameObject Defausse;
-    private int decalageTour = 1; // champ de classe, pas variable locale
+    [SyncVar] public int DecalageTour;
     [SyncVar(hook = nameof(OnTourChanged))]
     public int Tour;
     public GameObject TourObject;
@@ -64,18 +64,7 @@ public class GameManager : NetworkBehaviour
 
         if (TousLesJoueurs.Count >= 2)
         {
-            if (nouvelleValeur == 1) // calcul UNIQUEMENT au premier tour
-            {
-                decalageTour = 1;
-                if (TousLesJoueurs[1].Stratege.PMVar < TousLesJoueurs[0].Stratege.PMVar)
-                { decalageTour = 0; }
-                if (TousLesJoueurs[1].Stratege.PMVar == TousLesJoueurs[0].Stratege.PMVar)
-                {
-                    int choix = UnityEngine.Random.Range(0, 2);
-                    if (choix == 1) { decalageTour = 0; }
-                }
-            }
-            JoueurEnCours = TousLesJoueurs[(Tour + decalageTour) % 2]; // réutilise la valeur mémorisée
+            JoueurEnCours = TousLesJoueurs[(Tour + DecalageTour) % 2];
             PlayerManager.LocalPlayer.BoutonTourSuivant.GetComponent<Button>().interactable = JoueurEnCours == PlayerManager.LocalPlayer;
         }
         else if (TousLesJoueurs.Count == 1)
@@ -374,6 +363,12 @@ public class GameManager : NetworkBehaviour
     [Server]
     public void CommencerLeJeu()
     {
+        DecalageTour = 1;
+        if (TousLesJoueurs[1].Stratege.PMVar < TousLesJoueurs[0].Stratege.PMVar)
+        { DecalageTour = 0; }
+        if (TousLesJoueurs[1].Stratege.PMVar == TousLesJoueurs[0].Stratege.PMVar && UnityEngine.Random.Range(0, 2) == 1)
+        { DecalageTour = 0; }
+
         Tour = 1;
         EtatDuJeu = "Jouer";
         if (JoueurEnCours.Stratege != null)

@@ -257,10 +257,13 @@ public class PlayerManager : NetworkBehaviour
         { return; }
         Carte carteDeplacee = identity1.GetComponent<Carte>();
         Carte carteChoisie = identity2.GetComponent<Carte>();
+
+        if (carteDeplacee.Player != this) { return; }
+
         if (choix == "Echanger" && !carteDeplacee.EstStratege && !carteChoisie.EstStratege)
         {
+            if (carteChoisie.Player != this) { return; } // Un échange se fait entre deux cartes du même joueur
             EchangerCarte(carteDeplaceeId, carteChoisieId);
-
             CoutAction(2);
         }
         else if (choix == "Attaquer")
