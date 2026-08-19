@@ -20,6 +20,9 @@ public class CarteSettings : ScriptableObject
     public Sprite FamilleImage;
     public string Type;
     public Sprite TypeImage;
+    public bool Duo;
+    public int IDPartenaire;
     public List<int> liens = new List<int>();
+    public List<string> icones = new List<string>();
 
 }

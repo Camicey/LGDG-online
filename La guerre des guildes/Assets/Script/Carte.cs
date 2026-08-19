@@ -49,6 +49,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     public Image FamilleImageT;
     public Image TypeImageT;
     public TMP_Text LiensT;
+    public GameObject Icone;
 
     //Les paramètres qui changent
     [SyncVar] public float PMVar;

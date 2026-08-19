@@ -80,7 +80,7 @@ public class GameManager : NetworkBehaviour
     public void ImporterCartes()
     {
         CartesSettings.Clear(); //On enlève tout
-        TextAsset csv = Resources.Load<TextAsset>("ExportCartes");
+        TextAsset csv = Resources.Load<TextAsset>("ExportCartes1");
 
         if (csv == null)
         {
@@ -113,7 +113,14 @@ public class GameManager : NetworkBehaviour
             carte.FamilleImage = Resources.Load<Sprite>("Images/Famille/" + carte.Famille);
             carte.Type = colonnes[14];
             carte.TypeImage = Resources.Load<Sprite>("Images/Type/" + carte.Type);
-            //Id,Prenom,PM,PV,PA,Image,Pouvoir,IdPouvoir,Complement Pouvoir,Cout,LienID,Liens,Particularite,Famille,Role
+            if (colonnes[15] == "TRUE")
+            {
+                carte.Duo = true;
+                carte.IDPartenaire = int.Parse(colonnes[16]);
+            }
+            else { carte.Duo = false; }
+
+            //Id,Prenom,PM,PV,PA,Image,Pouvoir,IdPouvoir,Complement Pouvoir,Cout,LienID,Liens,Particularite,Famille,Role, Duo, Partenaire ID
             CartesSettings.Add(carte);
         }
     }

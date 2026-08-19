@@ -2,6 +2,7 @@ A faire :
 - Un état de sauvegarde pour le gamemanager pour restaurer pour les joueurs qui buggent. => avoir une liste 
 - Les pouvoirs
 - Echange avec le stratège
+-Si je choisis le stratège, soit je n'ai pas de limite de déplacement, soit je mets automatiquement la carte restante stratège :/
 
 En train de faire :
 - Améliorer le target message, je pourrais l'utiliser +
