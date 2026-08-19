@@ -2,15 +2,15 @@ A faire :
 - Un état de sauvegarde pour le gamemanager pour restaurer pour les joueurs qui buggent. => avoir une liste 
 - Les pouvoirs
 - Echange avec le stratège
--Si je choisis le stratège, soit je n'ai pas de limite de déplacement, soit je mets automatiquement la carte restante stratège :/
+- Si je choisis le stratège, soit je n'ai pas de limite de déplacement, soit je mets automatiquement la carte restante stratège :/
+- Attaquer le stratège / Remettre un stratège
+- Améliorer le target message, je pourrais l'utiliser +
 
 En train de faire :
-- Améliorer le target message, je pourrais l'utiliser +
-- Attaquer le stratège / Remettre un stratège
+- Duo et rectrifier les souciiiis
+- Les pouvoirs (juste après, en commençant par les ambivalents)
 
-
-
-Problèmes résolus :
+Résolus :
 Les cartes depop ;-; quand je quitte et revient > J'ai rajouté un bouton pour initialiser les cartes dans la pioche
 Les terrains ne s'initialient pas au bon endroit côté client. > J'ai enlevé le Network Transform
 > Je ne peux pas créer de pioche côté client. (Il parrait que le serveur est pas prêt) > Je pense que je vais laisser comme ça hein
@@ -35,3 +35,4 @@ Piocher uniquement quand voulu
 - Je peux pas bouger le stratège s'il est seul
 - Refuse de se battre qui n'apparait que d'un côté alors qu'il devrait être des deux
 - Réplique des robots les tuent sur le coup ; -; 
+- Icones gestion

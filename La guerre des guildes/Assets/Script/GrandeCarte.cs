@@ -28,6 +28,9 @@ public class GrandeCarteMontree : MonoBehaviour  //Les suppléments sont les pro
     public Image TypeImageT;
     public TMP_Text LiensT;
 
+    public GameObject Icones;
+    public GameObject DossierIcones;
+
     public void Start()
     {
         GetComponent<RectTransform>().anchoredPosition = new Vector2(1200, 0);
@@ -49,6 +52,7 @@ public class GrandeCarteMontree : MonoBehaviour  //Les suppléments sont les pro
         TypeImageT.sprite = carte.Stats.TypeImage;
         TypeImageT.enabled = true;
         LiensT.text = carte.MontrerLiens();
+        MontrerIcones(carte);
         GetComponent<RectTransform>().anchoredPosition = new Vector2(-680, 0);
     }
 
@@ -65,6 +69,26 @@ public class GrandeCarteMontree : MonoBehaviour  //Les suppléments sont les pro
         VisibiliteT.enabled = false;
         LiensT.text = " ";
         GetComponent<RectTransform>().anchoredPosition = new Vector2(1200, 0);
+        CacherIcones();
+    }
+
+    public void MontrerIcones(Carte carte)
+    {
+        foreach (Icone icone in carte.ListeIcones)
+        {
+            Icone grandeIcone = DossierIcones.GetComponentsInChildren<Icone>()[0];
+            grandeIcone.transform.SetParent(Icones.transform, false);
+            grandeIcone.CreerIcone(icone.Type, icone.Image.name, icone.Infos, icone.IDPartenaire);
+        }
+    }
+
+    public void CacherIcones()
+    {
+        foreach (Icone icone in Icones.GetComponentsInChildren<Icone>())
+        {
+            icone.transform.SetParent(DossierIcones.transform, false);
+            icone.GetComponent<RectTransform>().anchoredPosition = new Vector2(2000, 0);
+        }
     }
 
 }

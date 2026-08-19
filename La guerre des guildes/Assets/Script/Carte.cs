@@ -109,7 +109,6 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         {
             GameObject iconeCree = Instantiate(GameManager.Instance.PrefabIcone, Vector3.zero, Quaternion.identity);
             iconeCree.GetComponent<Icone>().transform.SetParent(Icones.transform, false);
-            iconeCree.SetActive(EstVisible);
             iconeCree.GetComponent<Icone>().CreerIcone("Duo", "IcoDuos", "/", Stats.IDPartenaire);
             ListeIcones.Add(iconeCree.GetComponent<Icone>());
         }
@@ -141,7 +140,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     }
     public void OnTerrainIdChanged(int ancienTerrain, int nouveauTerrain)
     {
-        UnityEngine.Debug.Log($"Nous allons de {ancienTerrain} à {nouveauTerrain}"); //Quand j'ai des bugs
+        //UnityEngine.Debug.Log($"Nous allons de {ancienTerrain} à {nouveauTerrain}"); //Quand j'ai des bugs
         PlaceTerrain vieuxTerrain = GameManager.Instance.TousLesTerrains.Find(t => t.Id == ancienTerrain);
         PlaceTerrain terrain = GameManager.Instance.TousLesTerrains.Find(t => t.Id == nouveauTerrain);
         if (vieuxTerrain != null && ancienTerrain != nouveauTerrain) { vieuxTerrain.CartePlacee = null; }
@@ -176,6 +175,23 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     }
 
     //Cacher et montrer carte
+
+    public void MontrerCarte()
+    {
+        PrenomT.text = Stats.Prenom;
+        ImageT.sprite = Stats.Image;
+        ImageT.enabled = true;
+        PMT.text = PMVar.ToString();
+        PVT.text = PVar.ToString();
+        PAT.text = PAVar.ToString();
+        PouvoirT.text = PouvoirVar;
+        CoutPouvoirT.text = CoutPouvoirVar.ToString() + "PM";
+        FamilleImageT.sprite = Stats.FamilleImage;
+        TypeImageT.sprite = Stats.TypeImage;
+        TypeImageT.enabled = true;
+        LiensT.text = MontrerLiens();
+        Icones.SetActive(true);
+    }
     public void CacherCarte()
     {
         //Retirer tout ce qui est visible
@@ -191,23 +207,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         VisibiliteT.enabled = false;
         LiensT.text = " ";
         EstVisible = false;
-        MontrerIcones(false);
-    }
-    public void MontrerCarte()
-    {
-        PrenomT.text = Stats.Prenom;
-        ImageT.sprite = Stats.Image;
-        ImageT.enabled = true;
-        PMT.text = PMVar.ToString();
-        PVT.text = PVar.ToString();
-        PAT.text = PAVar.ToString();
-        PouvoirT.text = PouvoirVar;
-        CoutPouvoirT.text = CoutPouvoirVar.ToString() + "PM";
-        FamilleImageT.sprite = Stats.FamilleImage;
-        TypeImageT.sprite = Stats.TypeImage;
-        TypeImageT.enabled = true;
-        LiensT.text = MontrerLiens();
-        MontrerIcones(true);
+        Icones.SetActive(false);
     }
     public string MontrerLiens() //Afficher les liens sur la carte
     {
@@ -219,11 +219,6 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         }
         if (description == " ") { description = "Personne"; }
         return description;
-    }
-    public void MontrerIcones(bool nouvelleValeur)
-    {
-        foreach (Icone icone in ListeIcones)
-        { icone.gameObject.SetActive(nouvelleValeur); }
     }
 
     // Contour time
@@ -381,7 +376,13 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         if (eventData.pointerDrag == null) { return; }
         GameManager gm = GameManager.Instance;
         Carte carteDeplace = eventData.pointerDrag.GetComponent<Carte>();
-        if (EstEnJeu && carteDeplace.isOwned && isOwned && eventData.button == PointerEventData.InputButton.Left && gm.JePeuxJouer(Player, "Echanger", this))
+        if (EstEnJeu && carteDeplace.isOwned && isOwned && eventData.button == PointerEventData.InputButton.Left && gm.JePeuxJouer(Player, "Duo", this))
+        {
+            UnityEngine.Debug.Log($"On duote entre {Stats.Prenom} et {carteDeplace.Stats.Prenom}");
+            if (gm.JePeuxJouer(Player, "Echanger", this)) { gm.Proposition(carteDeplace, this, "Duo/Echanger"); }
+            else { gm.Proposition(carteDeplace, this, "Duo"); }
+        }
+        else if (EstEnJeu && carteDeplace.isOwned && isOwned && eventData.button == PointerEventData.InputButton.Left && gm.JePeuxJouer(Player, "Echanger", this))
         {
             //UnityEngine.Debug.Log($"On échange entre {Stats.Prenom} et {carteDeplace.Stats.Prenom}");
             carteDeplace.EstEchange = true;

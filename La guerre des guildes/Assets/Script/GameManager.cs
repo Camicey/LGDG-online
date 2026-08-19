@@ -139,80 +139,21 @@ public class GameManager : NetworkBehaviour
     {
         if (carteChoisie.PlaceDeTerrain == null || carteDeplacee.PlaceDeTerrain == null) { return; } //Echange entre carte de deck
         if (!DeplacementAutorise(carteChoisie.PlaceDeTerrain.Id, carteDeplacee.PlaceDeTerrain.Id)) { return; }
-        EcranDeConfirmation.GameObject().SetActive(true);
-        string texteAffiche = "";
-        if (choix == "Echanger" && !carteDeplacee.EstStratege && !carteChoisie.EstStratege)
-        { texteAffiche = $"Voulez-vous échanger {carteDeplacee.Stats.Prenom} et {carteChoisie.Stats.Prenom} ?"; }
-        else if (choix == "Echanger" && (carteDeplacee.EstStratege || carteChoisie.EstStratege))
-        { texteAffiche = $"Voulez-vous changer de stratège et mettre {carteDeplacee.Stats.Prenom} à la place ?"; }
-        else if (choix == "Attaquer")
-        {
-            texteAffiche = $"Voulez-vous attaquer ";
-            if (carteChoisie.EstVisible)
-            { texteAffiche += $"{carteChoisie.Stats.Prenom} "; }
-            texteAffiche += $"avec {carteDeplacee.Stats.Prenom}, en infligeant {carteDeplacee.PAVar.ToString()} dégâts ?";
-            if (carteChoisie.isOwned) { texteAffiche += "\nAttention c'est votre carte."; }
-        }
-        else if (choix == "Lien")
-        {
-            texteAffiche = $"{carteDeplacee.Stats.Prenom} apperçoit {carteChoisie.Stats.Prenom} et refuse de se battre \nLien";
-            EcranDeConfirmation.BoutonConfirmer.gameObject.SetActive(false);
-        }
         GrandeCarte.CacherCarte();
-        //Visuels
-        EcranDeConfirmation.Texte.text = texteAffiche;
-        EcranDeConfirmation.BoutonConfirmer.gameObject.SetActive(true);
-        EcranDeConfirmation.BoutonConfirmer.GetComponentInChildren<TMP_Text>().text = choix;
-        EcranDeConfirmation.CarteDeplaceeTemp = carteDeplacee;
-        EcranDeConfirmation.CarteChoisieTemp = carteChoisie;
-        EcranDeConfirmation.ChoixTemp = choix;
+        EcranDeConfirmation.ChoisirSonAction(carteDeplacee, carteChoisie, choix); // Changement
+
     }
     public void Proposition(string choix)
     {
-        EcranDeConfirmation.GameObject().SetActive(true);
-        EcranDeConfirmation.BoutonConfirmer.GetComponentInChildren<TMP_Text>().text = "Ok";
         GrandeCarte.CacherCarte();
-        string texteAffiche = "";
-        switch (choix)
-        {
-            case "Gagner":
-                texteAffiche = "Vous avez gagné :)";
-                break;
-            case "Perdre":
-                texteAffiche = "Vous avez perdu :(";
-                break;
-            case "Cout":
-                texteAffiche = "Vous n'avez pas assez de Point de Mouvement";
-                break;
-            case "StrategeProtege":
-                texteAffiche = "Ce Stratege est protégé. Eliminez les cartes alentours pour pouvoir l'attaquer";
-                break;
-            case "DeckPlein":
-                texteAffiche = "Il n'y a plus de place dans votre deck";
-                break;
-            case "PiochePreparation":
-                texteAffiche = "Vous ne pouvez pas piocher pendant la phase de préparation. \nAppuyez sur Prêt.";
-                break;
-            case "PiocheVide":
-                texteAffiche = "La pioche est vide.";
-                break;
-            case "AttendreStratege":
-                texteAffiche = "Vous devez attendre que l'autre joueur choisisse un stratège.";
-                break;
-            case "DejaPioche":
-                texteAffiche = "Vous avez déjà pioché !";
-                break;
-        }
-
-        EcranDeConfirmation.Texte.text = texteAffiche;
-        EcranDeConfirmation.ChoixTemp = choix;
-        EcranDeConfirmation.BoutonConfirmer.gameObject.SetActive(true);
+        EcranDeConfirmation.ChoisirSonAction(choix);
     }
 
     // Grande Carte
     public void MontrerGrandeCarte()
     {
         if (CarteMontree == null) { return; }
+        GrandeCarte.CacherIcones();
         GrandeCarte.MontrerCarte(CarteMontree);
     }
     public void CacherGrandeCarte()
@@ -305,14 +246,19 @@ public class GameManager : NetworkBehaviour
     public void CreerDeck()
     {
         Pioche.Clear();
+        /*
         for (int i = 0; i < CartesSettings.Count; i++) // JAI CHANGE ICI POUR LES AMBIVALENTS
         {
             if (CartesSettings[i].Id < 200)
             { Pioche.Add(CartesSettings[i].Id); }
             if (CartesSettings[i].Type == "Ambivalent")
             { i++; }
-        }
+        }*/
         Melanger(Pioche);
+        Pioche.Add(16); // AHAHAHA
+        Pioche.Add(15); // AHAHAHA
+        Pioche.Add(14); // AHAHAHA
+        Pioche.Add(13); // AHAHAHA
         EtatDuJeu = "Preparation";
         NombreCartesPioche = Pioche.Count;
     }

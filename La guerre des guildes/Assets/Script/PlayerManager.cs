@@ -131,6 +131,12 @@ public class PlayerManager : NetworkBehaviour
         Carte carteChoisie = identity2.GetComponent<Carte>();
         ServerEchangerCarte(carteDeplaceeId, carteChoisie.TerrainId, carteChoisieId, carteDeplacee.TerrainId);
     }
+    private void DuoterCarte(Carte carteDeplacee, Carte carteChoisie)
+    {
+        UnityEngine.Debug.LogError($"DuoterCarte");
+        ServerDuoterCarte(carteDeplacee, carteChoisie);
+    }
+
     private void AttaquerCarte(uint carteAttaquanteId, uint carteChoisieId)
     {
         if (!NetworkClient.spawned.TryGetValue(carteAttaquanteId, out NetworkIdentity identity1)) { return; }
@@ -271,6 +277,11 @@ public class PlayerManager : NetworkBehaviour
             AttaquerCarte(carteDeplaceeId, carteChoisieId);
             CoutAction(1);
         }
+        else if (choix == "Duo")
+        {
+            DuoterCarte(carteDeplacee, carteChoisie);
+            CoutAction(1);
+        }
     }
 
     [Command]
@@ -398,7 +409,28 @@ public class PlayerManager : NetworkBehaviour
         Carte carte2 = identity2.GetComponent<Carte>();
         carte2.TerrainId = terrainId2;
     }
+    [Server]
+    void ServerDuoterCarte(Carte carteDeplacee, Carte carteChoisie)
+    {
+        UnityEngine.Debug.LogError($"Duo entre {carteDeplacee.Stats.Prenom} et {carteChoisie.Stats.Prenom}");
+        if (carteDeplacee.Player != carteChoisie.Player) { return; }
+        if (carteDeplacee.EstStratege || carteChoisie.EstStratege) { return; }
 
+        string IDDuoString = carteDeplacee.Stats.Particularite;
+        int IDDuo = IDDuoString != null && int.TryParse(IDDuoString, out int parsedID) ? parsedID : -1;
+        //UnityEngine.Debug.LogError($"Je suis passée avec l'ID {IDDuo}");
+        GameObject cardObj = Instantiate(PrefabCarte);
+        Carte carte = cardObj.GetComponent<Carte>();
+        carte.Id = IDDuo;
+        carte.Player = this;
+
+        NetworkServer.Spawn(cardObj, connectionToClient);
+        carte.TerrainId = carteChoisie.TerrainId;
+        carte.EstVisible = true;
+        if (carteChoisie.EstStratege) { carte.EstStratege = true; }
+        carteDeplacee.Mourir();
+        carteChoisie.Mourir();
+    }
     [Server]
     private void ServerRendreStratege(Carte carte, int terrainId)
     {
