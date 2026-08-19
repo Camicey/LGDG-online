@@ -2636,6 +2636,7 @@ MonoBehaviour:
   JoueurEnCours: {fileID: 0}
   JEnCoursAPioche: 0
   Defausse: {fileID: 907281906}
+  PrefabIcone: {fileID: 1771432711232053747, guid: 84a0f5885f10f4d43bd4af99162392e4, type: 3}
   DecalageTour: 0
   Tour: 0
   TourObject: {fileID: 1054705958}

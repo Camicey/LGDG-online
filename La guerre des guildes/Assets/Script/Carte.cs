@@ -49,7 +49,8 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     public Image FamilleImageT;
     public Image TypeImageT;
     public TMP_Text LiensT;
-    public GameObject Icone;
+    public GameObject Icones;
+    public List<Icone> ListeIcones;
 
     //Les paramètres qui changent
     [SyncVar] public float PMVar;
@@ -104,12 +105,20 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         {
             liensVar.Add(lien);
         }
+        if (Stats.Duo)
+        {
+            GameObject iconeCree = Instantiate(GameManager.Instance.PrefabIcone, Vector3.zero, Quaternion.identity);
+            iconeCree.GetComponent<Icone>().transform.SetParent(Icones.transform, false);
+            iconeCree.SetActive(EstVisible);
+            iconeCree.GetComponent<Icone>().CreerIcone("Duo", "IcoDuos", "/", Stats.IDPartenaire);
+            ListeIcones.Add(iconeCree.GetComponent<Icone>());
+        }
     }
 
     // On chose changed
     public void OnVisibleChanged(bool ancienneValeur, bool nouvelleValeur)
     {
-        if (nouvelleValeur == true)
+        if (nouvelleValeur)
         {
             MontrerCarte();
             if (isOwned)
@@ -182,6 +191,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         VisibiliteT.enabled = false;
         LiensT.text = " ";
         EstVisible = false;
+        MontrerIcones(false);
     }
     public void MontrerCarte()
     {
@@ -197,6 +207,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         TypeImageT.sprite = Stats.TypeImage;
         TypeImageT.enabled = true;
         LiensT.text = MontrerLiens();
+        MontrerIcones(true);
     }
     public string MontrerLiens() //Afficher les liens sur la carte
     {
@@ -208,6 +219,11 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         }
         if (description == " ") { description = "Personne"; }
         return description;
+    }
+    public void MontrerIcones(bool nouvelleValeur)
+    {
+        foreach (Icone icone in ListeIcones)
+        { icone.gameObject.SetActive(nouvelleValeur); }
     }
 
     // Contour time

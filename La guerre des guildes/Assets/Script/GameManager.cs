@@ -24,6 +24,7 @@ public class GameManager : NetworkBehaviour
     public PlayerManager JoueurEnCours;
     public bool JEnCoursAPioche;
     public GameObject Defausse;
+    public GameObject PrefabIcone;
     [SyncVar] public int DecalageTour;
     [SyncVar(hook = nameof(OnTourChanged))]
     public int Tour;
