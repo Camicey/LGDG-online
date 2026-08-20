@@ -310,6 +310,10 @@ public class GameManager : NetworkBehaviour
     public void PasserAuTourSuivant()
     {
         Tour++;
+        foreach (Carte carte in ToutesLesCartes)
+        {
+            carte.AUtilisePouvoir = false;
+        }
         if (JoueurEnCours.Stratege != null)
         { JoueurEnCours.ValeurPM(JoueurEnCours.Stratege.PMVar); }
 

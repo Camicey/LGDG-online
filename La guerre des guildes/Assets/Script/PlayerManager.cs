@@ -21,6 +21,7 @@ public class PlayerManager : NetworkBehaviour
     public GameObject DossierCarte;
     public GameObject PMObjet;
     public GameObject BoutonTourSuivant;
+    public GameObject CibleChoisie;
     [SyncVar(hook = nameof(OnStrategeChanged))]
     public Carte Stratege;
     public static PlayerManager LocalPlayer;
@@ -136,7 +137,6 @@ public class PlayerManager : NetworkBehaviour
         //UnityEngine.Debug.LogError($"DuoterCarte");
         ServerDuoterCarte(carteDeplacee, carteChoisie);
     }
-
     private void AttaquerCarte(uint carteAttaquanteId, uint carteChoisieId)
     {
         if (!NetworkClient.spawned.TryGetValue(carteAttaquanteId, out NetworkIdentity identity1)) { return; }
@@ -161,6 +161,22 @@ public class PlayerManager : NetworkBehaviour
         if (carteAttaquante.Stats.Type == "Robot") { degatsDef = 1; }
         ServeurAttaquerCarte(carteAttaquanteId, carteChoisieId, degats, degatsDef);
     }
+    public void UtiliserPouvoirCarte(Carte carte)
+    {
+        if (!isLocalPlayer) return;
+
+        /*
+            int nbCibles = PouvoirRegistry.NombreDeCibles(carte.IdPouvoirVar);
+
+            if (nbCibles == 0)
+            { CmdActiverPouvoir(CarteMontree.netId); }
+            else
+            { StartCoroutine(AttendreCibles(nbCibles)); }
+        */
+    }
+
+
+
 
     // Vérification du gagnant
     private bool VerifierGagnant()

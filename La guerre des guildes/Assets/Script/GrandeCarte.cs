@@ -91,4 +91,10 @@ public class GrandeCarteMontree : MonoBehaviour  //Les suppléments sont les pro
         }
     }
 
+    public void OnClickPouvoir()
+    {
+        UnityEngine.Debug.Log("Pouvoir de la carte cliqué");
+        GameManager.Instance.JoueurEnCours.UtiliserPouvoirCarte(GameManager.Instance.CarteMontree);
+    }
+
 }

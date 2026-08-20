@@ -5,9 +5,10 @@ A faire :
 - Si je choisis le stratège, soit je n'ai pas de limite de déplacement, soit je mets automatiquement la carte restante stratège :/
 - Attaquer le stratège / Remettre un stratège
 - Améliorer le target message, je pourrais l'utiliser +
+- Refaire un visu pour les duos
 
 En train de faire :
-- Les pouvoirs (juste après, en commençant par les ambivalents)
+- Les pouvoirs (en commençant par les ambivalents)
 
 Résolus :
 Les cartes depop ;-; quand je quitte et revient > J'ai rajouté un bouton pour initialiser les cartes dans la pioche
@@ -35,5 +36,4 @@ Piocher uniquement quand voulu
 - Refuse de se battre qui n'apparait que d'un côté alors qu'il devrait être des deux
 - Réplique des robots les tuent sur le coup ; -; 
 - Icones gestion
-
 - Duo et rectrifier les souciiiis

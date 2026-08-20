@@ -19,6 +19,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     public bool EstRemise;
     public bool EstMontree;
     public bool EstEchange;
+    public bool AUtilisePouvoir;
     private Vector2 offset;
 
     // Information importante carte
@@ -92,11 +93,11 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         EstVisible = false;
         EstStratege = false;
         EstRemise = false;
+        AUtilisePouvoir = false;
         VisibiliteT.sprite = GameManager.Instance.ImagePasVisible; //Oeil fermé 
         ImageDosCarte = Resources.Load<Sprite>("Images/" + "DosAdversaires");
         InitialiserVar();
     }
-
     public void InitialiserVar()
     {
         PVar = Stats.PV;
@@ -190,7 +191,6 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     }
 
     //Cacher et montrer carte
-
     public void MontrerCarte()
     {
         PrenomT.text = Stats.Prenom;
