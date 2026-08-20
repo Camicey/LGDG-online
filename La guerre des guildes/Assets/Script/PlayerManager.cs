@@ -83,7 +83,7 @@ public class PlayerManager : NetworkBehaviour
         if (!isLocalPlayer) return;
         if (nouvelleValeur)
         {
-            UnityEngine.Debug.LogError("Il dois choisir son stratège, zou");
+            //UnityEngine.Debug.LogError("Il dois choisir son stratège, zou");
             // afficher l'UI de choix de stratège
         }
     }
@@ -133,7 +133,7 @@ public class PlayerManager : NetworkBehaviour
     }
     private void DuoterCarte(Carte carteDeplacee, Carte carteChoisie)
     {
-        UnityEngine.Debug.LogError($"DuoterCarte");
+        //UnityEngine.Debug.LogError($"DuoterCarte");
         ServerDuoterCarte(carteDeplacee, carteChoisie);
     }
 
@@ -412,24 +412,20 @@ public class PlayerManager : NetworkBehaviour
     [Server]
     void ServerDuoterCarte(Carte carteDeplacee, Carte carteChoisie)
     {
-        UnityEngine.Debug.LogError($"Duo entre {carteDeplacee.Stats.Prenom} et {carteChoisie.Stats.Prenom}");
+        //UnityEngine.Debug.LogError($"Duo entre {carteDeplacee.Stats.Prenom} et {carteChoisie.Stats.Prenom}");
         if (carteDeplacee.Player != carteChoisie.Player) { return; }
         if (carteDeplacee.EstStratege || carteChoisie.EstStratege) { return; }
 
         string IDDuoString = carteDeplacee.Stats.Particularite;
         int IDDuo = IDDuoString != null && int.TryParse(IDDuoString, out int parsedID) ? parsedID : -1;
         //UnityEngine.Debug.LogError($"Je suis passée avec l'ID {IDDuo}");
-        GameObject cardObj = Instantiate(PrefabCarte);
-        Carte carte = cardObj.GetComponent<Carte>();
-        carte.Id = IDDuo;
-        carte.Player = this;
 
-        NetworkServer.Spawn(cardObj, connectionToClient);
-        carte.TerrainId = carteChoisie.TerrainId;
-        carte.EstVisible = true;
-        if (carteChoisie.EstStratege) { carte.EstStratege = true; }
+        carteChoisie.Id = IDDuo;
+        CarteSettings partenaire = GameManager.Instance.CartesSettings.Find(c => c.Id == IDDuo);
+        carteChoisie.Stats = partenaire;
+        carteChoisie.MontrerCarte();
+        carteChoisie.InitialiserVar();
         carteDeplacee.Mourir();
-        carteChoisie.Mourir();
     }
     [Server]
     private void ServerRendreStratege(Carte carte, int terrainId)

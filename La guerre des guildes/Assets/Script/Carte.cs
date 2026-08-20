@@ -93,17 +93,32 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         EstStratege = false;
         EstRemise = false;
         VisibiliteT.sprite = GameManager.Instance.ImagePasVisible; //Oeil fermé 
+        ImageDosCarte = Resources.Load<Sprite>("Images/" + "DosAdversaires");
+        InitialiserVar();
+    }
+
+    public void InitialiserVar()
+    {
         PVar = Stats.PV;
         PAVar = Stats.PA;
         PMVar = Stats.PM;
         IdPouvoirVar = Stats.IdPouvoir;
         PouvoirVar = Stats.Pouvoir;
-        ImageDosCarte = Resources.Load<Sprite>("Images/" + "DosAdversaires");
         CoutPouvoirVar = Stats.CoutPouvoir;
+
         liensVar.Clear();
         foreach (int lien in Stats.liens)
         {
             liensVar.Add(lien);
+        }
+
+        if (ListeIcones.Count > 0)
+        {
+            foreach (Icone icone in Icones.GetComponentsInChildren<Icone>())
+            {
+                icone.transform.SetParent(GameManager.Instance.Defausse.transform, false);
+            }
+            ListeIcones.Clear();
         }
         if (Stats.Duo)
         {

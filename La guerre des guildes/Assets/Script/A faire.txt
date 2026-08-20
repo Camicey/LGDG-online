@@ -7,7 +7,6 @@ A faire :
 - Améliorer le target message, je pourrais l'utiliser +
 
 En train de faire :
-- Duo et rectrifier les souciiiis
 - Les pouvoirs (juste après, en commençant par les ambivalents)
 
 Résolus :
@@ -36,3 +35,5 @@ Piocher uniquement quand voulu
 - Refuse de se battre qui n'apparait que d'un côté alors qu'il devrait être des deux
 - Réplique des robots les tuent sur le coup ; -; 
 - Icones gestion
+
+- Duo et rectrifier les souciiiis
