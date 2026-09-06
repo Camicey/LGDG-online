@@ -128,6 +128,8 @@ public class PlayerManager : NetworkBehaviour
             return;
         if (!NetworkClient.spawned.TryGetValue(carteChoisieId, out NetworkIdentity identity2))
             return;
+
+        UnityEngine.Debug.Log("Tentative d'échange");
         Carte carteDeplacee = identity1.GetComponent<Carte>();
         Carte carteChoisie = identity2.GetComponent<Carte>();
         ServerEchangerCarte(carteDeplaceeId, carteChoisie.TerrainId, carteChoisieId, carteDeplacee.TerrainId);
@@ -284,6 +286,7 @@ public class PlayerManager : NetworkBehaviour
 
         if (choix == "Echanger" && !carteDeplacee.EstStratege && !carteChoisie.EstStratege)
         {
+            UnityEngine.Debug.Log("On Echange deux cartes");
             if (carteChoisie.Player != this) { return; } // Un échange se fait entre deux cartes du même joueur
             EchangerCarte(carteDeplaceeId, carteChoisieId);
             CoutAction(2);
@@ -431,6 +434,7 @@ public class PlayerManager : NetworkBehaviour
         //UnityEngine.Debug.LogError($"Duo entre {carteDeplacee.Stats.Prenom} et {carteChoisie.Stats.Prenom}");
         if (carteDeplacee.Player != carteChoisie.Player) { return; }
         if (carteDeplacee.EstStratege || carteChoisie.EstStratege) { return; }
+        if (!carteDeplacee.Stats.Duo || !carteDeplacee.Stats.Duo) { return; }
 
         string IDDuoString = carteDeplacee.Stats.Particularite;
         int IDDuo = IDDuoString != null && int.TryParse(IDDuoString, out int parsedID) ? parsedID : -1;

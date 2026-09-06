@@ -11,13 +11,17 @@ public class EcranDeConfirmation : MonoBehaviour
 {
     public TMP_Text Texte;
     public Button BoutonConfirmer;
+    public Button BoutonConfirmer2;
     public Button BoutonAnnuler;
     public Carte CarteDeplaceeTemp;
     public Carte CarteChoisieTemp;
     public string ChoixTemp;
 
+
     public void Confirmer()
     {
+        if (ChoixTemp == "Duo/Echanger")
+        { ChoixTemp = "Duo"; }
         if (CarteChoisieTemp != null && CarteDeplaceeTemp != null)
         {
             PlayerManager.LocalPlayer.CmdConfirmerAction(
@@ -29,17 +33,24 @@ public class EcranDeConfirmation : MonoBehaviour
         RemiseAZero();
     }
 
-    public void Annuler()
+    public void ConfirmerSecondeAction()
     {
+        UnityEngine.Debug.Log("On arrive a la seconde action avec " + ChoixTemp);
         if (ChoixTemp == "Duo/Echanger") // Pour le choix entre Duo ou Echanger
         {
+            UnityEngine.Debug.Log("On arrive a la seconde action a l'intérieur :" + BoutonConfirmer2.GetComponentInChildren<TMP_Text>().text);
             PlayerManager.LocalPlayer.CmdConfirmerAction(
             CarteDeplaceeTemp.netId,
             CarteChoisieTemp.netId,
-            BoutonAnnuler.GetComponentInChildren<TMP_Text>().text
+            BoutonConfirmer2.GetComponentInChildren<TMP_Text>().text
             );
-            BoutonAnnuler.GetComponentInChildren<TMP_Text>().text = "Annuler";
         }
+        BoutonConfirmer2.gameObject.SetActive(false);
+        RemiseAZero();
+    }
+
+    public void Annuler()
+    {
         RemiseAZero();
     }
 
@@ -81,7 +92,7 @@ public class EcranDeConfirmation : MonoBehaviour
                 texteAffiche = "Vous avez déjà pioché !";
                 break;
         }
-
+        BoutonConfirmer2.gameObject.SetActive(false);
         Texte.text = texteAffiche;
     }
 
@@ -107,9 +118,11 @@ public class EcranDeConfirmation : MonoBehaviour
                 break;
             case "Duo/Echanger":
                 texteAffiche = $"Voulez vous que {carteDeplacee.Stats.Prenom} et {carteChoisie.Stats.Prenom} se battent ensemble ou les échanger ?";
+                BoutonConfirmer2.gameObject.SetActive(true);
                 BoutonConfirmer.GetComponentInChildren<TMP_Text>().text = "Duo";
-                BoutonAnnuler.GetComponentInChildren<TMP_Text>().text = "Echanger";
-                ChoixTemp = "Duo";
+                BoutonConfirmer2.GetComponentInChildren<TMP_Text>().text = "Echanger";
+                CarteDeplaceeTemp = carteDeplacee;
+                CarteChoisieTemp = carteChoisie;
                 break;
             case "StrategeProtege":
                 texteAffiche = $"Ce stratège est protégé par ses cartes alentours, vous ne pouvez pas l'attaquer.";
@@ -129,8 +142,9 @@ public class EcranDeConfirmation : MonoBehaviour
         }
         if (choix == "Duo/Echanger" || choix == "Echanger" || choix == "Attaquer")
         { BoutonAnnuler.gameObject.SetActive(true); }
-        else
-        { BoutonAnnuler.gameObject.SetActive(false); }
+        else { BoutonAnnuler.gameObject.SetActive(false); }
+        if (choix == "Duo/Echanger") { BoutonConfirmer2.gameObject.SetActive(true); }
+        else { BoutonConfirmer2.gameObject.SetActive(false); }
 
         Texte.text = texteAffiche.ToString();
     }
@@ -140,6 +154,7 @@ public class EcranDeConfirmation : MonoBehaviour
         CarteDeplaceeTemp = null;
         CarteChoisieTemp = null;
         ChoixTemp = "";
+        BoutonConfirmer2.gameObject.SetActive(false);
         gameObject.SetActive(false);
     }
 

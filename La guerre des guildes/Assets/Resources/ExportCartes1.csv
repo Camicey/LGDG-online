@@ -10,8 +10,8 @@ Id,Prenom,PM,PV,PA,Image,Pouvoir,IdPouvoir,Complement Pouvoir,Cout,LienID,Liens,
 9,Dimitri,3.5,35,5,Dimitri,Coupe tous les liens d'une carte,5,Tous,1,16/15/11,Vivalie / Sosara / Lie,,Rose,Defenseur,FALSE,
 10,Edwin,1,25,10,Edwin,Échanger deux cartes,11,/,1,16/15/11,Vivalie / Sosara / Lie,,Rose,Neutre,FALSE,
 11,Lié,2,15,30,Lie,Invoquer un dieu,10,/,2,16/15/0,Vivalie / Sosara / NeoTina,,Rose,Attaquant,FALSE,
-12,Loma,1,20,20,Loma,Change de statut,12,Malo,1,0/0,Merie / UrUra,,Rose,Ambivalent,FALSE,
-13,Malo,1,40,5,Malo,Change de statut,12,Loma,1,16/0/0,Vivalie / Merie / Josh,,Rose,Ambivalent,FALSE,
+12,Loma,1,20,20,Loma,Change de statut,12,13,1,0/0,Merie / UrUra,,Rose,Ambivalent,FALSE,
+13,Malo,1,40,5,Malo,Change de statut,12,12,1,16/0/0,Vivalie / Merie / Josh,,Rose,Ambivalent,FALSE,
 14,Papuchon,0,20,5,Papuchon,Si tué revient dans la pioche si plus de carte meurt,13,/,0,15/16/11,Sosara / Vivalie / Lie,,Rose,Piège,FALSE,
 15,Sosara,3.5,20,10,Sosara,Redirige chaque coup porté à ses liens vers lui,8,/,0.5,16/11/14,Vivalie / Lie / Papuchon,200,Rose,Pouvoir,TRUE,16
 16,Vivalie,4,3,10,Vivalie,Choisit une carte de son plateau qui retourne dans son deck,9,/,1.5,15/11/0,Sosara / Lie / Merie,200,Rose,Robot,TRUE,15

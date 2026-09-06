@@ -391,9 +391,11 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         if (eventData.pointerDrag == null) { return; }
         GameManager gm = GameManager.Instance;
         Carte carteDeplace = eventData.pointerDrag.GetComponent<Carte>();
-        if (EstEnJeu && carteDeplace.isOwned && isOwned && eventData.button == PointerEventData.InputButton.Left && gm.JePeuxJouer(Player, "Duo", this))
+        if (EstEnJeu && carteDeplace.isOwned && isOwned && eventData.button == PointerEventData.InputButton.Left
+        && carteDeplace.Stats.Duo && Stats.Duo && Stats.IDPartenaire == carteDeplace.Id)
         {
             UnityEngine.Debug.Log($"On duote entre {Stats.Prenom} et {carteDeplace.Stats.Prenom}");
+            UnityEngine.Debug.Log(" Savoir si je peux échanger " + gm.JePeuxJouer(Player, "Echanger", this));
             if (gm.JePeuxJouer(Player, "Echanger", this)) { gm.Proposition(carteDeplace, this, "Duo/Echanger"); }
             else { gm.Proposition(carteDeplace, this, "Duo"); }
         }

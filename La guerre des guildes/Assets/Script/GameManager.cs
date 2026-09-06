@@ -179,6 +179,7 @@ public class GameManager : NetworkBehaviour
     public bool JePeuxJouer(PlayerManager joueur, string action, Carte carte)
     {
         if (joueur == null || action == null) { UnityEngine.Debug.LogError("Joueur ou Action est null"); return false; }
+
         if (joueur.DoisAttendreStratege)
         {
             Proposition("AttendreStratege");
@@ -191,12 +192,14 @@ public class GameManager : NetworkBehaviour
             { return true; }
             else { return false; }
         }
+
         if (carte != null)
         {
-            //UnityEngine.Debug.Log($"{EtatDuJeu} avec joueur {joueur.Id} alors que je suis joueur en cours ? {joueur == JoueurEnCours} faisant {action}");
+            UnityEngine.Debug.Log($"{EtatDuJeu} avec joueur {joueur.Id} alors que je suis joueur en cours ? {joueur == JoueurEnCours} faisant {action} sur {carte.TerrainIdVise}");
             if ((action == "Deplacer" || action == "Echanger" || action == "RetournerDeck") &&
             ((carte.Player.Id == 0 && carte.TerrainIdVise == 4) || (carte.Player.Id == 1 && carte.TerrainIdVise == 1)))
-            { return false; } // Si on essaie d'envahir son terrain
+            { UnityEngine.Debug.Log("Ah"); return false; } // Si on essaie d'envahir son terrain
+            if (action == "Echanger") { return true; }
             if (EtatDuJeu == "Jouer" && joueur == JoueurEnCours) // Non si on n'est pas le joueur actif
             { return true; }
             if (EtatDuJeu == "Preparation" && (action == "Deplacer" || action == "Echanger" || action == "RetournerDeck")) //On peut déplacer et échanger
@@ -221,6 +224,7 @@ public class GameManager : NetworkBehaviour
             JEnCoursAPioche = false;
             return false;
         }
+
         return false;
     }
 
@@ -246,14 +250,14 @@ public class GameManager : NetworkBehaviour
     public void CreerDeck()
     {
         Pioche.Clear();
-        /*
+
         for (int i = 0; i < CartesSettings.Count; i++) // JAI CHANGE ICI POUR LES AMBIVALENTS
         {
             if (CartesSettings[i].Id < 200)
             { Pioche.Add(CartesSettings[i].Id); }
             if (CartesSettings[i].Type == "Ambivalent")
             { i++; }
-        }*/
+        }
         Melanger(Pioche);
         Pioche.Add(16); // AHAHAHA
         Pioche.Add(15); // AHAHAHA
