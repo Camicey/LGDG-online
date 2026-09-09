@@ -11,7 +11,6 @@ A faire :
 
 En train de faire :
 - Les pouvoirs (en commençant par les ambivalents)
-- Bouton Annuler pour les duos
 
 Résolus :
 Les cartes depop ;-; quand je quitte et revient > J'ai rajouté un bouton pour initialiser les cartes dans la pioche
@@ -41,3 +40,4 @@ Piocher uniquement quand voulu
 - Icones gestion
 - Duo et rectrifier les souciiiis
 - Les duos sont défectueux.
+- Bouton Annuler pour les duos

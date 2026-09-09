@@ -163,9 +163,12 @@ public class PlayerManager : NetworkBehaviour
         if (carteAttaquante.Stats.Type == "Robot") { degatsDef = 1; }
         ServeurAttaquerCarte(carteAttaquanteId, carteChoisieId, degats, degatsDef);
     }
+
     public void UtiliserPouvoirCarte(Carte carte)
     {
         if (!isLocalPlayer) return;
+        UnityEngine.Debug.LogError($"Pouvoir de la carte {carte.Stats.Prenom} cliqué");
+        carte.UtiliserPouvoir();
 
         /*
             int nbCibles = PouvoirRegistry.NombreDeCibles(carte.IdPouvoirVar);

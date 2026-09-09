@@ -58,6 +58,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
     [SyncVar(hook = nameof(OnPVarChanged))] public int PVar;
     [SyncVar] public int PAVar;
     [SyncVar] public int IdPouvoirVar;
+    public Pouvoir FonctionPouvoirVar;
     [SyncVar] public string PouvoirVar;
     [SyncVar] public float CoutPouvoirVar;
     public List<int> liensVar = new();
@@ -104,6 +105,7 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
         PAVar = Stats.PA;
         PMVar = Stats.PM;
         IdPouvoirVar = Stats.IdPouvoir;
+        FonctionPouvoirVar = PouvoirFactory.GetPouvoirById((PouvoirId)IdPouvoirVar, this);
         PouvoirVar = Stats.Pouvoir;
         CoutPouvoirVar = Stats.CoutPouvoir;
 
@@ -373,6 +375,11 @@ public class Carte : NetworkBehaviour, IBeginDragHandler, IEndDragHandler, IDrag
             LayoutRebuilder.MarkLayoutForRebuild(Player.DeckJoueur.GetComponent<RectTransform>());
         }
         TerrainIdVise = 0;
+    }
+
+    public void UtiliserPouvoir()
+    {
+        FonctionPouvoirVar.UtiliserPouvoir(this);
     }
 
     // Cliquer sur la carte et se laisser drop dessus

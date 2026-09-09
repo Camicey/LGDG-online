@@ -1076,6 +1076,7 @@ MonoBehaviour:
   EstRemise: 0
   EstMontree: 0
   EstEchange: 0
+  AUtilisePouvoir: 0
   Id: 0
   TerrainId: 0
   TerrainIdVise: 0
@@ -1095,10 +1096,12 @@ MonoBehaviour:
   TypeImageT: {fileID: 5767123323936230169}
   LiensT: {fileID: 507399061034212579}
   Icones: {fileID: 1960187950194657846}
+  ListeIcones: []
   PMVar: 0
   PVar: 0
   PAVar: 0
   IdPouvoirVar: 0
+  FonctionPouvoirVar: {fileID: 0}
   PouvoirVar: 
   CoutPouvoirVar: 0
   liensVar: 
